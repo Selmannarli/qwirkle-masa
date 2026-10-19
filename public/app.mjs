@@ -102,3 +102,5 @@ $('chatForm').onsubmit=e=>{e.preventDefault();sendChat($('chatInput').value)};
 $('chatButton').onclick=()=>{const open=$('chatPanel').classList.contains('hidden');$('chatPanel').classList.toggle('hidden',!open);$('game').classList.toggle('chat-open',open);$('chatButton').setAttribute('aria-expanded',String(open));if(open){chatUnread=false;$('chatButton').classList.remove('has-unread');$('chatMessages').scrollTop=$('chatMessages').scrollHeight;history(false)}};
 $('closeChat').onclick=()=>{$('game').classList.remove('chat-open');$('chatPanel').classList.add('hidden');$('chatButton').setAttribute('aria-expanded','false')};
 
+
+$('settingsRules').onclick=()=>{$('settings').close();modal('rules')};
