@@ -18,10 +18,10 @@ Miko ile tek kişilik oyun tarayıcıda çalışır ve bu tarayıcıda kaydedili
 
 - Kendinden barındırılan Nunito değişken yazı tipi; Türkçe karakterler ve Latin Extended paketi.
 - Özgün dört taşlı logo, özel üretilmiş 3D tanıtım görseli, tutarlı SVG ikonları.
-- Fiziksel kalınlık, yumuşak gölge ve ışıkla çizilen taşlar; perspektifli masa ve doğru ters konum eşlemesi.
+- Düz, sabit ölçekli 2B tahta; kabartma veya perspektif yok. Seçilen taş için uygun konum veya otomatik hamle önerisi gösterilmez.
 - Seçim ve yerleştirme geri bildirimi, puan kutlaması, Renkio altılısında konfeti.
 - Web Audio ile sentezlenen taş ve başarı sesleri; ses kapatılabilir.
-- Gündüz/gece atmosferi, düz/perspektif görünüm, azaltılmış hareket tercihi. Sistem hareket tercihi başlangıçta dikkate alınır.
+- Gündüz/gece atmosferi ve azaltılmış hareket tercihi. Sistem hareket tercihi başlangıçta dikkate alınır.
 - Yakınlaştırma, kaydırma, iki parmak yakınlaştırma, tam ekran, açılır oyun akışı.
 - Kontrollerin dokunma alanları ve küçük ekran düzeni için ek düzenlemeler. Tam WCAG uygunluğu sertifikası iddia edilmez.
 
@@ -35,7 +35,7 @@ Tek sunucu örneğiyle çalıştırın. JSON dizini kalıcı bir disk üzerindey
 
 ## Kontroller
 
-`npm test` kural, puanlama, gizli el, host yetkisi, sıra, SSE, yeniden bağlantı, dört oyunculu tam maç, kayıtla yeniden başlatma ve düz/perspektif konum eşlemesi testlerini çalıştırır. Tam maç boyunca 108 taşın bütünlüğü kontrol edilir. Testlerin geçmesi, ticari yük testi veya bağımsız güvenlik denetimi yerine geçmez.
+`npm test` kural, puanlama, gizli el, host yetkisi, sıra, SSE, yeniden bağlantı, dört oyunculu tam maç, kayıtla yeniden başlatma ve düz konum eşlemesi, hamle ipucunun yokluğu ve çizimlerin bir ekran karesinde birleştirilmesi testlerini çalıştırır. Tam maç boyunca 108 taşın bütünlüğü kontrol edilir. Testlerin geçmesi, ticari yük testi veya bağımsız güvenlik denetimi yerine geçmez.
 
 ## Varlıklar ve araştırma
 
@@ -48,3 +48,9 @@ Tek sunucu örneğiyle çalıştırın. JSON dizini kalıcı bir disk üzerindey
 ## Ticari çıkış durumu
 
 Bu sürüm kapsamlı bir görsel ve etkileşim yenilemesidir; ticari çıkış onayı değildir. Marka adı için tescil ve kullanım uygunluğu doğrulanmadı. Para alınacak dağıtım öncesinde kalıcı üretim kayıtları/yedekleme, eşzamanlı kullanıcı yük ölçümü, bağımsız güvenlik kontrolü ve ticari dağıtım koşulları tamamlanmalıdır. Kaynak depo şu anda herkese açıktır; ticari dağıtımda kaynak erişim politikası ayrıca seçilmelidir. Ödeme, hesap ve abonelik satışı bu sürümde yoktur.
+
+## 0.4.0: kullanım ve Android
+
+Tahta ekranı tek görünüm içinde tutulur; dikey ve yatay telefon düzeni, dört oyunculu kompakt skorlar, düz taşlar ve büyük hamle kontrolleri vardır. İpucu düğmesi ve uygun hücre vurguları kaldırılmıştır. Hatalı yerleştirme denemeleri kural mesajı verir. Miko hamle aramasını bir modül Worker içinde yapar; arama ekranın ana iş parçacığını durdurmaz. Boş imleç hareketleri tahtayı yeniden çizmez; seçili taş veya kaydırma çizimleri ekran karesine birleştirilir.
+
+Android kaynakları android/ altındadır. Java 17+, Android SDK 36 ve SDK Build Tools gerekir. android/local.properties içine sdk.dir ekleyip android/ içinden gradlew.bat assembleDebug çalıştırın. Üretilen test APK'sı app/build/outputs/apk/debug/app-debug.apk dosyasıdır. APK test anahtarıyla imzalanır; mağaza dağıtım sürümü değildir. Minimum Android 8.0. APK aynı HTTPS sunucusunu Android WebView ile açar; ayrı bir oyun motoru veya sunucu kullanmaz. APK ve masaüstü/telefon tarayıcıları aynı masa koduyla 2–4 kişilik oyuna katılır. İnternet ve güncel Android System WebView gerekir. Sunucu uykusu ücretsiz test planına bağlıdır. Çevrim dışı açılışta tekrar deneme ekranı vardır; kaydedilen oturum aynı kurulumda korunur.
