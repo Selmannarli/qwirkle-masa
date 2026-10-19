@@ -76,3 +76,9 @@ Tüyo yalnızca bilgisayara karşı, oyuncunun isteğiyle açılır. Önerilen t
 Doğrulama: 28 otomatik test; tarayıcıda iki oyuncuyla özel deneme, sıraya geçince korunma, hamle onayı, hızlı mesaj ve gerçek sayaç bitişi. 320×760 telefonda sohbet, tahta ve el paneli birlikte sayfaya sığar. Android aynı canlı arayüzü kullandığı için mevcut APK yeniden açıldığında güncellemeyi alır.
 
 Son hamle gösterimi güncellemesi: Oyuncu numaraları ve oyuncu başına geçmiş hamle çerçeveleri kaldırıldı. Yalnızca ortak game.last listesindeki en son yerleştirilen taşlar koyu çerçeve ve hafif lavanta zeminiyle işaretlenir. Bu işaret iki istemcide aynıdır; yeni yerleştirme geldiğinde önceki hamleden kalkar.
+
+## 0.5.1: gece teması ve tek süre seçimi
+
+Gece görünümü nötr lacivert yüzeyler ve okunaklı metin/ikon kontrastıyla yenilendi. Elde ve tahtada aynı açık taş yüzeyi kullanılır; siyah sembolü örten koyu iç katman ve tahtadaki gündüz radyal parlaması kaldırıldı.
+
+Çevrim içi oyunda süre yalnızca host tarafından bekleme odasındaki tek seçim alanında belirlenir. Konuk seçilen süreyi salt okunur görür. Ana sayfadaki süre alanı yalnızca solo modda görünür. Seçim olayı değerini ekran yeniden çizilmeden önce yakalar; bekleyen değer korunur ve hata halinde sunucu değeri geri gelir. Böylece önceki değerin yanlışlıkla kaydedilmesi giderildi. Tarayıcıda 60 ve 120 saniye seçimleri, konuğa yansıma, yeniden bağlanma ve seçilen süreyle maç başlatma kontrol edildi.
