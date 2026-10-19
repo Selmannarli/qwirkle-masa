@@ -63,3 +63,14 @@ Android emülatörü üzerinde canlı WebView açılışı, ipuçlarının yoklu
 Tahta her hamle, önizleme ve ekran boyutu değişiminde bütün taşlar ile bir hücre kenar payını sığdırır. 25 piksel alt ölçek sınırı kaldırıldı; 108 taşlık tek sıra ve uç koordinatlar telefon/masaüstü ölçülerinde test edilir. Kaydırma görünümü kırpmaz; yakınlaştırma bütün taşları sığdırma sınırını aşmaz. Çok uzun dizilimlerde taşların küçülmesi ekranın fiziksel sınırından kaynaklanır. El paneli daraltıldı. Sarı ve turuncu belirgin tonlara ayrıldı. SVG el ve Canvas tahta artık aynı SHAPE_PATHS kaynağını kullanır; yoncanın yerleştirilince şekil değiştirmesi düzeltildi.
 
 Tüyo yalnızca bilgisayara karşı, oyuncunun isteğiyle açılır. Önerilen taşları ve puanı açıklar; Hamleyi dene düğmesi öneriyi onaylanmamış hamleye dönüştürür. Oyuncu Hamleyi oyna demeden işlenmez. Çevrim içi oyunda tüyo veya uygun hücre vurgusu yoktur. Mevcut Android APK aynı canlı web arayüzünü açtığı için uygulama yeniden açılınca bu düzeltmeleri de alır; yeni APK kurulumu gerekmez.
+
+## 0.5.0: ortak masa özellikleri
+
+- Altı renk: kırmızı, siyah, sarı, yeşil, mavi, mor. Eski renklerin taş indeksleri korunur; kural ve kayıtlar değişmez.
+- Her oyuncunun son yerleştirdiği taşlar lastMoves içinde tutulur. Taşlarda koyu çerçeve ve oyuncu kartıyla eşleşen 1–4 işareti vardır; taş değiştirme, mesaj veya zaman aşımı bunları silmez.
+- Sıra beklerken taş seçme ve yerleştirme özel denemedir. Sunucuya gönderilmez, rakip göremez. Yeni hamleyle hâlâ uyumluysa korunur; çakışıyorsa temizlenir. Hamleyi onaylamak yalnızca oyuncunun kendi sırasında mümkündür.
+- Hızlı mesajlar ve 160 karakterlik serbest metin SSE üzerinden aynı odadaki oyunculara iletilir. Son 40 mesaj tutulur; mesaj başına en az 1,2 saniye vardır. Mesajlar DOM içine metin olarak yazılır. Mesaj göndermek oyun revizyonunu artırmaz. Masaüstünde sohbet yana, dikey telefonda tahtanın altına açılır; tahta yeniden sığdırılır.
+- Tur süresi: sınırsız, 30, 60 veya 120 saniye. Masa kurulurken veya başlatılmadan önce masa sahibi seçer; solo oyun da desteklenir. Çevrim içi sayaç sunucunun son zamanını esas alır; sunucu 500 ms aralıkla ve istek sırasında süreyi uygular. Süresi biten tur puan/taş değiştirmeden geçer. Açılış kaçırılırsa sıradaki oyuncunun açılış grubu kullanılır. Herkes iki tur art arda süreyi kaçırırsa maç sonlanır.
+- Oyuncunun sırasında hafif parlama; azaltılmış hareket seçeneğinde sabit çerçeve. Yazı tekrarları yerine etiketli ve açıklama balonlu ikon düğmeleri.
+
+Doğrulama: 28 otomatik test; tarayıcıda iki oyuncuyla özel deneme, sıraya geçince korunma, hamle onayı, hızlı mesaj ve gerçek sayaç bitişi. 320×760 telefonda sohbet, tahta ve el paneli birlikte sayfaya sığar. Android aynı canlı arayüzü kullandığı için mevcut APK yeniden açıldığında güncellemeyi alır.
