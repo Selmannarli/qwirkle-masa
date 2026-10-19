@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: qwirkle-masa
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: node --check server.mjs
+    startCommand: node server.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
