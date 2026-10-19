@@ -1,7 +1,8 @@
-export const COLORS=['#f36a78','#f3a43c','#d9ad24','#38ad89','#359ed3','#9971d4'];
+export const COLORS=['#f36a78','#e56b14','#edcb00','#38ad89','#359ed3','#9971d4'];
 export const COLOR_NAMES=['Mercan','Turuncu','Sarı','Yeşil','Mavi','Mor'];
 export const SHAPE_NAMES=['Daire','Kare','Baklava','Yıldız','Yonca','Işın'];
-export const SHAPES=['<circle cx="20" cy="20" r="14"/>','<rect x="7" y="7" width="26" height="26" rx="4"/>','<path d="M20 3 37 20 20 37 3 20Z"/>','<path d="M20 2 25 14 38 20 25 26 20 38 15 26 2 20 15 14Z"/>','<path d="M20 9C20-2 1 0 4 13C-5 19 2 33 13 29C14 43 31 41 30 28C44 30 44 12 31 12C37 0 20-4 20 9Z"/>','<path d="M20 1 25 10 34 6 30 15 39 20 30 25 34 34 25 30 20 39 15 30 6 34 10 25 1 20 10 15 6 6 15 10Z"/>'];
+export const SHAPE_PATHS=['M34 20A14 14 0 1 0 6 20A14 14 0 1 0 34 20Z','M11 7H29Q33 7 33 11V29Q33 33 29 33H11Q7 33 7 29V11Q7 7 11 7Z','M20 3 37 20 20 37 3 20Z','M20 2 25 14 38 20 25 26 20 38 15 26 2 20 15 14Z','M20 9C20-2 1 0 4 13C-5 19 2 33 13 29C14 43 31 41 30 28C44 30 44 12 31 12C37 0 20-4 20 9Z','M20 1 25 10 34 6 30 15 39 20 30 25 34 34 25 30 20 39 15 30 6 34 10 25 1 20 10 15 6 6 15 10Z'];
+export const SHAPES=SHAPE_PATHS.map(d=>'<path d="'+d+'"/>');
 const paths={
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 8.7a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2-2.5 3.8M12 17h.01"/>',
  sound:'<path d="m11 4-5 4H3v8h3l5 4V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',mute:'<path d="m11 4-5 4H3v8h3l5 4V4Zm5 5 5 6m0-6-5 6"/>',
@@ -23,7 +24,7 @@ const paths={
 export function icon(name){return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.spark}</svg>`}
 export function hydrateIcons(root=document){root.querySelectorAll('[data-icon]').forEach(n=>{if(n.querySelector(':scope > svg'))return;n.insertAdjacentHTML('afterbegin',icon(n.dataset.icon))})}
 export function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n}
-export function tileElement(t,opts={}){const n=node('button','tile'+(opts.used?' used':'')+(opts.selected?' selected':'')+(opts.exchange?' exchange-selected':''));n.setAttribute('aria-label',`${COLOR_NAMES[t.c]} ${SHAPE_NAMES[t.s]}`);n.setAttribute('aria-pressed',String(!!opts.selected||!!opts.exchange));n.innerHTML=`<span class="tile-face"><svg viewBox="0 0 40 40" fill="${COLORS[t.c]}" aria-hidden="true">${SHAPES[t.s]}</svg></span>`;n.dataset.tile=t.id||'';if(opts.number){const number=node('span','tile-number',opts.number);number.setAttribute('aria-hidden','true');n.append(number)}return n}
+export function tileElement(t,opts={}){const n=node('button','tile'+(opts.used?' used':'')+(opts.selected?' selected':'')+(opts.exchange?' exchange-selected':''));n.setAttribute('aria-label',`${COLOR_NAMES[t.c]} ${SHAPE_NAMES[t.s]}`);n.setAttribute('aria-pressed',String(!!opts.selected||!!opts.exchange));n.innerHTML=`<span class="tile-face"><svg viewBox="0 0 40 40" fill="${COLORS[t.c]}" aria-hidden="true">${SHAPES[t.s]}</svg></span>`;n.title=COLOR_NAMES[t.c]+' '+SHAPE_NAMES[t.s];n.dataset.tile=t.id||'';if(opts.number){const number=node('span','tile-number',opts.number);number.setAttribute('aria-hidden','true');n.append(number)}return n}
 export function avatar(name,index=0,robot=false){const a=node('div','avatar avatar-'+index);a.setAttribute('aria-hidden','true');a.innerHTML=robot?icon('bot'):`<svg viewBox="0 0 48 48"><path fill="currentColor" d="M24 3C39-1 49 17 44 32c-3 12-18 17-31 10C-1 35-1 12 12 6c4-2 7-2 12-3Z"/><ellipse cx="17" cy="22" rx="2.3" ry="3.2" fill="#392b61"/><ellipse cx="31" cy="22" rx="2.3" ry="3.2" fill="#392b61"/><path d="M19 31q5 5 10-1" fill="none" stroke="#392b61" stroke-width="2.4" stroke-linecap="round"/></svg>`;return a}
 export class Sound {
  constructor(enabled=true){this.enabled=enabled;this.ctx=null}

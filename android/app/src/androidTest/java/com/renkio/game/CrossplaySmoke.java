@@ -30,7 +30,7 @@ public class CrossplaySmoke extends Instrumentation {
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   java.lang.reflect.Field field=MainActivity.class.getDeclaredField("web");field.setAccessible(true);WebView web=(WebView)field.get(activity);
   boolean loaded=false;for(int i=0;i<60;i++){
-   CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript("JSON.stringify({ready:typeof document.querySelector('#create')?.onclick==='function',title:document.title,hint:!!document.querySelector('#hint')})",v->{value[0]=v;latch.countDown();}));latch.await(2,TimeUnit.SECONDS);
+   CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript("JSON.stringify({ready:typeof document.querySelector('#create')?.onclick==='function',title:document.title,hint:!!document.querySelector('#hint:not(.hidden)')})",v->{value[0]=v;latch.countDown();}));latch.await(2,TimeUnit.SECONDS);
    if(value[0].contains("ready\\\":true")&&value[0].contains("hint\\\":false")){loaded=true;break;}Thread.sleep(1000);
   }if(!loaded)throw new Exception("Updated WebView interface did not load");
   String room=args.getString("room");JSONObject joined=post("join",new JSONObject().put("room",room).put("name","Android QA"));String token=joined.getString("token");JSONObject state=null;
@@ -41,3 +41,4 @@ public class CrossplaySmoke extends Instrumentation {
   result.putString("result","PASS: WebView loaded without hints; Android joined desktop room; private hands and turn action verified");result.putInt("revision",played.getInt("revision"));finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
 }
+

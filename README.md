@@ -57,3 +57,9 @@ Android kaynakları android/ altındadır. Java 17+, Android SDK 36 ve SDK Build
 
 Android emülatörü üzerinde canlı WebView açılışı, ipuçlarının yokluğu, masaüstüyle aynı odaya katılma, gizli el ve Android hamlesinin masaüstüne ulaşması test edildi. Testi tekrarlamak için ana APK ve test APK'sını emülatöre kurup ADB ortam değişkenini adb yoluna ayarlayın ve node scripts/android-crossplay.mjs çalıştırın. Bu komut canlı test sunucusunda yeni bir oda açar. Fiziksel Android cihazında performans ölçümü yapılmadı.
 
+
+## 0.4.1: tam tahta, kompakt el, solo tüyo
+
+Tahta her hamle, önizleme ve ekran boyutu değişiminde bütün taşlar ile bir hücre kenar payını sığdırır. 25 piksel alt ölçek sınırı kaldırıldı; 108 taşlık tek sıra ve uç koordinatlar telefon/masaüstü ölçülerinde test edilir. Kaydırma görünümü kırpmaz; yakınlaştırma bütün taşları sığdırma sınırını aşmaz. Çok uzun dizilimlerde taşların küçülmesi ekranın fiziksel sınırından kaynaklanır. El paneli daraltıldı. Sarı ve turuncu belirgin tonlara ayrıldı. SVG el ve Canvas tahta artık aynı SHAPE_PATHS kaynağını kullanır; yoncanın yerleştirilince şekil değiştirmesi düzeltildi.
+
+Tüyo yalnızca bilgisayara karşı, oyuncunun isteğiyle açılır. Önerilen taşları ve puanı açıklar; Hamleyi dene düğmesi öneriyi onaylanmamış hamleye dönüştürür. Oyuncu Hamleyi oyna demeden işlenmez. Çevrim içi oyunda tüyo veya uygun hücre vurgusu yoktur. Mevcut Android APK aynı canlı web arayüzünü açtığı için uygulama yeniden açılınca bu düzeltmeleri de alır; yeni APK kurulumu gerekmez.
