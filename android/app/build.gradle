@@ -2,7 +2,8 @@ plugins { id 'com.android.application' }
 android {
  namespace 'com.renkio.game'
  compileSdk 36
- defaultConfig { applicationId 'com.renkio.game'; minSdk 26; targetSdk 36; versionCode 4; versionName '0.4.0' }
+ defaultConfig { applicationId 'com.renkio.game'; minSdk 26; targetSdk 36; versionCode 4; versionName '0.4.0'; testInstrumentationRunner 'com.renkio.game.CrossplaySmoke' }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
  buildTypes { release { minifyEnabled false } }
 }
+
