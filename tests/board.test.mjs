@@ -21,3 +21,7 @@ test('all tiles fit even in a 108-tile line and after phone rotation',()=>{
 test('canvas and hand use exactly the same six symbol paths',async()=>{
  const {SHAPES,SHAPE_PATHS}=await import('../public/ui.mjs');globalThis.Path2D=class{constructor(d){this.d=d}};const board=Object.create(Board.prototype);for(let i=0;i<6;i++){assert.equal(board.path(i).d,SHAPE_PATHS[i]);assert.equal(SHAPES[i],'<path d="'+SHAPE_PATHS[i]+'"/>')}
 });
+
+test('only the latest shared move is highlighted, without player number badges',()=>{
+ const drawn=[],labels=[];const ctx=new Proxy({},{get:(_,k)=>(...args)=>{if(k==='fillText')labels.push(args[0])},set:()=>true});globalThis.getComputedStyle=()=>({getPropertyValue:()=> '#aaa'});globalThis.cancelAnimationFrame=()=>{};const board=Object.create(Board.prototype);Object.assign(board,{ctx,canvas:{},w:800,h:500,camera:{x:0,y:0,size:60},seen:new Map(),state:{board:{'0,0':{c:0,s:0},'1,0':{c:1,s:0}},hand:[],pending:[],last:[{x:1,y:0}],lastMoves:{0:[{x:0,y:0}],1:[{x:1,y:0}]},reduced:true}});board.tile=(t,x,y,options)=>drawn.push({x,y,last:options.last});board.draw();assert.deepEqual(drawn,[{x:0,y:0,last:false},{x:1,y:0,last:true}]);assert.deepEqual(labels,[]);
+});

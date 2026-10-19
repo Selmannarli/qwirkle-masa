@@ -74,3 +74,5 @@ Tüyo yalnızca bilgisayara karşı, oyuncunun isteğiyle açılır. Önerilen t
 - Oyuncunun sırasında hafif parlama; azaltılmış hareket seçeneğinde sabit çerçeve. Yazı tekrarları yerine etiketli ve açıklama balonlu ikon düğmeleri.
 
 Doğrulama: 28 otomatik test; tarayıcıda iki oyuncuyla özel deneme, sıraya geçince korunma, hamle onayı, hızlı mesaj ve gerçek sayaç bitişi. 320×760 telefonda sohbet, tahta ve el paneli birlikte sayfaya sığar. Android aynı canlı arayüzü kullandığı için mevcut APK yeniden açıldığında güncellemeyi alır.
+
+Son hamle gösterimi güncellemesi: Oyuncu numaraları ve oyuncu başına geçmiş hamle çerçeveleri kaldırıldı. Yalnızca ortak game.last listesindeki en son yerleştirilen taşlar koyu çerçeve ve hafif lavanta zeminiyle işaretlenir. Bu işaret iki istemcide aynıdır; yeni yerleştirme geldiğinde önceki hamleden kalkar.
