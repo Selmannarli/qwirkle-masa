@@ -28,8 +28,8 @@ Android paketi HTML, CSS, oyun motoru ve bot Worker'ını kendi içinde taşır.
 ## Play Console'da kalan işlemler
 
 1. Kendi geliştirici hesabında Renkio adında **Oyun** oluştur. Kimlik ve hesap doğrulamalarını tamamla. Bu çalışma hesabına giriş yapmadı, sözleşme kabul etmedi veya uygulamayı yayımlamadı.
-2. Destek e-posta adresini gir. Adres henüz kullanıcı tarafından verilmedi; hiçbir e-posta uydurulmadı. Varsa geliştirici web sitesi: `https://qwirkle-masa.onrender.com/`.
-3. Gizlilik URL'si: `https://qwirkle-masa.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Şimdiki iletişim mekanizması geliştiricinin GitHub bildirim sayfasıdır. İstersen destek e-postasını ayrıca ekle.
+2. Destek e-posta adresi: `selman.narli@gmail.com`. Varsa geliştirici web sitesi: `https://qwirkle-masa.onrender.com/`.
+3. Gizlilik URL'si: `https://qwirkle-masa.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Gizlilik ve silme talepleri için iletişim adresi `selman.narli@gmail.com`.
 4. Mağaza metinlerini ve `store/` görsellerini ekle. Uygulama erişimi için üyelik veya test hesabı gerekmiyor.
 5. Reklam beyanını **Hayır** olarak doldur. Veri güvenliği, içerik derecelendirmesi ve hedef kitle formlarını uygulamanın gerçek kullanımı ve işletme bilgilerinle tamamla. Sohbet ve kullanıcı mesajlarını gizleme; yaş derecesini ben senin adına seçmedim.
 6. Play App Signing'i etkinleştirip `renkio-1.0.0.aab` dosyasını önce dahili test kanalına yükle. Sürüm adı `1.0.0`, kodu `10000` görünmeli. Paket adını sonraki sürümlerde değiştirme.
