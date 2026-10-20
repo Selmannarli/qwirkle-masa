@@ -1,3 +1,13 @@
+# Renkio 1.1.0
+
+Maç bulma, beş sunucu botu, misafir/e-posta/Google hesabı ve bulutta saklanan takma adlar. Web ve Android aynı eşleştirme kuyruğunu kullanır. Bot için bekleme süresi 3 dakika; beş bot doluysa ilk uygun rakip beklenir.
+
+- [Eşleştirme ve hesaplar](docs/MATCHMAKING.md)
+- [Google Play yükleme](docs/PLAY-RELEASE.md)
+- Geliştirme: `npm ci`, `npm start`; doğrulama: `npm test`.
+- Auth SDK güncellemesinde: `npm run build:auth`. Paketlenmiş tarayıcı modülü Android’in çevrim dışı açılışını korur.
+- Yayın derleme: `scripts/build-release.ps1`; özel imza klasörü depoya dahil edilmez.
+
 # Renkio 1.0.0
 
 Android V1: yayın imzalı AAB, paket içi çevrim dışı oyun dosyaları, API 36 hedefi, tarayıcıyla çapraz oyun, gizlilik erişimi, sohbet bildirimi ve oyuncu engelleme. İmzalama anahtarları kaynak deposunda tutulmaz. Yeniden üretim: `scripts/build-release.ps1`. Ayrıntılar: [Play yayın hazırlığı](docs/PLAY-RELEASE.md).

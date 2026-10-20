@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: node --check server.mjs
+    buildCommand: npm ci --omit=dev && node --check server.mjs
     startCommand: node server.mjs
     healthCheckPath: /api/health
     envVars:

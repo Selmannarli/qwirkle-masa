@@ -1,13 +1,22 @@
 {
   "name": "renkio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "build:auth": "esbuild client/firebase-entry.mjs --bundle --format=esm --target=es2020 --minify --outfile=public/firebase.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@firebase/app": "^0.16.3",
+    "@firebase/auth": "^1.13.7",
+    "jose": "^6.2.13"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

@@ -10,10 +10,11 @@ try {
  Push-Location (Join-Path $taskRoot 'android')
  & .\gradlew.bat --no-daemon bundleRelease assembleRelease lintRelease assembleDebug assembleDebugAndroidTest
  if ($LASTEXITCODE -ne 0) { throw 'Android release build failed.' }
- $taskOutput = Join-Path $taskRoot '..\renkio-v1'
+ $taskVersion = (Get-Content (Join-Path $taskRoot 'package.json') -Raw | ConvertFrom-Json).version
+ $taskOutput = Join-Path $taskRoot ('..\renkio-' + $taskVersion)
  New-Item -ItemType Directory -Force $taskOutput | Out-Null
- Copy-Item -LiteralPath 'app\build\outputs\bundle\release\app-release.aab' -Destination (Join-Path $taskOutput 'renkio-1.0.0.aab')
- Copy-Item -LiteralPath 'app\build\outputs\apk\release\app-release.apk' -Destination (Join-Path $taskOutput 'renkio-1.0.0.apk')
+ Copy-Item -LiteralPath 'app\build\outputs\bundle\release\app-release.aab' -Destination (Join-Path $taskOutput ('renkio-' + $taskVersion + '.aab'))
+ Copy-Item -LiteralPath 'app\build\outputs\apk\release\app-release.apk' -Destination (Join-Path $taskOutput ('renkio-' + $taskVersion + '.apk'))
 } finally {
  Pop-Location
  Remove-Item Env:RENKIO_STORE_PASSWORD,Env:RENKIO_KEY_PASSWORD,Env:RENKIO_STORE_FILE,Env:RENKIO_KEY_ALIAS -ErrorAction SilentlyContinue

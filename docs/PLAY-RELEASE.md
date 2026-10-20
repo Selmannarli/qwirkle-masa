@@ -1,9 +1,9 @@
-# Renkio 1.0.0 — Google Play yükleme paketi
+# Renkio 1.1.0 — Google Play yükleme paketi
 
 ## Dosyalar
 
-- `renkio-1.0.0.aab`: Play Console'a yüklenecek, yayın anahtarıyla imzalı Android App Bundle.
-- `renkio-1.0.0.apk`: aynı AAB'den bundletool ile üretilen, telefonda doğrudan kurulabilen sürüm.
+- `renkio-1.1.0.aab`: Play Console'a yüklenecek, yayın anahtarıyla imzalı Android App Bundle.
+- `renkio-1.1.0.apk`: aynı AAB'den bundletool ile üretilen, telefonda doğrudan kurulabilen sürüm.
 - `upload-certificate.pem`: Play App Signing için herkese açık yükleme sertifikası. Gizli anahtar değildir.
 - `store/`: 512×512 ikon, 1024×500 tanıtım görseli, gerçek Android kurulumundan iki adet 1080×1920 ekran görüntüsü.
 - `DATA-SAFETY.md`: mevcut uygulamanın veri akışlarına göre form taslağı.
@@ -15,24 +15,26 @@
 |---|---|
 | Uygulama | Renkio |
 | Paket | com.renkio.game |
-| Sürüm adı | 1.0.0 |
-| Sürüm kodu | 10000 |
+| Sürüm adı | 1.1.0 |
+| Sürüm kodu | 10100 |
 | Minimum Android | 8.0 / API 26 |
 | Hedef Android | 16 / API 36 |
 | İzinler | INTERNET |
 | Reklam / satın alma SDK'sı | Yok |
-| Hesap / giriş | Yok |
+| Hesap / giriş | Misafir, e-posta/şifre ve Google (Firebase Authentication) |
 
 Android paketi HTML, CSS, oyun motoru ve bot Worker'ını kendi içinde taşır. Tek kişilik oyun internet olmadan çalışır. Çevrim içi oyun aynı HTTPS sunucusunu kullanan tarayıcılarla 2–4 kişilik çapraz oyun sunar. Google Play incelemesi veya yayın onayı bu paketle verilmiş olmaz.
 
 ## Play Console'da kalan işlemler
 
-1. Kendi geliştirici hesabında Renkio adında **Oyun** oluştur. Kimlik ve hesap doğrulamalarını tamamla. Bu çalışma hesabına giriş yapmadı, sözleşme kabul etmedi veya uygulamayı yayımlamadı.
+1. Kendi geliştirici hesabında Renkio adında **Oyun** oluştur. Kimlik ve hesap doğrulamalarını tamamla. Bu çalışma hesabına Play Console hesabına giriş yapmadı, sözleşme kabul etmedi veya uygulamayı Play’de yayımlamadı.
 2. Destek e-posta adresi: `selman.narli@gmail.com`. Varsa geliştirici web sitesi: `https://qwirkle-masa.onrender.com/`.
-3. Gizlilik URL'si: `https://qwirkle-masa.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Gizlilik ve silme talepleri için iletişim adresi `selman.narli@gmail.com`.
-4. Mağaza metinlerini ve `store/` görsellerini ekle. Uygulama erişimi için üyelik veya test hesabı gerekmiyor.
+3. Hesap silme URL’si: `https://qwirkle-masa.onrender.com/delete-account.html`. Uygulamada Ayarlar > Hesap > Hesabı sil.
+
+   Gizlilik URL'si: `https://qwirkle-masa.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Gizlilik ve silme talepleri için iletişim adresi `selman.narli@gmail.com`.
+4. Mağaza metinlerini ve `store/` görsellerini ekle. Misafir girişi yeterlidir; inceleme için kayıtlı test hesabı gerekmez.
 5. Reklam beyanını **Hayır** olarak doldur. Veri güvenliği, içerik derecelendirmesi ve hedef kitle formlarını uygulamanın gerçek kullanımı ve işletme bilgilerinle tamamla. Sohbet ve kullanıcı mesajlarını gizleme; yaş derecesini ben senin adına seçmedim.
-6. Play App Signing'i etkinleştirip `renkio-1.0.0.aab` dosyasını önce dahili test kanalına yükle. Sürüm adı `1.0.0`, kodu `10000` görünmeli. Paket adını sonraki sürümlerde değiştirme.
+6. Play App Signing'i etkinleştirip `renkio-1.1.0.aab` dosyasını önce dahili test kanalına yükle. Sürüm adı `1.1.0`, kodu `10100` görünmeli. Paket adını sonraki sürümlerde değiştirme.
 7. Ön lansman raporunu kontrol et. Hesabın yeni kişisel geliştirici hesabı kapsamındaysa Google, üretim erişiminden önce en az 12 testçinin 14 gün kesintisiz katıldığı kapalı test isteyebilir. Bu hesap koşulu AAB oluşturularak aşılmaz.
 8. Formlar, test koşulları ve Google incelemesi tamamlanınca üretim yayınına geç. Ücret ve ülke seçimini sahibi yapmalıdır.
 
@@ -45,6 +47,8 @@ Android paketi HTML, CSS, oyun motoru ve bot Worker'ını kendi içinde taşır.
 **Tam açıklama:**
 Renkio, renk ve şekilleri eşleştirerek puan kazandığın bir taş oyunudur.
 
+- Seviyesiz hızlı eşleştirme ve 3 dakika sonra uygun sunucu botuyla oyun
+- Misafir, e-posta/şifre ve Google ile giriş; kalıcı oyuncu ID’si ve değiştirilebilir takma ad
 - 2–4 kişilik özel çevrim içi masalar
 - Android ve tarayıcı arasında çapraz oyun
 - İnternetsiz bilgisayara karşı oyun ve isteğe bağlı ipucu
@@ -53,7 +57,7 @@ Renkio, renk ve şekilleri eşleştirerek puan kazandığın bir taş oyunudur.
 
 Çevrim içi mod internet bağlantısı gerektirir.
 
-**Sürüm notu:** İlk Android sürümü. Çevrim dışı tek kişilik oyun, çevrim içi özel masalar, çapraz oyun ve uyarlanabilir arayüz.
+**Sürüm notu:** Maç bulma, beş sunucu botu, hesap seçenekleri, oyuncu kimliği ve takma ad düzenleme eklendi.
 
 **Ekran görüntüsü alternatif metinleri:**
 - phone-menu.png: Oyuncu adı, arkadaşlarla veya bilgisayara karşı oyun seçenekleri ve masa kurma alanı.
@@ -62,7 +66,13 @@ Renkio, renk ve şekilleri eşleştirerek puan kazandığın bir taş oyunudur.
 
 ## İnceleyici talimatı
 
-Uygulamayı açıp bir oyuncu adı girin. **Bilgisayar > Miko ile oyna** yoluyla internetsiz mod denenebilir. İpucu düğmesine basıp öneriyi uygulayabilir ve onay simgesiyle hamleyi oynayabilirsiniz. Çevrim içi mod için **Arkadaşlarla > Masa kur** seçin; kodu başka bir Android cihazında veya `https://qwirkle-masa.onrender.com/` adresindeki tarayıcıda kullanarak katılın. Masa sahibi tur süresini seçip Başlat'a basar. Kullanıcı hesabı veya ödeme gerekmez. Sunucu ücretsiz planda olduğu için ilk bağlantı uyanma gecikmesi yaşayabilir.
+Uygulamayı açıp bir oyuncu adı girin. **Bilgisayar > Miko ile oyna** yoluyla internetsiz mod denenebilir. İpucu düğmesine basıp öneriyi uygulayabilir ve onay simgesiyle hamleyi oynayabilirsiniz. Çevrim içi mod için **Arkadaşlarla > Masa kur** seçin; kodu başka bir Android cihazında veya `https://qwirkle-masa.onrender.com/` adresindeki tarayıcıda kullanarak katılın. Masa sahibi tur süresini seçip Başlat'a basar. Misafir hesabı otomatik açılır; isteğe bağlı e-posta/şifre veya Google girişi kullanılabilir. Ödeme gerekmez. Sunucu ücretsiz planda olduğu için ilk bağlantı uyanma gecikmesi yaşayabilir.
+
+## Eşleştirme
+
+Maç bul, aynı anda arayan iki oyuncuyu eşleştirir; seviye veya puan filtresi yoktur. 180 saniye sonra beş sabit kimlikli bottan uygun olanıyla maç açılır. Beşi de oyundaysa arama devam eder; insan rakip gelirse öncelik insana verilir. Botlar oyun içinde işaretlenir. Eşleşmeli maçlarda tur 60 saniyedir; iki insan turu üst üste kaçırılırsa maç sona erer. Çıkış maçı terk eder; özel masaların tekrar bağlanma davranışı korunur.
+
+Google girişi Android’de sistem tarayıcısında açılır; giriş sonrası oyuna dönülür. Misafir hesabı ilk kez e-posta veya Google hesabına bağlandığında ID korunur. Zaten var olan bir hesaba girişte o hesabın ID’si kullanılır. Firebase Spark ücretsiz planında kalındı.
 
 ## İmza ve güvenlik
 
