@@ -26,7 +26,7 @@ public class CrossplaySmoke extends OfflineSmoke {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
- @Override public void onStart(){if("offline".equals(args.getString("mode"))){super.onStart();return;}Bundle result=new Bundle();try{
+ @Override public void onStart(){if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){
@@ -40,5 +40,24 @@ public class CrossplaySmoke extends OfflineSmoke {
   JSONObject played=post("action",action).getJSONObject("game");if(played.getInt("revision")!=game.getInt("revision")+1)throw new Exception("Revision did not advance");
   result.putString("result","PASS: WebView loaded without hints; Android joined desktop room; private hands and turn action verified");result.putInt("revision",played.getInt("revision"));finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
+ private String matchJs(WebView web,String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript(script,v->{value[0]=v;latch.countDown();}));if(!latch.await(5,TimeUnit.SECONDS))throw new Exception("WebView timeout");return value[0];}
+ private void matchWait(WebView web,String condition)throws Exception{for(int i=0;i<180;i++){if("true".equals(matchJs(web,condition)))return;Thread.sleep(500);}throw new Exception("Match UI timeout: "+condition);}
+ private void captureMatch(String name)throws Exception{dismissSystemWait();android.graphics.Bitmap b=getUiAutomation().takeScreenshot();try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),name))){b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}b.recycle();}
+ private void matchSmoke(){Bundle result=new Bundle();try{dismissSystemWait();
+  Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(activity.getWindow().getDecorView());
+  matchWait(web,"typeof document.getElementById('findMatch')?.onclick==='function'&&document.getElementById('name').value.startsWith('Player ')");captureMatch("store-menu.png");
+  matchJs(web,"document.getElementById('findMatch').click()");matchWait(web,"document.getElementById('matchDialog').open");captureMatch("store-search.png");
+  matchJs(web,"document.getElementById('cancelMatch').click()");matchWait(web,"!document.getElementById('matchDialog').open&&!document.getElementById('findMatch').disabled");
+  matchJs(web,"document.getElementById('findMatch').click()");matchWait(web,"document.getElementById('matchDialog').open");Bundle progress=new Bundle();progress.putString("stage","searching");sendStatus(1,progress);
+  matchWait(web,"document.body.dataset.view==='game'&&!document.getElementById('connection').classList.contains('offline')");
+  if(!"true".equals(matchJs(web,"document.getElementById('rack').children.length===6&&document.documentElement.scrollWidth<=innerWidth&&document.getElementById('gameCode').classList.contains('hidden')")))throw new Exception("Match UI or hand regression");
+  String serialized=(String)new JSONTokener(matchJs(web,"sessionStorage.getItem('renkio-session')")).nextValue();JSONObject auth=new JSONObject(serialized),state=null;
+  for(int i=0;i<120;i++){state=post("state",auth);if(state.getJSONObject("game").getInt("turn")==state.getInt("me"))break;Thread.sleep(500);}
+  JSONObject game=state.getJSONObject("game");int me=state.getInt("me");if(game.getInt("turn")!=me)throw new Exception("Native turn did not arrive");JSONArray players=game.getJSONArray("players");if(players.getJSONObject(1-me).has("hand"))throw new Exception("Opponent hand exposed");JSONArray hand=players.getJSONObject(me).getJSONArray("hand");JSONObject action=new JSONObject(auth.toString()).put("revision",game.getInt("revision"));
+  if(game.getJSONObject("board").length()==0)action.put("action","play").put("placements",opening(hand));else action.put("action","exchange").put("ids",new JSONArray().put(hand.getJSONObject(0).getString("id")));
+  post("action",action);matchWait(web,"!document.getElementById('lastMove').classList.contains('hidden')");captureMatch("store-match.png");
+  result.putString("result","PASS: release WebView Firebase guest ID, cancel and requeue, Android/browser matchmaking, private hands, live turn synchronization and compact layout");finish(Activity.RESULT_OK,result);
+ }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
+
 }
 
