@@ -58,3 +58,5 @@ body[data-theme=night] .minor-actions #exchange{background:#2d405b;border-color:
 /* Keep settings in the same control row as chat and history on every game layout. */
 body[data-view=game] .game-topline{padding-right:0!important}.game-topline>#settingsButton{position:static!important;inset:auto!important;transform:none;flex:0 0 40px;width:40px;height:40px;min-height:40px;padding:10px;margin:0 0 0 4px;align-self:center;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:none;color:var(--violet-dark)}.game-topline>#settingsButton .icon{width:19px;height:19px}body[data-view=game] .app-header .header-actions:empty{display:none}
 @media(max-width:800px) and (orientation:portrait){.game-topline{gap:4px}.game-topline>#settingsButton{flex-basis:40px;width:40px;height:44px;min-height:44px;margin-left:2px}.game-topline #historyButton{flex-shrink:0}}
+
+.brand-app-icon{display:block;width:32px;height:32px;flex-shrink:0;border-radius:9px;object-fit:cover}body[data-view=game] .app-header .brand-app-icon{display:none}
