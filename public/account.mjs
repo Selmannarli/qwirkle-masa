@@ -6,7 +6,7 @@ const read=()=>{try{return JSON.parse(localStorage.getItem('renkio-profile'))}ca
 export let profile=read();
 export function watchProfile(fn){changed=fn;fn(profile)}
 export async function idFor(uid){const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(uid)));const hex=[...bytes.slice(0,8)].map(n=>n.toString(16).padStart(2,'0')).join('');return (BigInt('0x'+hex)%800000000000n+100000000000n).toString()}
-async function publish(user){if(!user)return;const id=await idFor(user.uid);profile={id,name:user.displayName||'Player '+id,guest:user.isAnonymous,email:user.email||''};known=user.uid;try{localStorage.setItem('renkio-profile',JSON.stringify(profile))}catch{}changed(profile)}
+async function publish(user){if(!user)return;const id=await idFor(user.uid);profile={id,name:user.displayName||'Player '+id,guest:user.isAnonymous,email:user.email||'',photoURL:user.photoURL||''};known=user.uid;try{localStorage.setItem('renkio-profile',JSON.stringify(profile))}catch{}changed(profile)}
 onAuthStateChanged(auth,user=>{if(user)publish(user).catch(()=>{});else{known=null;profile=null;try{localStorage.removeItem('renkio-profile')}catch{}changed(null)}});
 export async function ensureAccount(){await auth.authStateReady();if(!auth.currentUser){guestPending??=signInAnonymously(auth).finally(()=>{guestPending=null});await guestPending;}await publish(auth.currentUser);return auth.currentUser}
 export async function accountToken(){await auth.authStateReady();const user=auth.currentUser||await ensureAccount();return user.getIdToken()}
