@@ -1,9 +1,29 @@
 plugins { id 'com.android.application' }
+
+def releaseStore = System.getenv('RENKIO_STORE_FILE')
 android {
  namespace 'com.renkio.game'
  compileSdk 36
- defaultConfig { applicationId 'com.renkio.game'; minSdk 26; targetSdk 36; versionCode 4; versionName '0.4.0'; testInstrumentationRunner 'com.renkio.game.CrossplaySmoke' }
+ defaultConfig { applicationId 'com.renkio.game'; minSdk 26; targetSdk 36; versionCode 10000; versionName '1.0.0'; testInstrumentationRunner 'com.renkio.game.CrossplaySmoke' }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
- buildTypes { release { minifyEnabled false } }
+ buildFeatures { buildConfig true }
+ signingConfigs {
+  release {
+   if (releaseStore) {
+    storeFile file(releaseStore)
+    storePassword System.getenv('RENKIO_STORE_PASSWORD')
+    keyAlias System.getenv('RENKIO_KEY_ALIAS')
+    keyPassword System.getenv('RENKIO_KEY_PASSWORD')
+   }
+  }
+ }
+ buildTypes { release { debuggable false; minifyEnabled true; shrinkResources true; signingConfig signingConfigs.release; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' } }
+ sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/gameAssets')
 }
 
+tasks.register('bundleGameAssets', Sync) {
+ from('../../public')
+ into(layout.buildDirectory.dir('generated/gameAssets/game'))
+ exclude('assets/renkio-hero.webp')
+}
+tasks.named('preBuild').configure { dependsOn 'bundleGameAssets' }

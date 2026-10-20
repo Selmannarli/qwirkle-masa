@@ -1,3 +1,7 @@
+# Renkio 1.0.0
+
+Android V1: yayın imzalı AAB, paket içi çevrim dışı oyun dosyaları, API 36 hedefi, tarayıcıyla çapraz oyun, gizlilik erişimi, sohbet bildirimi ve oyuncu engelleme. İmzalama anahtarları kaynak deposunda tutulmaz. Yeniden üretim: `scripts/build-release.ps1`. Ayrıntılar: [Play yayın hazırlığı](docs/PLAY-RELEASE.md).
+
 # Renkio
 
 Renkleri ve şekilleri birleştiren 2–4 kişilik çevrim içi masa oyunu. Renkio, ürünün çalışma markasıdır. Bu depo ilk prototipten devralındığı için GitHub ve barındırma adresinde eski ad bulunabilir.

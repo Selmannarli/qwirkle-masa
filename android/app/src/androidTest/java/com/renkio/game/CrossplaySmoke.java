@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /** Device smoke test: real WebView load and Android/desktop room interoperability. */
-public class CrossplaySmoke extends Instrumentation {
+public class CrossplaySmoke extends OfflineSmoke {
  private Bundle args;
  private final String base="https://qwirkle-masa.onrender.com";
  @Override public void onCreate(Bundle arguments){args=arguments;start();}
@@ -26,9 +26,9 @@ public class CrossplaySmoke extends Instrumentation {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
- @Override public void onStart(){Bundle result=new Bundle();try{
+ @Override public void onStart(){if("offline".equals(args.getString("mode"))){super.onStart();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
-  java.lang.reflect.Field field=MainActivity.class.getDeclaredField("web");field.setAccessible(true);WebView web=(WebView)field.get(activity);
+  WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){
    CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript("JSON.stringify({ready:typeof document.querySelector('#create')?.onclick==='function',title:document.title,hint:!!document.querySelector('#hint:not(.hidden)')})",v->{value[0]=v;latch.countDown();}));latch.await(2,TimeUnit.SECONDS);
    if(value[0].contains("ready\\\":true")&&value[0].contains("hint\\\":false")){loaded=true;break;}Thread.sleep(1000);

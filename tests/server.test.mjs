@@ -9,6 +9,7 @@ test('multiplayer API: privacy, host access, wrong turn, SSE and resume',async()
  const data=await mkdtemp(path.join(tmpdir(),'qwirkle-test-'));const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',QWIRKLE_DATA:data}});
  try{const url=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/http:\/\/localhost:\d+/);if(m)resolve(m[0])});child.on('error',reject);child.on('exit',c=>reject(Error('Server exit '+c)))});
  const homepage=await fetch(url+'/');assert.equal(homepage.status,200);const html=await homepage.text();assert.ok(html.includes('/refine.css'));for(const asset of ['/style.css','/refine.css']){const stylesheet=await fetch(url+asset);assert.equal(stylesheet.status,200);assert.ok(stylesheet.headers.get('content-type').includes('text/css'));assert.ok((await stylesheet.text()).length>100)}
+ const privacy=await fetch(url+'/privacy.html');assert.equal(privacy.status,200);assert.ok((await privacy.text()).includes('Gizlilik'));
  const call=async(route,b)=>{const res=await fetch(url+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return {status:res.status,v:await res.json()}};
  const a=(await call('create',{name:'A'})).v,sa={room:a.code,token:a.token};const b=(await call('join',{room:a.code,name:'B'})).v,sb={room:a.code,token:b.token};
  assert.equal((await call('start',sb)).status,400);assert.equal((await call('state',{room:a.code,token:'wrong'})).status,403);
