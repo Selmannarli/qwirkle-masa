@@ -159,4 +159,6 @@ function bindHandDrag(n,t,enabled){if(!enabled)return;let drag; n.onpointerdown=
 
 function historyEntry(h,index){const r=node('div','history-row'),content=node('div','history-content'),top=node('div','history-line'),name=node('b','history-name',h.name),number=node('span','history-number',String(game.history.length-index));top.append(number,name);content.append(top,node('small','history-description',h.qwirkles?'Altılı · '+h.text:h.text));if(h.tiles?.length){const tiles=node('div','history-tiles');for(const t of h.tiles){const el=tileElement(t);el.disabled=true;el.removeAttribute('aria-pressed');tiles.append(el)}content.append(tiles)}r.append(content,node('strong','history-points',h.score?'+'+h.score:'0'));return r}
 
-$('refreshApp').onclick=()=>{if(view!=='home'){toast('Güncellemek için ana menüye dön.');return}window.RenkioNative?.refresh()};
+$('refreshApp').onclick=()=>{if(view!=='home'){toast('Güncellemek için ana menüye dön.');return}closeDialogs();window.RenkioNative?.refresh()};
+
+window.addEventListener('renkio-update',e=>{const button=$('refreshApp');button.disabled=e.detail==='checking';button.innerHTML=icon('refresh')+(e.detail==='checking'?'Kontrol ediliyor…':'Güncel sürümü yükle');if(e.detail==='current')toast('Güncelsin.');if(e.detail==='offline')toast('Güncelleme alınamadı; kayıtlı sürüm korunuyor.');});

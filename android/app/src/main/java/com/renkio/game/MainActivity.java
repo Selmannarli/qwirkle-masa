@@ -19,14 +19,20 @@ import android.webkit.*;
 import android.widget.*;
 import java.io.*;
 import java.util.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import org.json.*;
+import android.util.Base64;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class MainActivity extends Activity {
  private static final String HOST="qwirkle-masa.onrender.com", HOME="https://"+HOST+"/";
- private volatile boolean bundled=false;private boolean foreground=false;private final Handler uiHandler=new Handler(Looper.getMainLooper());private Runnable fallbackTimeout;private ValueCallback<Uri[]> photoCallback; private WebView web; private FrameLayout frame; private ProgressBar progress;
+ private volatile boolean applyRequested=false;private volatile File activeClient;private ClientStore clientStore;private final AtomicBoolean checking=new AtomicBoolean();private boolean foreground=false;private final Handler uiHandler=new Handler(Looper.getMainLooper());private ValueCallback<Uri[]> photoCallback; private WebView web; private FrameLayout frame; private ProgressBar progress;
  private boolean trusted(Uri uri){return "https".equals(uri.getScheme())&&HOST.equals(uri.getHost())&&(uri.getPort()==-1||uri.getPort()==443);}
  private boolean page(Uri uri){String p=uri.getPath();return trusted(uri)&&(p.equals("/")||p.equals("/index.html")||p.equals("/privacy.html"));}
  public final class NativeUi {
-  @JavascriptInterface public void refresh(){runOnUiThread(()->{if(!foreground)return;bundled=false;if(fallbackTimeout!=null)uiHandler.removeCallbacks(fallbackTimeout);fallbackTimeout=()->fallback();uiHandler.postDelayed(fallbackTimeout,15000);web.loadUrl(HOME);});}
+  @JavascriptInterface public void refresh(){runOnUiThread(()->{if(foreground&&clientStore!=null)checkClient(true);});}
 
   @JavascriptInterface public void notifyEvent(String kind,boolean audio,boolean haptics){if(!"turn".equals(kind)&&!"message".equals(kind))return;runOnUiThread(()->{if(!foreground)return;boolean turn="turn".equals(kind);if(audio){try{ToneGenerator tone=new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55);tone.startTone(turn?ToneGenerator.TONE_PROP_ACK:ToneGenerator.TONE_PROP_BEEP,turn?240:130);uiHandler.postDelayed(tone::release,400);}catch(RuntimeException ignored){}}if(haptics){Vibrator vibrator=(Vibrator)getSystemService(VIBRATOR_SERVICE);if(vibrator!=null&&vibrator.hasVibrator())vibrator.vibrate(VibrationEffect.createWaveform(turn?new long[]{0,90,70,90}:new long[]{0,55},-1));}});}
 
@@ -38,17 +44,32 @@ public final class MainActivity extends Activity {
   });}
  }
  private WebResourceResponse asset(WebResourceRequest request){
-  Uri uri=request.getUrl();if(!bundled||!trusted(uri)||!"GET".equals(request.getMethod())||uri.getPath().startsWith("/api/"))return null;
+  Uri uri=request.getUrl();if(!trusted(uri)||!"GET".equals(request.getMethod())||uri.getPath().startsWith("/api/"))return null;
   String path=uri.getPath().equals("/")?"index.html":uri.getPath().substring(1);
   if(path.contains("..")||path.contains("\\"))return missing();
   String mime=path.endsWith(".html")?"text/html":path.endsWith(".mjs")?"text/javascript":path.endsWith(".css")?"text/css":path.endsWith(".svg")?"image/svg+xml":path.endsWith(".woff2")?"font/woff2":path.endsWith(".png")?"image/png":path.endsWith(".webp")?"image/webp":"application/octet-stream";
-  try{InputStream stream=getAssets().open("game/"+path);Map<String,String> headers=new HashMap<>();headers.put("Cache-Control","no-store");headers.put("X-Content-Type-Options","nosniff");headers.put("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://qwirkle-v-selman.firebaseapp.com; frame-src https://qwirkle-v-selman.firebaseapp.com; base-uri 'none'; form-action 'self'");return new WebResourceResponse(mime,"UTF-8",200,"OK",headers,stream);}catch(IOException e){return missing();}
+  try{File snapshot=activeClient;InputStream stream=snapshot==null?getAssets().open("game/"+path):new FileInputStream(new File(snapshot,path));Map<String,String> headers=new HashMap<>();headers.put("Cache-Control","no-store");headers.put("X-Content-Type-Options","nosniff");headers.put("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://qwirkle-v-selman.firebaseapp.com; frame-src https://qwirkle-v-selman.firebaseapp.com; base-uri 'none'; form-action 'self'");return new WebResourceResponse(mime,"UTF-8",200,"OK",headers,stream);}catch(IOException e){return missing();}
  }
  private WebResourceResponse missing(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
- private void fallback(){if(bundled||isFinishing()||web==null)return;bundled=true;web.stopLoading();web.loadUrl(HOME);}
+ private void updateStatus(String status){if(web!=null&&!isFinishing())web.evaluateJavascript("window.dispatchEvent(new CustomEvent('renkio-update',{detail:"+JSONObject.quote(status)+"}))",null);}
+ private void activateClient(File installed){if(installed==null||web==null||isFinishing())return;if(installed.equals(activeClient)){updateStatus("current");return;}web.evaluateJavascript("document.body.dataset.view==='home'&&!document.getElementById('matchDialog')?.open",home->{if("true".equals(home)){activeClient=installed;web.loadUrl(HOME);}else updateStatus("saved");applyRequested=false;});}
+ private void checkClient(boolean requested){
+  if(requested)applyRequested=true;
+  if(!checking.compareAndSet(false,true)){if(requested)updateStatus("checking");return;}
+  if(requested)updateStatus("checking");
+  new Thread(()->{HttpURLConnection connection=null;try{
+   connection=(HttpURLConnection)new URL(HOME+"api/client-bundle").openConnection();connection.setInstanceFollowRedirects(false);connection.setConnectTimeout(60000);connection.setReadTimeout(30000);File previous=clientStore.current();if(previous!=null)connection.setRequestProperty("If-None-Match","\""+previous.getName()+"\"");
+   int status=connection.getResponseCode();if(status==304){runOnUiThread(()->{if(applyRequested)activateClient(previous);applyRequested=false;});return;}if(status!=200)throw new IOException("Update unavailable");
+   ByteArrayOutputStream output=new ByteArrayOutputStream();try(InputStream in=connection.getInputStream()){byte[] buffer=new byte[16384];int n;while((n=in.read(buffer))!=-1){if(output.size()+n>18*1024*1024)throw new IOException("Update too large");output.write(buffer,0,n);}}
+   JSONObject body=new JSONObject(output.toString(StandardCharsets.UTF_8.name()));if(body.getInt("format")!=1)throw new IOException("Unsupported client");JSONArray files=body.getJSONArray("files");List<ClientStore.Entry> entries=new ArrayList<>();for(int i=0;i<files.length();i++){JSONObject entry=files.getJSONObject(i);entries.add(new ClientStore.Entry(entry.getString("path"),entry.getString("sha256"),Base64.decode(entry.getString("data"),Base64.DEFAULT)));}
+   File installed=clientStore.install(body.getString("revision"),entries);
+   runOnUiThread(()->{if(web==null||isFinishing())return;boolean apply=applyRequested;applyRequested=false;if(apply)activateClient(installed);else updateStatus("saved");});
+  }catch(Exception error){runOnUiThread(()->{if(applyRequested)updateStatus("offline");applyRequested=false;});}finally{checking.set(false);if(connection!=null)connection.disconnect();}},"Renkio-client-update").start();
+ }
  @Override protected void onResume(){super.onResume();foreground=true;}
  @Override protected void onPause(){foreground=false;super.onPause();}
  @Override public void onCreate(Bundle state){super.onCreate(state);
+  try{clientStore=new ClientStore(new File(getFilesDir(),"client-snapshots"));activeClient=clientStore.current();}catch(IOException error){activeClient=null;}
   frame=new FrameLayout(this);frame.setBackgroundColor(Color.parseColor("#f5f6fa"));setContentView(frame);
   frame.setOnApplyWindowInsetsListener((v,insets)->{if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout()|WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);}else v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
   WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);web=new WebView(this);frame.addView(web,new FrameLayout.LayoutParams(-1,-1));
@@ -56,14 +77,12 @@ public final class MainActivity extends Activity {
   progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);frame.addView(progress,new FrameLayout.LayoutParams(-1,4));
   web.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){if(photoCallback!=null)photoCallback.onReceiveValue(null);photoCallback=callback;Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.setType("image/*");pick.addCategory(Intent.CATEGORY_OPENABLE);try{startActivityForResult(pick,301);}catch(Exception error){photoCallback.onReceiveValue(null);photoCallback=null;}return true;}@Override public void onProgressChanged(WebView view,int value){progress.setProgress(value);progress.setVisibility(value==100?View.GONE:View.VISIBLE);}});
   web.setWebViewClient(new WebViewClient(){
-   @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame()&&trusted(request.getUrl())&&error.getErrorCode()!=WebViewClient.ERROR_FAILED_SSL_HANDSHAKE)fallback();}
-   @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse error){if(request.isForMainFrame()&&trusted(request.getUrl())&&error.getStatusCode()>=500)fallback();}
    @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){return asset(request);}
    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){Uri uri=request.getUrl();if(page(uri))return false;if("https".equals(uri.getScheme())||"mailto".equals(uri.getScheme()))try{startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(Exception ignored){}return true;}
-   @Override public void onPageFinished(WebView view,String url){if(trusted(Uri.parse(url))){if(Uri.parse(url).getPath().equals("/privacy.html")){if(fallbackTimeout!=null)uiHandler.removeCallbacks(fallbackTimeout);}else view.evaluateJavascript("typeof document.getElementById('create')?.onclick==='function'",ready->{if("true".equals(ready)&&fallbackTimeout!=null)uiHandler.removeCallbacks(fallbackTimeout);});}if(trusted(Uri.parse(url)))view.evaluateJavascript("(()=>{const sync=()=>RenkioNative.theme(document.body.dataset.theme||'day');sync();new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['data-theme']})})()",null);}
+   @Override public void onPageFinished(WebView view,String url){if(trusted(Uri.parse(url)))view.evaluateJavascript("(()=>{const sync=()=>RenkioNative.theme(document.body.dataset.theme||'day');sync();new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['data-theme']})})()",null);}
    @Override public boolean onRenderProcessGone(WebView view,RenderProcessGoneDetail detail){frame.removeView(view);view.destroy();new AlertDialog.Builder(MainActivity.this).setMessage("Oyun yeniden açılsın mı?").setPositiveButton("Yeniden aç",(d,w)->recreate()).setNegativeButton("Kapat",(d,w)->finish()).setCancelable(false).show();return true;}
   });
-  fallbackTimeout=()->fallback();uiHandler.postDelayed(fallbackTimeout,15000);Uri link=getIntent().getData();web.loadUrl(link!=null&&page(link)?link.toString():HOME);
+  Uri link=getIntent().getData();web.loadUrl(link!=null&&page(link)?link.toString():HOME);if(clientStore!=null)checkClient(false);
  }
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==301&&photoCallback!=null){photoCallback.onReceiveValue(result==RESULT_OK&&data!=null&&data.getData()!=null?new Uri[]{data.getData()}:null);photoCallback=null;}}
  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);Uri link=intent.getData();if(link!=null&&page(link))web.loadUrl(link.toString());}

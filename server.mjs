@@ -1,3 +1,4 @@
+import {clientBundle} from './client-bundle.mjs';
 import http from 'node:http';
 import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
@@ -33,11 +34,13 @@ function scheduleServerBot(r){if(!r.matchmaking||!r.game||r.game.over||!r.seats[
 }
 function resign(r,actor,text='Maçtan ayrıldı'){if(r.game.over)return;r.game.over=true;r.game.turnDeadline=null;r.game.revision++;r.game.winner=1-actor;r.game.history.unshift({name:r.seats[actor].name,score:0,text});}
 function applyExpiry(r){if(!r.game)return false;const actor=r.game.turn;if(!expireTurn(r.game))return false;if(r.matchmaking&&!r.seats[actor].bot){r.misses??=[0,0];if(++r.misses[actor]>=2)resign(r,actor,'Bağlantı kesildi · maç sona erdi')}return true}
+let bundlePromise;
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://qwirkle-v-selman.firebaseapp.com; frame-src https://qwirkle-v-selman.firebaseapp.com; frame-ancestors 'self'; base-uri 'none'; form-action 'self'");
  if(req.url.split('?')[0]==='/login.html'){res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; frame-ancestors 'self'; base-uri 'none'; form-action 'self'")}
  try{const u=new URL(req.url,'http://localhost');
+ if(u.pathname==='/api/client-bundle'&&(req.method==='GET'||req.method==='HEAD')){try{bundlePromise??=clientBundle(root).then(bundle=>({revision:bundle.revision,json:JSON.stringify(bundle)}));const bundle=await bundlePromise;res.setHeader('ETag','"'+bundle.revision+'"');if(req.headers['if-none-match']==='"'+bundle.revision+'"'){res.writeHead(304);res.end();return}if(req.method==='HEAD'){res.writeHead(200);res.end();return}res.writeHead(200,{'Content-Type':'application/json; charset=utf-8'});res.end(bundle.json);return}catch(error){bundlePromise=null;throw error}}
  if(u.pathname==='/api/health')return reply(res,200,{ok:true,rooms:rooms.size});
  if(u.pathname==='/api/events'){
  const token=u.searchParams.get('token'),r=rooms.get(u.searchParams.get('room'));if(!r||!r.seats.some(s=>s.token===token))return reply(res,403,{error:'Oda oturumu bulunamadı.'});
