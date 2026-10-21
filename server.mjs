@@ -4,7 +4,7 @@ import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {createGame,play,exchange,pass,expireTurn} from './public/engine.mjs';
+import {createGame,play,exchange,pass,expireTurn,resignGame} from './public/engine.mjs';
 import {TIME_OPTIONS} from './public/session.mjs';
 import {verifyAccount,publicProfile,verifyGoogleCredential} from './account.mjs';
 import {firebaseConfig} from './public/firebase-config.mjs';
@@ -16,7 +16,7 @@ await mkdir(dataDir,{recursive:true});
 const rooms=new Map();try{for(const r of JSON.parse(await readFile(path.join(dataDir,'rooms.json'),'utf8')))if(Date.now()-r.updated<7*86400000)rooms.set(r.code,r)}catch{}
 let saving=Promise.resolve();function persist(){const snapshot=JSON.stringify([...rooms.values()]);saving=saving.then(async()=>{await writeFile(path.join(dataDir,'rooms.tmp'),snapshot);await rename(path.join(dataDir,'rooms.tmp'),path.join(dataDir,'rooms.json'))}).catch(e=>console.error('Kayıt hatası:',e.message));return saving}
 const streams=new Map();const clients=new Map();
-function view(r,token){const me=r.seats.findIndex(s=>s.token===token);return {code:r.code,serverNow:Date.now(),turnSeconds:r.turnSeconds||0,matchmaking:!!r.matchmaking,messages:r.messages||[],me,host:me===0,seats:r.seats.map((s,i)=>({name:s.name,playerId:s.playerId,bot:!!s.bot,connected:!!s.bot||!!streams.get(s.token)?.size,host:i===0})),game:r.game?{...r.game,bag:undefined,bagCount:r.game.bag.length,players:r.game.players.map((p,i)=>({name:p.name,score:p.score,count:p.hand.length,hand:i===me?p.hand:undefined}))}:null}}
+function view(r,token){const me=r.seats.findIndex(s=>s.token===token);return {code:r.code,serverNow:Date.now(),turnSeconds:r.turnSeconds||0,matchmaking:!!r.matchmaking,messages:r.messages||[],me,host:me===0,seats:r.seats.map((s,i)=>({name:s.name,playerId:s.playerId,bot:!!s.bot,connected:!!s.bot||!!streams.get(s.token)?.size,host:i===0})),game:r.game?{...r.game,bag:undefined,bagCount:r.game.bag.length,players:r.game.players.map((p,i)=>({name:p.name,score:p.score,eliminated:!!p.eliminated,count:p.hand.length,hand:i===me?p.hand:undefined}))}:null}}
 function broadcast(r){for(const s of r.seats)for(const res of streams.get(s.token)||[])res.write(`data: ${JSON.stringify(view(r,s.token))}\n\n`)}
 async function changed(r){r.updated=Date.now();await persist();broadcast(r);scheduleServerBot(r)}
 function reply(res,status,obj){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(obj))}
@@ -32,8 +32,7 @@ async function account(b,lookup=false){const user=await verifyAccount(b.accountT
 function scheduleServerBot(r){if(!r.matchmaking||!r.game||r.game.over||!r.seats[r.game.turn]?.bot||botPending.has(r.code)||closing)return;botPending.add(r.code);const revision=r.game.revision,actor=r.game.turn;
  setTimeout(async()=>{try{if(r.game.over||r.game.revision!==revision)return;const move=await botRunner.solve(r.game.board,r.game.players[actor].hand,Object.keys(r.game.board).length?0:r.game.opening);if(r.game.over||r.game.revision!==revision||!rooms.has(r.code))return;if(move)play(r.game,actor,move.placements);else if(r.game.bag.length)exchange(r.game,actor,r.game.players[actor].hand.slice(0,Math.min(6,r.game.bag.length)).map(t=>t.id));else pass(r.game,actor);await changed(r)}catch(e){console.error('Bot hamlesi tamamlanamadı:',e.message)}finally{botPending.delete(r.code)}},900).unref()
 }
-function resign(r,actor,text='Maçtan ayrıldı'){if(r.game.over)return;r.game.over=true;r.game.turnDeadline=null;r.game.revision++;r.game.winner=1-actor;r.game.history.unshift({name:r.seats[actor].name,score:0,text});}
-function applyExpiry(r){if(!r.game)return false;const actor=r.game.turn;if(!expireTurn(r.game))return false;if(r.matchmaking&&!r.seats[actor].bot){r.misses??=[0,0];if(++r.misses[actor]>=2)resign(r,actor,'Bağlantı kesildi · maç sona erdi')}return true}
+function applyExpiry(r){return r.game?expireTurn(r.game):false}
 let bundlePromise;
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
@@ -54,6 +53,7 @@ const server=http.createServer(async(req,res)=>{
  if(u.pathname==='/api/auth/complete'){const f=authFlows.get(b.flow);if(!f||Date.now()-f.at>180000||f.credential)throw Error('Giriş isteğinin süresi doldu.');if(typeof b.credential!=='string'||b.credential.length>8192)throw Error('Giriş doğrulanamadı.');await verifyGoogleCredential(b.credential,b.flow);f.credential=b.credential;return reply(res,200,{ok:true})}
  if(u.pathname==='/api/auth/poll'){const f=authFlows.get(b.flow);if(!f||f.poll!==b.poll||Date.now()-f.at>180000)throw Error('Giriş isteğinin süresi doldu.');if(!f.credential)return reply(res,200,{ready:false});authFlows.delete(b.flow);return reply(res,200,{ready:true,credential:f.credential})}
  if(u.pathname==='/api/profile'){const p=await account(b,true);return reply(res,200,{id:p.id,name:p.name,guest:p.guest})}
+ if(u.pathname==='/api/games'){const p=await account(b);const games=[];for(const r of rooms.values()){const me=r.seats.findIndex(s=>s.uid===p.uid&&!s.bot);if(me<0||!r.game||r.game.over||r.game.players[me]?.eliminated)continue;if(applyExpiry(r))await changed(r);if(r.game.over||r.game.players[me]?.eliminated)continue;games.push({room:r.code,token:r.seats[me].token,updated:r.updated,names:r.seats.filter((_,i)=>i!==me).map(s=>s.name),turn:r.game.turn===me,score:r.game.players[me].score,timeouts:r.game.timeoutCounts?.[me]||0});}return reply(res,200,{games:games.sort((a,b)=>b.updated-a.updated)})}
  if(u.pathname==='/api/account/delete'){const p=await account(b,true);if(Date.now()/1000-p.authTime>300)throw Error('Hesabını silmek için önce yeniden giriş yap.');const response=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:delete?key='+firebaseConfig.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:b.accountToken}),signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error('Hesap silinemedi. Yeniden giriş yapıp tekrar dene.');matchmaker.queue.delete(p.uid);for(const [code,r] of rooms)if(r.seats.some(s=>s.uid===p.uid)){for(const seat of r.seats)for(const stream of streams.get(seat.token)||[])stream.end();rooms.delete(code)}await persist();return reply(res,200,{ok:true})}
  if(u.pathname.startsWith('/api/match/')){const p=await account(b,u.pathname==='/api/match/start');let result;if(u.pathname==='/api/match/start')result=matchmaker.enter(p);else if(u.pathname==='/api/match/poll')result=matchmaker.poll(p);else if(u.pathname==='/api/match/cancel')result=matchmaker.cancel(p.uid);else throw Error('İşlem bulunamadı.');return reply(res,200,matchView(result,p.uid))}
  if(u.pathname==='/api/create'){
@@ -74,10 +74,10 @@ const server=http.createServer(async(req,res)=>{
  }
  if(u.pathname==='/api/settings'){if(me!==0||r.game)throw Error('Süreyi oyun başlamadan masa sahibi seçebilir.');if(!TIME_OPTIONS.includes(b.turnSeconds))throw Error('Süre seçimi geçerli değil.');r.turnSeconds=b.turnSeconds;await changed(r);return reply(res,200,view(r,b.token))}
  if(u.pathname==='/api/state')return reply(res,200,view(r,b.token));
- if(u.pathname==='/api/resign'){if(!r.matchmaking)throw Error('Bu işlem yalnızca eşleşmeli maçlarda kullanılabilir.');resign(r,me);}
+ if(u.pathname==='/api/resign'){if(!r.game)throw Error('Oyun henüz başlamadı.');resignGame(r.game,me);}
  else if(u.pathname==='/api/start'){if(r.matchmaking)throw Error('Yeni maç için Maç bul seçeneğini kullan.');if(me!==0)throw Error('Oyunu oda sahibi başlatabilir.');if(r.game&&!r.game.over)throw Error('Oyun zaten devam ediyor.');if(r.seats.length<2)throw Error('Başlamak için en az iki oyuncu gerekli.');r.game=createGame(r.seats.map(s=>s.name),{turnSeconds:r.turnSeconds||0})}
  else if(u.pathname==='/api/leave'){if(r.game)throw Error('Devam eden oyundaki yerin korunur; bağlantıyı kapatıp sonra dönebilirsin.');const seat=r.seats[me];for(const s of streams.get(seat.token)||[])s.end();streams.delete(seat.token);r.seats.splice(me,1);if(!r.seats.length)rooms.delete(r.code);else await changed(r);await persist();return reply(res,200,{ok:true});}
- else if(u.pathname==='/api/action'){if(!r.game)throw Error('Oyun henüz başlamadı.');if(b.revision!==r.game.revision)throw Error('Masa güncellendi. Hamleni yeniden kontrol et.');if(b.action==='play')play(r.game,me,b.placements);else if(b.action==='exchange')exchange(r.game,me,b.ids);else if(b.action==='pass')pass(r.game,me);else throw Error('Bilinmeyen hamle.');if(r.misses)r.misses[me]=0;}
+ else if(u.pathname==='/api/action'){if(!r.game)throw Error('Oyun henüz başlamadı.');if(b.revision!==r.game.revision)throw Error('Masa güncellendi. Hamleni yeniden kontrol et.');if(b.action==='play')play(r.game,me,b.placements);else if(b.action==='exchange')exchange(r.game,me,b.ids);else if(b.action==='pass')pass(r.game,me);else throw Error('Bilinmeyen hamle.');}
  else throw Error('İşlem bulunamadı.');await changed(r);return reply(res,200,view(r,b.token));
  }
  if(req.method!=='GET'&&req.method!=='HEAD')return reply(res,405,{error:'Yöntem desteklenmiyor.'});

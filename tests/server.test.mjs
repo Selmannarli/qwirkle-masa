@@ -23,5 +23,11 @@ test('multiplayer API: privacy, host access, wrong turn, SSE and resume',async()
  assert.equal((await call('action',{...other,action:'play',revision:1,placements:[]})).status,400);
  const resumed=(await call('state',sb)).v;assert.equal(resumed.game.revision,2);assert.equal(Object.keys(resumed.game.board).length,move.placements.length);
  assert.equal((await call('join',{room:a.code,name:'C'})).status,400);
+ // Disconnecting the event stream or returning home must not surrender a seat.
+ assert.equal((await call('state',sa)).v.game.over,false);
+ const surrendered=await call('resign',sb);assert.equal(surrendered.status,200);
+ assert.equal(surrendered.v.game.over,true);assert.equal(surrendered.v.game.winner,0);
+ assert.equal((await call('state',sa)).v.game.players[1].eliminated,true);
+ assert.equal((await call('games',{})).status,400);
  }finally{child.kill();await new Promise(r=>child.once('exit',r));await rm(data,{recursive:true,force:true})}
 });
