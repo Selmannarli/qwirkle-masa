@@ -1,0 +1,12 @@
+import {randomBytes} from 'node:crypto';
+export class Friends {
+ constructor(state){this.state=state;state.friends??=[];state.invites??=[];}
+ edge(a,b){return this.state.friends.find(e=>e.from===a&&e.to===b||e.from===b&&e.to===a)}
+ request(from,to){if(from===to)throw Error('Kendini ekleyemezsin.');if(!/^\d{12}$/.test(String(to))||!this.state.profiles[to]?.name)throw Error('Oyuncu bulunamadı. ID’sini kontrol et.');const existing=this.edge(from,to);if(existing)return existing;if(this.state.friends.filter(e=>e.from===from&&e.status==='pending').length>=30)throw Error('Bekleyen istek sınırına ulaştın.');const edge={from,to,status:'pending',at:Date.now()};this.state.friends.push(edge);return edge}
+ respond(id,other,accept){const e=this.edge(id,other);if(!e||e.to!==id||e.status!=='pending')throw Error('Bu istek sana ait değil.');if(accept)e.status='accepted';else this.remove(id,other);return e}
+ remove(id,other){this.state.friends=this.state.friends.filter(e=>!(e.from===id&&e.to===other||e.from===other&&e.to===id));this.state.invites=this.state.invites.filter(e=>!(e.from===id&&e.to===other||e.from===other&&e.to===id))}
+ invite(from,to,room,now=Date.now()){if(this.edge(from,to)?.status!=='accepted')throw Error('Önce arkadaş olmalısınız.');this.state.invites=this.state.invites.filter(i=>now-i.at<600000);const prior=this.state.invites.find(i=>i.from===from&&i.to===to&&i.room===room);if(prior)return prior;const invite={id:randomBytes(12).toString('hex'),from,to,room,at:now};this.state.invites.push(invite);return invite}
+ dismiss(id,inviteId){this.state.invites=this.state.invites.filter(i=>!(i.id===inviteId&&i.to===id))}
+ removeAccount(id){this.state.friends=this.state.friends.filter(e=>e.from!==id&&e.to!==id);this.state.invites=this.state.invites.filter(e=>e.from!==id&&e.to!==id)}
+ view(id,rooms,now=Date.now()){const person=id=>({id,name:this.state.profiles[id]?.name||'Player '+id,avatar:this.state.profiles[id]?.avatar});return {friends:this.state.friends.filter(e=>(e.from===id||e.to===id)&&e.status==='accepted').map(e=>person(e.from===id?e.to:e.from)),incoming:this.state.friends.filter(e=>e.to===id&&e.status==='pending').map(e=>person(e.from)),outgoing:this.state.friends.filter(e=>e.from===id&&e.status==='pending').map(e=>person(e.to)),invites:this.state.invites.filter(i=>i.to===id&&now-i.at<600000&&rooms.get(i.room)&&!rooms.get(i.room).game&&rooms.get(i.room).seats.length<4).map(i=>({...i,from:person(i.from)}))}}
+}
