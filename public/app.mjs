@@ -13,7 +13,7 @@ import {COLORS,COLOR_NAMES,SHAPE_NAMES,SHAPE_PATHS,icon,hydrateIcons,node,tileEl
 let skipRackAnimation=false,friendsData={friends:[],incoming:[],outgoing:[],invites:[]},friendsOwner=null;let avatarSynced=null,avatarSyncPromise=null;let gamesRefresh=0;let soloAlertId=0;let lobbyTimerPending=null,badDraft=false,handOrder=[];
 let serverOffset=0,lastChatKey="",chatUnread=false;
 const $=id=>document.getElementById(id);
-const EXPERIMENTAL=await fetch('/api/config').then(r=>r.json()).then(v=>!!v.experimental).catch(()=>false);let wallet={balance:0,available:null,claimedDays:0},walletOwner=null,jokerChoice={c:0,s:0};document.body.dataset.page='home';
+const EXPERIMENTAL=true;let wallet={balance:0,available:null,claimedDays:0},walletOwner=null,jokerChoice={c:0,s:0};document.body.dataset.page='home';
 const read=(k,fallback=null)=>{try{return JSON.parse(localStorage.getItem(k))??fallback}catch{return fallback}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const preferences={sound:true,haptics:true,alerts:true,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,theme:'day',...read('renkio-preferences',{})};

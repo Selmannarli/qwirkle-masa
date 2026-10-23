@@ -17,7 +17,7 @@ Preview: `http://localhost:4188/`, server environment `RENKIO_EXPERIMENTAL=1` an
 
 ## Revert
 
-Stop the experimental preview and switch to `main` (or the baseline tag). Stable package 1.8.1 and its APK/AAB remain unchanged. There is no production deployment or Play submission in this experiment. Do not erase live Firestore collections as part of a rollback. If activated later, preserve experimental matches with their explicit rules version instead of converting them into classic games.
+Stop the experimental preview and switch to `main` (or the baseline tag). Stable package 1.8.1 and its APK/AAB remain unchanged. The user authorized mobile activation on 24 October 2026. Release 1.9.0 (10900) promotes this experiment; baseline tag remains available for rollback. Server flag RENKIO_EXPERIMENTAL=1 applies only to new games. Do not erase live Firestore collections as part of a rollback. If activated later, preserve experimental matches with their explicit rules version instead of converting them into classic games.
 
 ## Validation
 
