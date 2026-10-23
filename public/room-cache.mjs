@@ -1,0 +1,2 @@
+export function mergeOpenGames(previous,current,owner){const cached=new Map(previous.filter(g=>g.owner===owner&&g.token).map(g=>[g.room,g]));return current.map(g=>({...((cached.get(g.room)?.token===g.token&&cached.get(g.room)?.matchId===g.matchId)?cached.get(g.room):{}),...g,owner})).sort((a,b)=>b.updated-a.updated)}
+export const playerCode=(id,tag)=>tag&&/^\d{5}$/.test(tag)?tag:(/^\d{5}$/.test(id)?id:'');

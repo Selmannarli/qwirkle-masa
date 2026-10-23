@@ -32,6 +32,8 @@ public final class MainActivity extends Activity {
  private boolean trusted(Uri uri){return "https".equals(uri.getScheme())&&HOST.equals(uri.getHost())&&(uri.getPort()==-1||uri.getPort()==443);}
  private boolean page(Uri uri){String p=uri.getPath();return trusted(uri)&&(p.equals("/")||p.equals("/index.html")||p.equals("/privacy.html"));}
  public final class NativeUi {
+  @JavascriptInterface public void shareGame(String value){runOnUiThread(()->{try{Uri link=Uri.parse(value);if(!foreground||!trusted(link)||!"/".equals(link.getPath())||!link.getQueryParameter("room").matches("[A-F0-9]{6}"))return;Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_TEXT,"Renkio’da birlikte oynayalım.\n"+link.toString());startActivity(Intent.createChooser(send,"Oyuna davet et"));}catch(RuntimeException ignored){}});}
+
   @JavascriptInterface public void refresh(){runOnUiThread(()->{if(foreground&&clientStore!=null)checkClient(true);});}
 
   @JavascriptInterface public void notifyEvent(String kind,boolean audio,boolean haptics){if(!"turn".equals(kind)&&!"message".equals(kind))return;runOnUiThread(()->{if(!foreground)return;boolean turn="turn".equals(kind);if(audio){try{ToneGenerator tone=new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55);tone.startTone(turn?ToneGenerator.TONE_PROP_ACK:ToneGenerator.TONE_PROP_BEEP,turn?240:130);uiHandler.postDelayed(tone::release,400);}catch(RuntimeException ignored){}}if(haptics){Vibrator vibrator=(Vibrator)getSystemService(VIBRATOR_SERVICE);if(vibrator!=null&&vibrator.hasVibrator())vibrator.vibrate(VibrationEffect.createWaveform(turn?new long[]{0,90,70,90}:new long[]{0,55},-1));}});}

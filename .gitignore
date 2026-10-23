@@ -12,3 +12,7 @@ android/**/build/
 *.jks
 *signing.json
 android/keystore.properties
+
+*service-account*.json
+*firebase-admin*.json
+renkio-firestore.json

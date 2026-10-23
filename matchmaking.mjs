@@ -1,5 +1,5 @@
 export const BOT_WAIT_MS=180000;
-export const BOT_PLAYERS=Array.from({length:5},(_,i)=>({id:String(900000000001+i),name:'Player '+(900000000001+i),bot:true}));
+export const BOT_PLAYERS=Array.from({length:5},(_,i)=>({id:String(900000000001+i),tag:String(99001+i),name:'Player '+(99001+i),bot:true}));
 export class Matchmaker {
  constructor({createMatch,findMatch,clock=Date.now,waitMs=BOT_WAIT_MS}){this.queue=new Map();this.createMatch=createMatch;this.findMatch=findMatch;this.clock=clock;this.waitMs=waitMs}
  enter(player){const active=this.findMatch(player.uid);if(active)return {status:'matched',match:active};let entry=this.queue.get(player.uid);if(!entry){entry={player,joined:this.clock(),seen:this.clock()};this.queue.set(player.uid,entry)}else{entry.seen=this.clock();entry.player=player}this.tick();return this.status(player.uid)}
