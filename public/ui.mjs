@@ -3,7 +3,7 @@ export const COLOR_NAMES=['Kırmızı','Siyah','Sarı','Yeşil','Mavi','Mor'];
 export const SHAPE_NAMES=['Daire','Kare','Baklava','Yıldız','Yonca','Işın'];
 export const SHAPE_PATHS=['M34 20A14 14 0 1 0 6 20A14 14 0 1 0 34 20Z','M11 7H29Q33 7 33 11V29Q33 33 29 33H11Q7 33 7 29V11Q7 7 11 7Z','M20 3 37 20 20 37 3 20Z','M20 2 25 14 38 20 25 26 20 38 15 26 2 20 15 14Z','M20 9C20-2 1 0 4 13C-5 19 2 33 13 29C14 43 31 41 30 28C44 30 44 12 31 12C37 0 20-4 20 9Z','M20 1 25 10 34 6 30 15 39 20 30 25 34 34 25 30 20 39 15 30 6 34 10 25 1 20 10 15 6 6 15 10Z'];
 export const SHAPES=SHAPE_PATHS.map(d=>'<path d="'+d+'"/>');
-const paths={send:'<path d="m21 3-7 18-4-7-7-4 18-7Z"/><path d="m10 14 11-11"/>',chat:'<path d="M21 11a8 8 0 0 1-8 8H5l-4 3V11a10 10 0 0 1 20 0Z"/><path d="M6 11h.01M11 11h.01M16 11h.01"/>',
+const paths={flag:'<path d="M5 21V3m0 1c5-4 9 4 15 0v10c-6 4-10-4-15 0"/>',send:'<path d="m21 3-7 18-4-7-7-4 18-7Z"/><path d="m10 14 11-11"/>',chat:'<path d="M21 11a8 8 0 0 1-8 8H5l-4 3V11a10 10 0 0 1 20 0Z"/><path d="M6 11h.01M11 11h.01M16 11h.01"/>',
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 8.7a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2-2.5 3.8M12 17h.01"/>',
  sound:'<path d="m11 4-5 4H3v8h3l5 4V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',mute:'<path d="m11 4-5 4H3v8h3l5 4V4Zm5 5 5 6m0-6-5 6"/>',
  settings:'<path d="m10 3-1 3-3 1-3 1 1 4-1 4 3 1 3 1 1 3h4l1-3 3-1 3-1-1-4 1-4-3-1-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>',
