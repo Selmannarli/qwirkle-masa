@@ -299,7 +299,7 @@ for(let s=0;s<6;s++){const t=tileElement({c:4,s,joker:s===5});t.tabIndex=-1;$('r
 const purchaseReceipts=new Map();let shopping=false;
 function paintShop(){
  $('shopDiamonds').textContent=wallet.diamonds||0;const list=$('shopItems');list.replaceChildren();
- for(const [item,title,glyph,description]of [['joker','Joker','joker','İstediğin taşa dönüşür'],['hint','İpucu','bulb','Bir hamle önerisi al']]){
+ for(const [item,title,glyph,description]of [['joker','Joker','wand','İstediğin taşa dönüşür'],['hint','İpucu','bulb','Bir hamle önerisi al']]){
  const row=node('div','support-card'),art=node('span','support-art '+(item==='hint'?'hint-art':''));art.innerHTML=icon(glyph);const copy=node('span');copy.append(node('b','',title),node('small','',description),node('small','',`Sende ${wallet.inventory?.[item]||0} adet`));const buy=node('button','support-buy');buy.innerHTML=icon('diamond');buy.append(node('b','','5'));buy.setAttribute('aria-label',title+' satın al · 5 elmas');buy.disabled=shopping||(wallet.diamonds||0)<5;buy.onclick=()=>purchaseSupport(item);row.append(art,copy,buy);list.append(row)}
  $('shopStatus').textContent=(wallet.diamonds||0)<5?'Günlük ödülünden 10 elmas toplayabilirsin.':'';
 }
