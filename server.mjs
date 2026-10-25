@@ -1,3 +1,4 @@
+import {friendLeaderboard} from './leaderboard.mjs';
 import {durableStore} from './durable-state.mjs';
 import {ensurePlayerTag,resolvePlayerId} from './player-tags.mjs';
 import {Friends} from './friends.mjs';
@@ -68,7 +69,7 @@ const server=http.createServer(async(req,res)=>{
  if(u.pathname==='/api/auth/poll'){const f=authFlows.get(b.flow);if(!f||f.poll!==b.poll||Date.now()-f.at>180000)throw Error('Giriş isteğinin süresi doldu.');if(!f.credential)return reply(res,200,{ready:false});authFlows.delete(b.flow);return reply(res,200,{ready:true,credential:f.credential})}
  if(u.pathname==='/api/rewards'||u.pathname==='/api/rewards/claim'){if(!EXPERIMENTAL)throw Error('Deneysel ödüller bu sunucuda kapalı.');const p=await account(b),profile=social.profiles[p.id];const result=u.pathname.endsWith('/claim')?claimReward(profile):rewardView(profile);await persist();return reply(res,200,result)}
  if(u.pathname==='/api/shop/buy'||u.pathname==='/api/supports/spend'){if(!EXPERIMENTAL)throw Error('Destekler kapalı.');const p=await account(b),profile=social.profiles[p.id];const result=u.pathname.endsWith('/buy')?buySupport(profile,b.item,b.receipt):consumeSupport(profile,b.item,b.receipt);await persist();return reply(res,200,result)}
- if(u.pathname==='/api/leaderboard'){await account(b);const totals=new Map();for(const m of social.matches)for(const p of m.players){const v=totals.get(p.id)||{id:p.id,name:social.profiles[p.id]?.name||p.name,score:0,wins:0,games:0,avatar:social.profiles[p.id]?.avatar};v.score+=p.score;v.wins+=Number(p.won&&m.players.filter(t=>t.won).length===1);v.games++;totals.set(p.id,v)}return reply(res,200,{players:[...totals.values()].sort((a,b)=>b.wins-a.wins||b.score-a.score).slice(0,50)})}
+ if(u.pathname==='/api/leaderboard'){const p=await account(b);return reply(res,200,{players:friendLeaderboard(social,p.id)})}
  if(u.pathname==='/api/profile'){const p=await account(b,true);return reply(res,200,{id:p.id,tag:p.tag,name:p.name,guest:p.guest,avatar:social.profiles[p.id]?.avatar||null})}
  if(u.pathname==='/api/avatar'){const p=await account(b);social.profiles[p.id]={...social.profiles[p.id],avatar:normalizeAvatar(b.avatar,p.id)};await persist();for(const r of rooms.values())if(r.seats.some(s=>s.playerId===p.id))broadcast(r);return reply(res,200,{avatar:social.profiles[p.id].avatar})}
  if(u.pathname==='/api/history'){const p=await account(b);return reply(res,200,{matches:social.matches.filter(m=>m.players.some(s=>s.id===p.id)).map(m=>({...m,players:m.players.map(v=>({...v,tag:v.tag||social.profiles[v.id]?.tag,name:social.profiles[v.id]?.name||v.name}))})).sort((a,b)=>b.at-a.at)})}
