@@ -5,7 +5,12 @@ function economy(profile){
  if(!profile.economy){const old=profile.reward||{};profile.economy={version:2,diamonds:0,inventory:{joker:Math.max(0,old.balance||0),hint:0},lastClaim:old.lastClaim,claimedDays:old.claimedDays||0,receipts:[]}}
  return profile.economy;
 }
-export function rewardView(profile,now=Date.now()){const e=economy(profile);return {diamonds:e.diamonds,inventory:{...e.inventory},balance:e.inventory.joker,available:e.lastClaim!==rewardDay(now),claimedDays:e.claimedDays,day:rewardDay(now)}}
+export const OCTOBER_GIFT_CUTOFF=Date.parse('2026-11-01T00:00:00+01:00');
+export function grantOctoberGift(profile,now=Date.now()){
+ if(!Number.isFinite(profile.createdAt)||profile.createdAt>=OCTOBER_GIFT_CUTOFF||profile.createdAt>now||profile.octoberGift2026)return false;
+ const e=economy(profile);e.diamonds+=500;profile.octoberGift2026={amount:500,at:now};return true;
+}
+export function rewardView(profile,now=Date.now()){const e=economy(profile);return {octoberGift:profile.octoberGift2026||null,diamonds:e.diamonds,inventory:{...e.inventory},balance:e.inventory.joker,available:e.lastClaim!==rewardDay(now),claimedDays:e.claimedDays,day:rewardDay(now)}}
 export function claimReward(profile,now=Date.now()){
  if(!rewardView(profile,now).available)throw Error('Bugünün ödülünü zaten topladın.');
  const e=economy(profile);e.diamonds+=10;e.lastClaim=rewardDay(now);e.claimedDays++;return rewardView(profile,now);
