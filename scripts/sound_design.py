@@ -19,10 +19,13 @@ def stereo(a,tail=True):
     out[:128]*=np.linspace(0,1,128)[:,None];out[-640:]*=np.linspace(1,0,640)[:,None]
     return out
 def tile(index):
-    t=np.arange(int(SR*.34))/SR;f=[392,440,523.25,587.33,659.25,783.99][index]
+    t=np.arange(int(SR*.34))/SR;f=[261.63,293.66,329.63,349.23,392,440][index]
     noise=rng.standard_normal(len(t));noise=np.convolve(noise,[.2,.6,.2],mode='same')
-    a=.18*noise*np.exp(-t/.007)+tone(t,f*.48,.035,.38)+tone(t,f,.065,.3)+tone(t,f*2.71,.026,.045)+tone(t,f*4.14,.018,.018)
-    if index>1:a+=tone(t,f*1.5,.095,.065)
+    # A rounded felt/wood contact: slower attack, muted air, no metallic upper partials.
+    noise=np.convolve(noise,np.ones(15)/15,mode='same')
+    attack=1-np.exp(-t/.006)
+    a=(.018*noise*np.exp(-t/.012)+tone(t,f*.5,.052,.24)+tone(t,f,.070,.21)+tone(t,f*2,.045,.022))*attack
+    if index>1:a+=tone(t,f*1.5,.095,.025)*attack
     return stereo(a)
 def whoosh():
     t=np.arange(int(SR*.28))/SR;n=rng.standard_normal(len(t));n=np.convolve(n,np.ones(6)/6,mode='same');env=np.sin(np.pi*t/.28)**2
