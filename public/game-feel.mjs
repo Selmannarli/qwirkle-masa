@@ -1,8 +1,9 @@
 // Pure intensity model shared by sound, canvas and controls.
 export function moveEnergy(count,score,valid=true){
- if(!valid||!count)return 0;
- return score>=16||count>=5?3:score>=8||count>=3?2:1;
+ if(!valid||!count||score<=0)return 0;
+ return score>=16?3:score>=8?2:1;
 }
+export const movePower=score=>Math.max(0,Math.min(1,score/24));
 export function celebrationSpec(score,qwirkles=0){const epic=qwirkles>0;return {duration:epic?3400:score>=16?1900:1100,particles:epic?Math.min(180,120+qwirkles*20):score>=16?70:score>=8?42:24,rings:epic?3:score>=8?2:1}}
 class EpicEffects{
  constructor(preferences){this.preferences=preferences;this.canvas=document.createElement('canvas');this.canvas.className='epic-effects';this.canvas.setAttribute('aria-hidden','true');document.body.append(this.canvas);this.ctx=this.canvas.getContext('2d');this.particles=[];this.waves=[];this.frame=null;this.started=0;this.banner=null}
@@ -14,7 +15,7 @@ class EpicEffects{
 }
 export class GameFeel{
  constructor({sound,preferences,button}){this.sound=sound;this.preferences=preferences;this.button=button;this.until=0;this.level=0;this.effects=new EpicEffects(preferences);const fire=document.createElement('span');fire.className='commit-fire';fire.setAttribute('aria-hidden','true');button.append(fire)}
- preview(count,score,valid){const level=moveEnergy(count,score,valid);this.level=level;this.until=level?Infinity:0;this.button.dataset.heat=String(level);this.button.classList.toggle('heat-kick',!!level&&!this.preferences.reduced)}
+ preview(count,score,valid){const level=moveEnergy(count,score,valid);this.level=level;this.until=level?Infinity:0;this.button.dataset.heat=String(level);this.power=valid?movePower(score):0;this.button.style.setProperty('--move-power',String(this.power));this.button.classList.toggle('heat-kick',!!level&&!this.preferences.reduced)}
  place(count,score,valid){this.preview(count,score,valid);this.sound.placement(count,score,valid)}
  launch(score){const r=this.button.getBoundingClientRect();this.sound.launch();this.effects.burst([{x:r.left+r.width/2,y:r.top+r.height/2}],score,0,true)}
  celebrate(score,qwirkles,points=[]){this.sound.reward(score,qwirkles);this.effects.burst(points,score,qwirkles)}

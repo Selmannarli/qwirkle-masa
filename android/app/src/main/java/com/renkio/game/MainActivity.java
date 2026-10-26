@@ -34,6 +34,12 @@ public final class MainActivity extends Activity {
  public final class NativeUi {
   @JavascriptInterface public void shareGame(String value){runOnUiThread(()->{try{Uri link=Uri.parse(value);if(!foreground||!trusted(link)||!"/".equals(link.getPath())||!link.getQueryParameter("room").matches("[A-F0-9]{6}"))return;Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_TEXT,"Renkio’da birlikte oynayalım.\n"+link.toString());startActivity(Intent.createChooser(send,"Oyuna davet et"));}catch(RuntimeException ignored){}});}
 
+  @JavascriptInterface public String pushState(){try{JSONObject value=new JSONObject();boolean granted=Build.VERSION.SDK_INT<33||checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED;value.put("allowed",granted&&getSystemService(android.app.NotificationManager.class).areNotificationsEnabled());value.put("enabled",getSharedPreferences("push",MODE_PRIVATE).getBoolean("enabled",false));value.put("token",getSharedPreferences("push",MODE_PRIVATE).getString("token",""));return value.toString();}catch(Exception ignored){return "{}";}}
+  @JavascriptInterface public void notificationPreferences(boolean audio,boolean haptics){getSharedPreferences("push",MODE_PRIVATE).edit().putBoolean("audio",audio).putBoolean("haptics",haptics).apply();}
+  @JavascriptInterface public void enableNotifications(){runOnUiThread(()->{if(!foreground)return;if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},402);else enablePush();});}
+  @JavascriptInterface public void disconnectPush(){getSharedPreferences("push",MODE_PRIVATE).edit().putBoolean("enabled",false).remove("token").apply();com.google.firebase.messaging.FirebaseMessaging.getInstance().setAutoInitEnabled(false);com.google.firebase.messaging.FirebaseMessaging.getInstance().deleteToken();}
+  @JavascriptInterface public void disableNotifications(){getSharedPreferences("push",MODE_PRIVATE).edit().putBoolean("enabled",false).apply();com.google.firebase.messaging.FirebaseMessaging.getInstance().setAutoInitEnabled(false);}
+
   @JavascriptInterface public void refresh(){runOnUiThread(()->{if(foreground&&clientStore!=null)checkClient(true);});}
 
   @JavascriptInterface public void notifyEvent(String kind,boolean audio,boolean haptics){if(!"turn".equals(kind)&&!"message".equals(kind))return;runOnUiThread(()->{if(!foreground)return;boolean turn="turn".equals(kind);if(audio){try{ToneGenerator tone=new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55);tone.startTone(turn?ToneGenerator.TONE_PROP_ACK:ToneGenerator.TONE_PROP_BEEP,turn?240:130);uiHandler.postDelayed(tone::release,400);}catch(RuntimeException ignored){}}if(haptics){Vibrator vibrator=(Vibrator)getSystemService(VIBRATOR_SERVICE);if(vibrator!=null&&vibrator.hasVibrator())vibrator.vibrate(VibrationEffect.createWaveform(turn?new long[]{0,90,70,90}:new long[]{0,55},-1));}});}
@@ -68,8 +74,11 @@ public final class MainActivity extends Activity {
    runOnUiThread(()->{if(web==null||isFinishing())return;boolean apply=applyRequested;applyRequested=false;if(apply)activateClient(installed);else updateStatus("saved");});
   }catch(Exception error){runOnUiThread(()->{if(applyRequested)updateStatus("offline");applyRequested=false;});}finally{checking.set(false);if(connection!=null)connection.disconnect();}},"Renkio-client-update").start();
  }
- @Override protected void onResume(){super.onResume();foreground=true;}
- @Override protected void onPause(){foreground=false;super.onPause();}
+ @Override protected void onResume(){super.onResume();foreground=true;RenkioApplication.foreground=true;if(getSharedPreferences("push",MODE_PRIVATE).getBoolean("enabled",false))enablePush();}
+ @Override protected void onPause(){foreground=false;RenkioApplication.foreground=false;super.onPause();}
+ private void pushEvent(){if(web!=null&&trusted(Uri.parse(web.getUrl()==null?HOME:web.getUrl())))web.evaluateJavascript("window.dispatchEvent(new Event('renkio-push-state'))",null);}
+ private void enablePush(){getSharedPreferences("push",MODE_PRIVATE).edit().putBoolean("enabled",true).apply();com.google.firebase.messaging.FirebaseMessaging.getInstance().setAutoInitEnabled(true);com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token->{getSharedPreferences("push",MODE_PRIVATE).edit().putString("token",token).apply();pushEvent();}).addOnFailureListener(e->pushEvent());}
+ @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){super.onRequestPermissionsResult(requestCode,permissions,grantResults);if(requestCode==402){if(grantResults.length>0&&grantResults[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)enablePush();else pushEvent();}}
  @Override public void onCreate(Bundle state){super.onCreate(state);
   try{clientStore=new ClientStore(new File(getFilesDir(),"client-snapshots"));activeClient=clientStore.current();}catch(IOException error){activeClient=null;}
   frame=new FrameLayout(this);frame.setBackgroundColor(Color.parseColor("#f5f6fa"));setContentView(frame);

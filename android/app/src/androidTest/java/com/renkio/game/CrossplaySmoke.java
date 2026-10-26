@@ -26,7 +26,7 @@ public class CrossplaySmoke extends OfflineSmoke {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
- @Override public void onStart(){if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
+ @Override public void onStart(){if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){
