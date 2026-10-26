@@ -1,3 +1,4 @@
+import {botThinkDelay,practiceAvailable,practiceSnapshot,restorePractice} from './practice.mjs';
 import {GameFeel} from './game-feel.mjs';
 import {finalBoardSvg} from './match-snapshot.mjs';
 import {mergeOpenGames,playerCode} from './room-cache.mjs';
@@ -13,6 +14,7 @@ import {Board} from './board.mjs';
 import {COLORS,COLOR_NAMES,SHAPE_NAMES,SHAPE_PATHS,icon,hydrateIcons,node,tileElement,avatar,Sound} from './ui.mjs';
 let skipRackAnimation=false,friendsData={friends:[],incoming:[],outgoing:[],invites:[]},friendsOwner=null;let avatarSynced=null,avatarSyncPromise=null;let gamesRefresh=0;let soloAlertId=0;let lobbyTimerPending=null,badDraft=false,handOrder=[];
 const speechBubbles=new Map();let bubbleRoom=null,bubbleTimer=null;
+let practicePausedAt=0;
 let serverOffset=0,lastChatKey="",chatUnread=false;
 const $=id=>document.getElementById(id);
 const EXPERIMENTAL=true;let wallet={diamonds:0,inventory:{joker:0,hint:0},balance:0,available:null,claimedDays:0},walletOwner=null,jokerChoice={c:0,s:0};document.body.dataset.page='home';
@@ -82,7 +84,7 @@ $('confirmDeleteAccount').onclick=()=>accountTask(async()=>{if($('deleteConfirm'
 if(new URL(location.href).searchParams.get('account')==='delete')setTimeout(openAccount,100);
 setInterval(updateSearchClock,500);
 
-const soloSaved=read('renkio-solo');$('resume').classList.toggle('hidden',!session&&!soloSaved);
+const soloSaved=readPractice();$('resume').classList.toggle('hidden',!session&&!soloSaved);
 const invitation=new URL(location.href).searchParams.get('room');if(invitation){$('code').value=invitation.toUpperCase().slice(0,6);mode(false)}
 function name(){const n=$('name').value.trim();if(!n){$('name').focus();throw Error('Önce oyuncu adını yazalım.')}save('renkio-name',n);return n}
 async function api(route,data,timeout=65000){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const res=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:controller.signal});const v=await res.json();if(!res.ok)throw Error(v.error||'İşlem tamamlanamadı.');return v}catch(e){if(e.name==='AbortError')throw Error('Sunucu yanıt vermedi. Biraz sonra yeniden deneyebilirsin.');throw e}finally{clearTimeout(timer)}}
@@ -113,12 +115,13 @@ async function goHome(){
 $('confirmLeave').onclick=()=>run(goHome);$('finishHome').onclick=()=>run(goHome);
 $('resignButton').onclick=()=>{$('settings').close();modal('resignDialog')};
 $('confirmResign').onclick=()=>run(async()=>{$('resignDialog').close();if(local){resignGame(game,me);saveSolo();render()}else receive(await api('resign',session))});
-function saveSolo(){if(game&&!game.matchId)game.matchId=crypto.randomUUID();if(local&&game&&!game.over)save('renkio-solo',{game,at:Date.now()});else if(local)save('renkio-solo',null)}
-function soloStart(saved){soloAlertId++;stream?.close();clearTimeout(botTimer);epoch++;local=true;connected=true;me=0;game=saved||createGame([$('name').value.trim()||'Sen','Miko'],{turnSeconds:Number($('turnLimit').value),experimental:EXPERIMENTAL});game.matchId??=crypto.randomUUID();room=null;pending=[];selected=null;swapping=false;swapIds.clear();lastRevision=game.revision;lastCelebrated=game.revision;finishedRevision=0;board.autoFit=true;board.camera={x:0,y:0,size:76};board.seen.clear();setView('game');render();requestAnimationFrame(()=>{board.autoFit=true;board.center(false)});saveSolo();scheduleBot()}
+function readPractice(){const saved=read('renkio-solo');return practiceAvailable(saved,accounts.profile?.id)?saved:null}
+function saveSolo(){if(game&&!game.matchId)game.matchId=crypto.randomUUID();if(local&&game&&!game.over)save('renkio-solo',practiceSnapshot(game,{owner:accounts.profile?.id,draft:pending,order:handOrder,now:practicePausedAt||Date.now()}));else if(local)save('renkio-solo',null)}
+function soloStart(saved){const snapshot=saved?restorePractice(saved.game?saved:{game:saved,at:Date.now()}):null;practicePausedAt=0;coaching=null;soloAlertId++;stream?.close();clearTimeout(botTimer);epoch++;local=true;connected=true;me=0;game=snapshot?.game||createGame([$('name').value.trim()||'Sen','Miko'],{turnSeconds:Number($('turnLimit').value),experimental:EXPERIMENTAL});game.matchId??=crypto.randomUUID();room=null;pending=rebaseDraft(game.board,game.players[0].hand,snapshot?.draft||[]);handOrder=snapshot?.order||[];selected=null;swapping=false;swapIds.clear();lastRevision=game.revision;lastCelebrated=game.revision;finishedRevision=0;board.autoFit=true;board.camera={x:0,y:0,size:76};board.seen.clear();setView('game');render();requestAnimationFrame(()=>{board.autoFit=true;board.center(false)});saveSolo();scheduleBot()}
 $('practice').onclick=()=>{if($('name').value.trim())save('renkio-name',$('name').value.trim());soloStart()};
-$('resume').onclick=()=>run(async()=>{if(session){try{const v=await api('state',session);game=null;local=false;lastRevision=0;receive(v);subscribe();return}catch(e){if(!read('renkio-solo'))throw e}}const s=read('renkio-solo');if(s?.game)soloStart(s.game);else toast('Devam eden oyun bulunamadı. Yeni bir masa kurabilirsin.')});
+$('resume').onclick=()=>run(async()=>{if(session){try{const v=await api('state',session);game=null;local=false;lastRevision=0;receive(v);subscribe();return}catch(e){if(!readPractice())throw e}}const s=readPractice();if(s?.game)soloStart(s);else toast('Devam eden oyun bulunamadı. Yeni bir masa kurabilirsin.')});
 const botWorker=new Worker('/bot-worker.mjs',{type:'module'});let botRequest=0;const botJobs=new Map();botWorker.onmessage=({data})=>{const job=botJobs.get(data.id);if(job){botJobs.delete(data.id);job(data.move)}};function findBotMove(board,hand,opening,options={}){return new Promise(resolve=>{const id=++botRequest;botJobs.set(id,resolve);botWorker.postMessage({id,board,hand,opening,options})})}
-function scheduleBot(){if(!local||!game||game.over||game.turn!==1)return;const myEpoch=epoch;botTimer=setTimeout(async()=>{if(myEpoch!==epoch||!local||!game||game.turn!==1)return;const move=await findBotMove(game.board,game.players[1].hand,game.experimental||Object.keys(game.board).length?0:game.opening,{experimental:game.experimental,bonusCells:game.bonusCells});if(myEpoch!==epoch||!local||!game||game.turn!==1)return;try{if(move)play(game,1,move.placements);else if(game.bag.length)exchange(game,1,game.players[1].hand.slice(0,Math.min(6,game.bag.length)).map(t=>t.id));else pass(game,1);lastRevision=game.revision;pending=rebaseDraft(game.board,game.players[me].hand,pending);render();board.keepInView();celebrate();saveSolo()}catch(e){toast(e.message,'error')}},700)}
+function scheduleBot(){clearTimeout(botTimer);if(!local||!game||game.over||game.turn!==1||practicePausedAt)return;const myEpoch=epoch,revision=game.revision;botTimer=setTimeout(async()=>{if(myEpoch!==epoch||!local||!game||game.turn!==1||game.revision!==revision)return;const move=await findBotMove(game.board,game.players[1].hand,game.experimental||Object.keys(game.board).length?0:game.opening,{experimental:game.experimental,bonusCells:game.bonusCells});if(myEpoch!==epoch||!local||!game||game.turn!==1||game.revision!==revision)return;try{if(move)play(game,1,move.placements);else if(game.bag.length)exchange(game,1,game.players[1].hand.slice(0,Math.min(6,game.bag.length)).map(t=>t.id));else pass(game,1);lastRevision=game.revision;pending=rebaseDraft(game.board,game.players[me].hand,pending);render();board.keepInView();celebrate();saveSolo()}catch(e){toast(e.message,'error')}},botThinkDelay())}
 function canPlan(){return !!game&&!game.over&&!game.players[me].eliminated&&!busy&&(local||connected)}
 function active(){return !!game&&!game.over&&!game.timeoutDecision&&!game.players[me].eliminated&&game.turn===me&&!busy&&(local||connected)}
 let coaching=null,coachingBusy=false;
@@ -165,7 +168,7 @@ window.addEventListener('beforeunload',()=>{saveSolo();if(!local&&room?.game)rem
 
 
 function updateClock(){if(!game||view!=='game')return;const n=$('turnClock'),remaining=game.turnDeadline?Math.max(0,Math.ceil((game.turnDeadline-Date.now()-(local?0:serverOffset))/1000)):0;n.classList.toggle('hidden',!game.turnSeconds||game.over);n.textContent=remaining>=60?Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'):String(remaining);n.style.setProperty('--remaining',String(Math.max(0,Math.min(1,remaining/(game.turnSeconds||1)))));n.classList.toggle('urgent',remaining<=10);n.title='Kalan tur süresi: '+remaining+' saniye'}
-setInterval(()=>{updateClock();if(local&&game&&!busy&&!coachingBusy&&expireTurn(game)){clearTimeout(botTimer);epoch++;swapping=false;swapIds.clear();selected=null;pending=rebaseDraft(game.board,game.players[me].hand,pending);lastRevision=game.revision;render();saveSolo();scheduleBot();if(!game.timeoutDecision)toast('Süre doldu; sıra geçti.')}},250);
+setInterval(()=>{updateClock();if(local&&game&&!practicePausedAt&&!busy&&!coachingBusy&&expireTurn(game)){clearTimeout(botTimer);epoch++;swapping=false;swapIds.clear();selected=null;pending=rebaseDraft(game.board,game.players[me].hand,pending);lastRevision=game.revision;render();saveSolo();scheduleBot();if(!game.timeoutDecision)toast('Süre doldu; sıra geçti.')}},250);
 function chatIsOpen(){return $('game').classList.contains('chat-open')}
 function updateChatComposer(){if(!chatIsOpen())return;setButton('commit','Gönder','send');$('commit').setAttribute('aria-label','Mesajı gönder');$('commit').classList.remove('waiting');$('commit').disabled=sendingChat||!connected||!$('chatInput').value.trim();$('commit').setAttribute('aria-busy',String(sendingChat));$('chatInput').style.height='auto';$('chatInput').style.height=Math.min(100,$('chatInput').scrollHeight)+'px'}
 function setChatPage(open){if(open&&(local||!room))return;cancelTileDrag();board.cancelGesture();$('chatPanel').classList.toggle('hidden',!open);$('game').classList.toggle('chat-open',open);$('chatButton').setAttribute('aria-expanded',String(open));$('leave').setAttribute('aria-label',open?'Tahtaya dön':'Ana menü');if(open){document.querySelector('.conversation-heading').append($('settingsButton'));chatUnread=false;$('chatButton').classList.remove('has-unread');history(false);$('chatPeople').textContent=room.seats.map(p=>p.name).join(' · ');requestAnimationFrame(()=>{$('chatMessages').scrollTop=$('chatMessages').scrollHeight;updateChatComposer()})}else{document.querySelector('.game-topline').append($('settingsButton'));$('chatInput').blur();$('commit').removeAttribute('aria-busy');requestAnimationFrame(()=>board.resize())}render()}
@@ -204,8 +207,9 @@ window.addEventListener('renkio-update',e=>{const button=$('refreshApp');button.
 function openGames(){return read('renkio-open-games',[]).filter(g=>g.owner&&g.owner===accounts.profile?.id&&g.token)}
 function storeOpenGames(games){const owner=accounts.profile?.id;const others=read('renkio-open-games',[]).filter(g=>g.owner&&g.owner!==owner);save('renkio-open-games',[...others,...games].slice(-100))}
 function rememberRoom(v){if(!session||session.room!==v?.code||!v.game||v.seats[v.me]?.playerId!==accounts.profile?.id)return;if(v.game.over||v.game.players[v.me]?.eliminated){save('renkio-session',null);try{sessionStorage.removeItem('renkio-session')}catch{}}const entries=openGames().filter(g=>g.room!==v.code);if(!v.game.over&&!v.game.players[v.me]?.eliminated)entries.unshift({room:v.code,token:session.token,owner:accounts.profile?.id,updated:Date.now(),matchId:v.game.matchId,names:v.seats.filter((_,i)=>i!==v.me).map(p=>p.name),turn:v.game.turn===v.me,score:v.game.players[v.me].score,timeouts:v.game.timeoutCounts?.[v.me]||0,draft:pending,order:handOrder});storeOpenGames(entries)}
-function renderOpenGames(){const entries=openGames(),solo=read('renkio-solo');$('resumePractice').classList.toggle('hidden',!solo?.game||solo.game.over||solo.game.players[0].eliminated);$('resume').classList.add('hidden');$('openGamesSection').classList.toggle('hidden',!entries.length);$('openGamesList').replaceChildren();
+function renderOpenGames(){const entries=openGames(),solo=readPractice();$('resumePractice').classList.toggle('hidden',!solo?.game||solo.game.over||solo.game.players[0].eliminated);$('resume').classList.add('hidden');$('openGamesSection').classList.toggle('hidden',!entries.length&&!solo);$('openGamesList').replaceChildren();
  const card=(label,detail,click,kind)=>{const b=node('button','open-game-card');const art=node('span','open-game-art');art.innerHTML=icon(kind||'people');const content=node('span','open-game-content');content.append(node('b','',label),node('small','',detail));b.append(art,content);b.insertAdjacentHTML('beforeend',icon('arrow'));b.onclick=()=>run(click);$('openGamesList').append(b)};
+ if(solo)card('Miko · Antrenman',solo.game.players[0].score+' : '+solo.game.players[1].score+' · Devam et',()=>soloStart(solo),'bot');
  for(const g of entries)card(g.names?.join(', ')||'Masa '+g.room,(g.turn?'Sıra sende':'Rakip oynuyor')+' · '+(g.score||0)+' puan'+(g.timeouts?' · '+g.timeouts+'/3':''),async()=>{const v=await api('state',g);connect({...v,token:g.token})});
 
 }
@@ -263,7 +267,7 @@ function scoreSparkles(){if(preferences.reduced||view!=='game'||chatIsOpen())ret
 
 $('shuffle').innerHTML=icon('shuffle');$('shuffle').title='Karıştır';$('exchange').setAttribute('aria-label','Taş değiştir');
 
-$('resumePractice').onclick=()=>{const saved=read('renkio-solo');if(saved?.game&&!saved.game.over)soloStart(saved.game)};
+$('resumePractice').onclick=()=>{const saved=readPractice();if(saved?.game&&!saved.game.over)soloStart(saved)};
 
 function knownPlayerTag(id){return id===accounts.profile?.id?accounts.profile.tag:room?.seats.find(p=>p.playerId===id)?.playerTag||[...friendsData.friends,...friendsData.incoming,...friendsData.outgoing].find(p=>p.id===id)?.tag||archived().flatMap(m=>m.players).find(p=>p.id===id&&p.tag)?.tag||''}
 
@@ -315,3 +319,9 @@ function paintSpeechBubbles(){
  if(Number.isFinite(next))bubbleTimer=setTimeout(paintSpeechBubbles,Math.max(50,next+20));
 }
 function bonusChips(h){const list=node('span','bonus-chips');const labels=[];for(const b of h?.bonuses||[]){const label=b.type==='line'?b.multiplier>1?b.multiplier+'×':null:b.type==='opening'?'Açılış 2×':b.type;if(label&&!labels.includes(label))labels.push(label)}for(const label of labels)list.append(node('b','bonus-chip',label));return list}
+
+document.addEventListener('visibilitychange',()=>{
+ if(!local||!game||game.over)return;
+ if(document.hidden){practicePausedAt=Date.now();saveSolo();clearTimeout(botTimer);epoch++}
+ else if(practicePausedAt){if(game.turnDeadline!=null)game.turnDeadline+=Date.now()-practicePausedAt;practicePausedAt=0;saveSolo();render();scheduleBot()}
+});
