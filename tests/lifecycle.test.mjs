@@ -5,7 +5,7 @@ test('lobby supports four seats, rejects fifth, and transfers host after leave',
   const a=(await call('create',{name:'A'})).data;const seats=[a];for(const name of['B','C','D'])seats.push((await call('join',{room:a.code,name})).data);
   assert.equal((await call('join',{room:a.code,name:'E'})).status,400);
   assert.equal((await call('leave',{room:a.code,token:'bad'})).status,403);
-  assert.equal((await call('leave',{room:a.code,token:a.token})).status,200);
+  assert.equal((await call('leave',{room:a.code,token:a.token,abandon:true})).status,200);
   const state=(await call('state',{room:a.code,token:seats[1].token})).data;assert.equal(state.seats.length,3);assert.equal(state.host,true);assert.equal(state.me,0);assert.equal(state.seats[0].name,'B');
   assert.equal((await call('start',{room:a.code,token:seats[1].token})).status,200);
   assert.equal((await call('leave',{room:a.code,token:seats[2].token})).status,400);
