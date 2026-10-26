@@ -1,0 +1,16 @@
+config_version=5
+
+[application]
+config/name="Renkio Character Studio"
+run/main_scene="res://studio.tscn"
+
+[display]
+window/size/viewport_width=512
+window/size/viewport_height=512
+window/size/window_width_override=512
+window/size/window_height_override=512
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+environment/defaults/default_clear_color=Color(0,0,0,0)
+textures/default_filters/use_nearest_mipmap_filter=false

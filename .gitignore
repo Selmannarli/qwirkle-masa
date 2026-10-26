@@ -16,3 +16,6 @@ android/keystore.properties
 *service-account*.json
 *firebase-admin*.json
 renkio-firestore.json
+art/character-studio/.godot/
+art/character-studio/renders/
+art/character-studio/review/

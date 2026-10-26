@@ -1,15 +1,17 @@
 // One-shot native timelines: no idle game loop, GPU context or external dependency.
+export const CHARACTER_FILES=['pof','robot','cat','cyclops','star','jelly'].map(name=>'/assets/character-'+name+'-v3.webp');
+export const FRAME_COUNT=32;
 export const CHARACTER_CLIPS=[
- {name:'El salla',duration:1150,frames:[0,1,2,3,2,3,4,5]},
- {name:'Selam ver',duration:1100,frames:[0,1,2,2,3,4,5]},
- {name:'Göz kırp',duration:900,frames:[0,1,2,3,3,4,5]},
- {name:'Ayağını kaldır',duration:1150,frames:[0,1,2,3,3,4,5]},
- {name:'Göz kırp ve eğil',duration:1050,frames:[0,1,2,3,3,4,5]},
- {name:'Kollarını dalgalandır',duration:1300,frames:[0,1,2,3,2,3,4,5]}
-];
+ {name:'El salla',duration:1150},
+ {name:'Selam ver',duration:1100},
+ {name:'Göz kırp',duration:900},
+ {name:'Ayağını kaldır',duration:1150},
+ {name:'Göz kırp ve eğil',duration:1050},
+ {name:'Kollarını dalgalandır',duration:1300}
+].map(clip=>({...clip,frames:Array.from({length:FRAME_COUNT},(_,i)=>i)}));
 export function spriteFrames(face){
  const clip=CHARACTER_CLIPS[face];if(!clip)return [];
- return clip.frames.map((frame,i)=>({backgroundPositionX:frame*20+'%',offset:i/(clip.frames.length-1),easing:'steps(1,end)'}));
+ return clip.frames.map((frame,i)=>({backgroundPosition:(frame%8*100/7)+'% '+(Math.floor(frame/8)*100/3)+'%',offset:i/(clip.frames.length-1),easing:'steps(1,end)'}));
 }
 export class MotionDirector{
  constructor({limit=8,reduced=()=>false}={}){this.limit=Math.max(1,limit);this.reduced=reduced;this.active=new Map()}
@@ -24,12 +26,14 @@ export class MotionDirector{
  cancelAll(){for(const element of [...this.active.keys()])this.cancel(element)}
  prune(){for(const element of this.active.keys())if(element.isConnected===false)this.cancel(element)}
 }
-let director,installed=false,atlasReady,atlasLoaded=false;
+let director,installed=false;
+const artwork=new Map();
 const requests=new WeakMap();
-function prepareAtlas(){
- if(atlasReady)return atlasReady;
- atlasReady=new Promise(resolve=>{const image=new Image();image.onload=()=>{atlasLoaded=true;resolve(true)};image.onerror=()=>{atlasReady=null;resolve(false)};image.src='/assets/characters-motion-v1.webp';if(image.complete&&image.naturalWidth){atlasLoaded=true;resolve(true)}});
- return atlasReady;
+function prepareAtlas(face){
+ if(artwork.has(face))return artwork.get(face).ready;
+ const state={loaded:false,ready:null};
+ state.ready=new Promise(resolve=>{const image=new Image();image.onload=()=>{state.loaded=true;resolve(true)};image.onerror=()=>{artwork.delete(face);resolve(false)};image.src=CHARACTER_FILES[face];if(image.complete&&image.naturalWidth){state.loaded=true;resolve(true)}});
+ artwork.set(face,state);return state.ready;
 }
 const reduced=()=>document.hidden||document.body?.dataset.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function motionDirector(){return director??=new MotionDirector({reduced})}
@@ -38,14 +42,15 @@ export function playCharacter(host){
  if(!art||reduced())return null;const clip=CHARACTER_CLIPS[Number(art.dataset.character)];if(!clip)return null;
  const request={};requests.set(art,request);
  const start=()=>{if(requests.get(art)!==request||!art.isConnected||reduced())return null;return motionDirector().play(art,spriteFrames(Number(art.dataset.character)),{duration:clip.duration})};
- return atlasLoaded?start():prepareAtlas().then(ok=>ok?start():null);
+ const face=Number(art.dataset.character);
+ return artwork.get(face)?.loaded?start():prepareAtlas(face).then(ok=>ok?start():null);
 }
 export function installCharacterMotion(root=document){
- if(installed)return;installed=true;prepareAtlas();
+ if(installed)return;installed=true;
  const enhance=()=>{for(const avatar of root.querySelectorAll('.illustrated-avatar')){
   if(avatar.hasAttribute('role')||avatar.parentElement?.closest('button,a,[role="button"]'))continue;
   avatar.setAttribute('role','button');avatar.tabIndex=0;avatar.dataset.motionOnly='true';avatar.setAttribute('aria-label',(avatar.dataset.avatarName||'Karakter')+' · Canlandır');
- }};
+ }for(const art of root.querySelectorAll('.character-art'))if(art.getClientRects().length)prepareAtlas(Number(art.dataset.character));};
  root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host)playCharacter(host)},{capture:true});
  root.addEventListener('keydown',event=>{const host=event.target.closest?.('[data-motion-only="true"]');if(host&&['Enter',' '].includes(event.key)){event.preventDefault();host.click()}});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)director?.cancelAll()});

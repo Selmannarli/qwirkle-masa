@@ -1,0 +1,52 @@
+{
+  "producer": "Godot 4.5",
+  "source": "art/character-studio/studio.gd",
+  "framesPerCharacter": 32,
+  "columns": 8,
+  "rows": 4,
+  "cellSize": 192,
+  "characters": [
+    {
+      "name": "pof",
+      "minimumPaddingPx": 58,
+      "strayIslands": 0,
+      "bytes": 520546,
+      "sha256": "77e38a768c36d3bbf76946ba4be5535f34eaab5d375816c01591360d0b9a8728"
+    },
+    {
+      "name": "robot",
+      "minimumPaddingPx": 69,
+      "strayIslands": 0,
+      "bytes": 367504,
+      "sha256": "18a2ddcf57ef778106e7a95f5a91f366f3b2427966d879ef4b79326d96ab1951"
+    },
+    {
+      "name": "cat",
+      "minimumPaddingPx": 69,
+      "strayIslands": 0,
+      "bytes": 475184,
+      "sha256": "1a56c400d50d47b2734777586f0b1a98bece7bdfd48c6255e92a93075319a79d"
+    },
+    {
+      "name": "cyclops",
+      "minimumPaddingPx": 63,
+      "strayIslands": 0,
+      "bytes": 398238,
+      "sha256": "b43477f6d761d0d5695e38612a11298030bc311483cce795942e4841a64adc7c"
+    },
+    {
+      "name": "star",
+      "minimumPaddingPx": 64,
+      "strayIslands": 0,
+      "bytes": 419948,
+      "sha256": "7125ba62a0b4438306da98fba9bc4ff12f0fdc3587f80fc223ef9c3d632687a4"
+    },
+    {
+      "name": "jelly",
+      "minimumPaddingPx": 76,
+      "strayIslands": 0,
+      "bytes": 529862,
+      "sha256": "54a50d6559ec0bb5856526cfcd0224fffe9d657d2dd8580e888a0739ad974ddf"
+    }
+  ]
+}
