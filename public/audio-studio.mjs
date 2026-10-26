@@ -1,0 +1,7 @@
+// Original prerecorded stereo effects, decoded once and mixed through a limiter.
+export class AudioStudio{
+ constructor(){this.buffers=new Map();this.voices=[];this.loading=null}
+ prepare(ctx){if(this.loading)return this.loading;this.loading=(async()=>{this.ctx=ctx;this.bus=ctx.createDynamicsCompressor();this.bus.threshold.value=-9;this.bus.knee.value=12;this.bus.ratio.value=5;this.bus.attack.value=.006;this.bus.release.value=.20;this.bus.connect(ctx.destination);const response=await fetch('/assets/renkio-sound-bank-v2.txt');if(!response.ok)throw Error('Sound bank unavailable');const bank=await response.json();for(const [name,encoded]of Object.entries(bank.sounds)){const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));this.buffers.set(name,await ctx.decodeAudioData(bytes.buffer))}})().catch(()=>{});return this.loading}
+ stop(){for(const voice of this.voices){try{voice.stop()}catch{}}this.voices=[]}
+ play(name,volume=.7,rate=1){const buffer=this.buffers.get(name);if(!buffer||this.ctx?.state!=='running')return false;const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();source.buffer=buffer;source.playbackRate.value=rate;gain.gain.value=Math.max(0,Math.min(.9,volume));source.connect(gain);gain.connect(this.bus);source.onended=()=>{source.disconnect();gain.disconnect();this.voices=this.voices.filter(s=>s!==source)};this.voices.push(source);if(this.voices.length>6){try{this.voices.shift().stop()}catch{}}source.start();return true}
+}
