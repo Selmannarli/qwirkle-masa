@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {CHARACTER_FILES,FRAME_COUNT,spriteFrames} from '../public/motion.mjs';
+import {avatarArt} from '../public/profile-art.mjs';
 
 test('all Godot frames passed real-alpha, clean-edge, safe-padding and loop-closure checks',async()=>{
  const report=JSON.parse(await readFile(new URL('../art/character-studio/quality-report.json',import.meta.url),'utf8'));
@@ -14,6 +14,6 @@ test('all Godot frames passed real-alpha, clean-edge, safe-padding and loop-clos
   const dimensions=bytes.readUInt32LE(21);assert.equal((dimensions&0x3fff)+1,report.cellSize*report.columns);assert.equal(((dimensions>>>14)&0x3fff)+1,report.cellSize*report.rows);
  }
 });
-test('production portraits have four explicit expressions, stable cells and a bounded gesture',()=>{
- assert.equal(FRAME_COUNT,4);for(let face=0;face<6;face++){assert.match(CHARACTER_FILES[face],/-v4\.webp$/);const frames=spriteFrames(face);assert.ok(frames.length>=4&&frames.length<=6);assert.equal(frames[0].backgroundPosition,'100% 100%');assert.equal(frames.at(-1).backgroundPosition,'100% 100%');assert.ok(frames.every(f=>f.transform&&f.easing.startsWith('cubic-bezier')))}
+test('production portraits request the shared 3D model rather than the retired expression sheets',()=>{
+ for(let face=0;face<6;face++){const art=avatarArt({face,color:2});assert.ok(art.includes('data-character="'+face+'"'));assert.ok(art.includes('data-colour="2"'));assert.ok(!/webp|background-image|avatar-image/.test(art))}
 });
