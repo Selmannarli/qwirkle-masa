@@ -14,7 +14,8 @@ export const EN={
  'Mini oyunu yalnızca daveti oluşturan oyuncu iptal edebilir.':'Only the player who started this round can cancel it.','Bu mini oyun artık iptal edilemez.':'This round can no longer be cancelled.',
  'Mini oyunu yalnızca daveti gönderen oyuncu iptal edebilir.':'Only the player who sent this invitation can cancel the round.','Bu mini oyun zaten bitti.':'This round has already finished.',
  'Tur kapandı':'Round closed',
- 'Kazandı':'Won'
+ 'Kazandı':'Won',
+ 'Özgün renkler':'Original colours','Turkuaz':'Teal','Mercan':'Coral','Altın':'Gold','Pembe':'Pink','Gri':'Grey'
 };
 Object.assign(EN,{'Oyun masası':'Game table','Masayı çevir':'Rotate table','Masa görüntüsü bu cihazda açılamadı.':'The table view could not be opened on this device.',
  'Takma ad 2–24 karakter olmalı.':'Your nickname must be 2–24 characters.','Şifre en az 8 karakter olmalı.':'Your password must have at least 8 characters.','Önce hesabından çıkış yap.':'Sign out of your account first.','Önce giriş yap.':'Sign in first.','E-posta veya şifre hatalı.':'Incorrect email or password.','Bu e-posta zaten kayıtlı. Giriş yap seçeneğini kullan.':'This email is already registered. Choose Sign in.','Daha güçlü bir şifre seç.':'Choose a stronger password.','Çok fazla deneme. Biraz sonra yeniden dene.':'Too many attempts. Please try again later.','İnternet bağlantısını kontrol et.':'Check your internet connection.','Giriş penceresine izin verip tekrar dene.':'Allow the sign-in pop-up and try again.','Giriş penceresi kapatıldı.':'The sign-in window was closed.','Önce yeniden giriş yap.':'Sign in again first.','Giriş tamamlanamadı.':'Sign-in could not be completed.',

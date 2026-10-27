@@ -17,7 +17,7 @@ export class CharacterPortraits{
   this.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;this.pause()});this.renderer.domElement.addEventListener('webglcontextrestored',()=>{this.lost=false;this.invalidate()});
  }
  add(art){
-  if(this.records.has(art))return;const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
+  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour){record.face=face;record.colour=colour;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
   const r={art,canvas,ctx,face:Number(art.dataset.character)||0,colour:Number(art.dataset.colour)||0,visible:false,dirty:true,mood:'idle',start:0,until:0,phase:Math.random()*15,last:0};this.records.set(art,r);this.observer.observe(art);this.resizeObserver.observe(art);this.request();
  }
  model(face,colour){

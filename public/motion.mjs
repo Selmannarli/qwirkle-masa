@@ -9,7 +9,7 @@ async function portraitRuntime(){
 }
 export function playCharacter(host,mood='hello',remaining=null){
  const art=host?.matches?.('.character-art')?host:host?.querySelector?.('.character-art');if(!art)return null;const request={};requests.set(art,request);
- return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){studio.play(art,mood,remaining);return studio}});
+ return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){studio.play(art,mood,remaining);if(remaining===null)document.dispatchEvent(new CustomEvent('character-voice',{detail:{face:Number(art.dataset.character),mood}}));return studio}});
 }
 export function installCharacterMotion(root=document){
  if(installed)return;installed=true;let frame;

@@ -55,8 +55,8 @@ function furniture(){
 }
 
 export class TableScene{
- constructor({onProject,onError,onRestore,paths,colours}){
-  this.onProject=onProject;this.onError=onError;this.onRestore=onRestore;this.scene=new T.Scene();this.people=Array(4).fill(null);this.poses=new Map();this.visible=false;this.angle=.55;this.angleTarget=.55;this.angularVelocity=0;this.lastTick=0;this.lastDraw=0;this.camera=new T.PerspectiveCamera(36,1.4,.1,50);this.target=new T.Vector3(0,1.0,0);
+ constructor({onProject,onGreet,onError,onRestore,paths,colours}){
+  this.onProject=onProject;this.onGreet=onGreet;this.onError=onError;this.onRestore=onRestore;this.scene=new T.Scene();this.people=Array(4).fill(null);this.poses=new Map();this.visible=false;this.angle=.55;this.angleTarget=.55;this.angularVelocity=0;this.lastTick=0;this.lastDraw=0;this.camera=new T.PerspectiveCamera(36,1.4,.1,50);this.target=new T.Vector3(0,1.0,0);
   this.renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.VSMShadowMap;this.canvas=this.renderer.domElement;this.canvas.className='table-scene-canvas';this.canvas.setAttribute('aria-hidden','true');
   const environment=new RoomEnvironment(),pmrem=new T.PMREMGenerator(this.renderer);this.environment=pmrem.fromScene(environment,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.55;environment.dispose();pmrem.dispose();
   const ambient=new T.HemisphereLight('#f6e8ff','#554568',.7);this.scene.add(ambient);const key=new T.DirectionalLight('#fff0db',2.3);key.position.set(-3.5,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=4;key.shadow.camera.bottom=-4;key.shadow.normalBias=.025;key.shadow.bias=-.00015;key.shadow.radius=10;key.shadow.blurSamples=8;key.shadow.camera.near=.5;key.shadow.camera.far=20;this.scene.add(key);const rim=new T.DirectionalLight('#bfa5ff',1.0);rim.position.set(3,4,-4);this.scene.add(rim);
@@ -86,7 +86,7 @@ export class TableScene{
  render(){if(!this.visible||!this.width||document.hidden||this.lost)return;this.positionCamera();this.renderer.render(this.scene,this.camera);this.lastDraw=performance.now();const labels=TABLE_SEATS.map((s,i)=>{const p=new T.Vector3(s.x,this.people[i]?2.82:1.03,s.z).project(this.camera);return {index:i,x:(p.x+1)*.5*this.width,y:Math.max(7,Math.min(this.height-24,(1-p.y)*.5*this.height)),visible:p.z<1}});this.onProject?.(this.host,labels);this.host.dataset.sceneReady='true';this.host.dataset.sceneDistance=this.distance.toFixed(2);this.host.dataset.sceneTriangles=String(this.renderer.info.render.triangles);this.host.dataset.sceneDraws=String(this.renderer.info.render.calls);}
  rotate(delta){this.angleTarget+=delta;if(this.reduced){this.angle=this.angleTarget;this.angularVelocity=0;this.render();return}this.startMotion()}
  startMotion(){if(!this.frame){this.lastTick=performance.now();this.frame=requestAnimationFrame(now=>this.tick(now))}}
- greet(index,idle=false){if(!this.people[index]||!this.visible||document.hidden||this.reduced)return;this.poses.set(index,{start:performance.now(),idle});this.startMotion()}
+ greet(index,idle=false){if(!this.people[index]||!this.visible||document.hidden)return;if(!idle)this.onGreet?.(this.host,index);if(this.reduced)return;this.poses.set(index,{start:performance.now(),idle});this.startMotion()}
  tick(now){
   this.frame=null;if(!this.visible||document.hidden)return;
   const dt=Math.min(.032,Math.max(.001,(now-this.lastTick)/1000));this.lastTick=now;

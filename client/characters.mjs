@@ -1,3 +1,4 @@
+import {characterBodyColour} from '../public/character-style.mjs';
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -21,7 +22,7 @@ function tapered(parent,m,points,radii){
  });return mesh(parent,g,m);
 }
 function remember(n){n.userData.rest={position:n.position.toArray(),rotation:[n.rotation.x,n.rotation.y,n.rotation.z],scale:n.scale.toArray()};return n}
-function skin(face,colour){const bases=['#ad86df','#8c54c7','#eb8b53','#43bea8','#edb32a','#55c7e8'],shift=[0,255/360,95/360,155/360,315/360,40/360,220/360,0][colour]||0,c=new T.Color(bases[face]);if(colour===7)c.lerp(new T.Color('#bcb7cc'),.74);else c.offsetHSL(shift,0,0);return mat('#'+c.getHexString(),face===1?.27:face===5?.2:.43,face===1?.14:0,{sheen:face===0||face===2?.35:0,sheenColor:new T.Color('#ffffff'),sheenRoughness:.65})}
+function skin(face,colour){return mat(characterBodyColour(face,colour),face===1?.27:face===5?.2:.43,face===1?.14:0,{sheen:face===0||face===2?.35:0,sheenColor:new T.Color('#ffffff'),sheenRoughness:.65})}
 const INK=()=>mat('#21172f',.28),CREAM=()=>mat('#fff0dc',.57),PINK=()=>mat('#ed9bac',.5),BROW=()=>mat('#714270',.5);
 function eye(head,at,scale=1,robot=false){
  const n=group(head,'Eye',at);n.scale.setScalar(scale);n.userData.eyeScale=scale;

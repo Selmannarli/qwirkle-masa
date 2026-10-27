@@ -33,6 +33,11 @@ export class Sound {
  constructor(enabled=true){this.enabled=enabled;this.ctx=null;this.studio=new AudioStudio()}
  unlock(){try{this.ctx??=new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});this.studio.prepare(this.ctx)}catch{}}
  tone(f,time,duration=.09,type='sine',gain=.1){if(!this.enabled)return;try{this.ctx??=new (window.AudioContext||window.webkitAudioContext)();this.ctx.resume().catch(()=>{});const o=this.ctx.createOscillator(),g=this.ctx.createGain(),at=this.ctx.currentTime+time;o.type=type;o.frequency.setValueAtTime(f,at);g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(gain,at+.008);g.gain.exponentialRampToValueAtTime(.0001,at+duration);o.connect(g);g.connect(this.ctx.destination);o.start(at);o.stop(at+duration+.01)}catch{}}
+ character(face,mood='hello'){
+  if(!this.enabled||!Number.isInteger(face)||face<0||face>5)return;const now=performance.now();if(now-(this.lastCharacterVoice??-999)<650)return;this.lastCharacterVoice=now;
+  const motifs=[[[330,0,.10,'sine'],[440,.075,.12,'sine']],[[720,0,.045,'triangle'],[960,.06,.045,'sine'],[720,.12,.05,'sine']],[[510,0,.13,'sine'],[465,.08,.12,'sine']],[[150,0,.12,'triangle'],[200,.08,.13,'sine']],[[880,0,.10,'sine'],[1320,.065,.13,'sine']],[[420,0,.075,'sine'],[640,.055,.09,'sine'],[520,.105,.10,'sine']]],factor=['sad','lose'].includes(mood)?.78:['win','celebrate'].includes(mood)?1.12:1;
+  for(const [frequency,delay,duration,wave]of motifs[face])this.tone(frequency*factor,delay,duration,wave,face===3?.017:.022);
+ }
  launch(){if(!this.enabled)return;this.studio.play('launch',.44)}
  placement(count=1,score=0,valid=true){
  if(!this.enabled)return;const index=Math.max(1,Math.min(6,Math.ceil((valid?score:0)/4)));if(this.studio.play('tile'+index,valid?Math.min(.44,.32+score/250):.28,1+(Math.random()-.5)*.025))return;
