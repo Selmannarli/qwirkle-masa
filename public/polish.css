@@ -189,3 +189,5 @@ dialog.table-quick-game{position:fixed;inset:auto;margin:0;width:224px;max-width
 #scores .player-card{overflow:visible!important}#game>.board-area{position:relative;z-index:1}#game>#scores{z-index:5;flex-shrink:0}.avatar-accessories button{font-size:10px;overflow-wrap:anywhere;min-height:49px}.avatar-accessories small{font-size:10px}
 
 #game>#scores.player-strip{height:auto!important;min-height:70px!important;flex:0 0 auto!important;padding:3px 0!important;overflow:visible!important}#scores>.player-card{min-height:64px!important}
+
+.lobby-card .seat.empty-seat{display:none}
