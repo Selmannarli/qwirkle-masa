@@ -19,22 +19,22 @@ def stereo(a,tail=True):
     out[:128]*=np.linspace(0,1,128)[:,None];out[-640:]*=np.linspace(1,0,640)[:,None]
     return out
 def tile(index):
-    t=np.arange(int(SR*.34))/SR;f=[261.63,293.66,329.63,349.23,392,440][index]
-    noise=rng.standard_normal(len(t));noise=np.convolve(noise,[.2,.6,.2],mode='same')
-    # A rounded felt/wood contact: slower attack, muted air, no metallic upper partials.
-    noise=np.convolve(noise,np.ones(15)/15,mode='same')
-    attack=1-np.exp(-t/.006)
-    a=(.018*noise*np.exp(-t/.012)+tone(t,f*.5,.052,.24)+tone(t,f,.070,.21)+tone(t,f*2,.045,.022))*attack
-    if index>1:a+=tone(t,f*1.5,.095,.025)*attack
+    # Warm ceramic-on-felt transient, several inharmonic modes and a breath of air.
+    t=np.arange(int(SR*.30))/SR;f=[246.94,277.18,311.13,329.63,369.99,415.30][index]
+    noise=rng.standard_normal(len(t));noise=np.convolve(noise,np.hanning(31)/np.hanning(31).sum(),mode='same')
+    attack=(1-np.exp(-t/.0055))**2
+    a=(tone(t,f*.5,.043,.22)+tone(t,f,.062,.19)+tone(t,f*2.73,.022,.018)+tone(t,f*4.12,.013,.006)+noise*np.exp(-t/.016)*.065)*attack
+    a+=tone(t,f*1.5,.075,.014+index*.0018)*attack
     return stereo(a)
+
 def whoosh():
     t=np.arange(int(SR*.28))/SR;n=rng.standard_normal(len(t));n=np.convolve(n,np.ones(6)/6,mode='same');env=np.sin(np.pi*t/.28)**2
     return stereo(n*env*.3+np.sin(2*np.pi*(180*t+1700*t*t))*env*.07,False)
 def impact(level):
     length=[.85,1.35,1.9,3.6][level];t=np.arange(int(SR*length))/SR
     # Low drum pitch fall + damped resonant body + short band-limited air hit.
-    a=np.sin(2*np.pi*(48*t+5.8*(1-np.exp(-t*18))))*np.exp(-t/.17)*(.55+level*.07)
-    n=rng.standard_normal(len(t));n=np.convolve(n,np.ones(5)/5,mode='same');a+=n*np.exp(-t/.045)*(.14+level*.035)
+    a=np.sin(2*np.pi*(48*t+5.8*(1-np.exp(-t*18))))*np.exp(-t/.17)*(.34+level*.05)
+    n=rng.standard_normal(len(t));n=np.convolve(n,np.ones(5)/5,mode='same');a+=n*np.exp(-t/.045)*(.065+level*.018)
     a+=tone(t,147,.10,.10)+tone(t,221,.067,.05)
     notes=[523.25,659.25,783.99,1046.5,1318.5,1568]
     # Staggered resonators and warm, gently detuned chord: no repeated pure beeps.
@@ -49,12 +49,30 @@ def impact(level):
             delay=.33+i*.065;u=np.maximum(0,t-delay);env=(t>=delay)*np.exp(-u/.08)
             a+=np.sin(2*np.pi*notes[i%6]*2*u)*env*.038
     return stereo(a)
-sounds={**{f'tile{i+1}':tile(i) for i in range(6)},'launch':whoosh(),'impact1':impact(0),'impact2':impact(1),'impact3':impact(2),'renkio':impact(3)}
+def ui_sound(name):
+    lengths={'turn':.7,'message':.35,'shuffle':.36,'purchase':.62,'support':.65,'win':1.25}
+    length=lengths.get(name,.21);t=np.arange(int(SR*length))/SR;a=np.zeros(len(t))
+    chords={'turn':[392,493.88,587.33],'message':[659.25,783.99],'purchase':[523.25,659.25,783.99,1046.5],'support':[392,523.25,659.25,783.99],'win':[261.63,329.63,392,523.25]}
+    if name in chords:
+        for i,f in enumerate(chords[name]):
+            delay=i*(.085 if name!='message' else .065);u=np.maximum(0,t-delay);e=(t>=delay)*(1-np.exp(-u/.008))*np.exp(-u/(.11 if name=='message' else .18))
+            a+=e*(np.sin(2*np.pi*f*u)+.13*np.sin(2*np.pi*f*2.003*u))*.15
+    elif name=='error':
+        a=(tone(t,196,.09,.11)+tone(t,246.94,.07,.045))*(1-np.exp(-t/.007))
+    else:
+        f={'select':660,'lift':392,'drop':220,'slide':440,'return':329.63,'shuffle':293.66}.get(name,440)
+        repeats=3 if name=='shuffle' else 1
+        noise=rng.standard_normal(len(t));noise=np.convolve(noise,np.hanning(23)/np.hanning(23).sum(),mode='same')
+        for i in range(repeats):
+            delay=i*.065;u=np.maximum(0,t-delay);e=(t>=delay)*(1-np.exp(-u/.006))*np.exp(-u/.035)
+            a+=e*(.12*np.sin(2*np.pi*f*u)+.012*np.sin(2*np.pi*f*2.61*u)+noise*.07)
+    return stereo(a)
+sounds={**{f'tile{i+1}':tile(i) for i in range(6)},'launch':whoosh(),'impact1':impact(0),'impact2':impact(1),'impact3':impact(2),'renkio':impact(3),**{name:ui_sound(name) for name in ['select','lift','drop','slide','return','shuffle','support','error','turn','message','purchase','win']}}
 bank={};report={}
 for name,a in sounds.items():
     raw=io.BytesIO()
     with wave.open(raw,'wb') as w:w.setnchannels(2);w.setsampwidth(2);w.setframerate(SR);w.writeframes((a*32767).astype('<i2').tobytes())
     bank[name]=base64.b64encode(raw.getvalue()).decode();report[name]={'seconds':round(len(a)/SR,2),'peak':round(float(np.max(np.abs(a))),3)}
 root=Path(__file__).resolve().parents[1]
-(root/'public/assets/renkio-sound-bank-v2.txt').write_text(json.dumps({'format':1,'sampleRate':SR,'sounds':bank},separators=(',',':')),encoding='utf-8')
+(root/'public/assets/renkio-sound-bank-v3.txt').write_text(json.dumps({'format':1,'sampleRate':SR,'sounds':bank},separators=(',',':')),encoding='utf-8')
 print(json.dumps(report))

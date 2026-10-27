@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MotionDirector,CHARACTER_CLIPS,spriteFrames} from '../public/motion.mjs';
 function element(){return {isConnected:true,calls:[],animate(frames,options){let finish;const a={frames,options,cancelled:false,finished:new Promise(resolve=>{finish=resolve}),cancel(){this.cancelled=true;finish()},finish(){finish()}};this.calls.push(a);return a}}}
-test('each character has one bounded gesture with frame-safe discrete sprite positions',()=>{
+test('each character has one bounded gesture with expressive poses and smooth transforms',()=>{
  assert.equal(CHARACTER_CLIPS.length,6);assert.equal(new Set(CHARACTER_CLIPS.map(c=>c.name)).size,6);
- for(let face=0;face<6;face++){const clip=CHARACTER_CLIPS[face],frames=spriteFrames(face);assert.ok(clip.duration>=800&&clip.duration<=1400);assert.equal(frames[0].backgroundPosition,'0% 0%');assert.equal(frames.at(-1).backgroundPosition,'100% 100%');assert.equal(frames[0].offset,0);assert.equal(frames.at(-1).offset,1);assert.ok(frames.every(f=>/^([0-9.]+)% ([0-9.]+)%$/.test(f.backgroundPosition)&&f.easing==='steps(1,end)'))}
+ for(let face=0;face<6;face++){const clip=CHARACTER_CLIPS[face],frames=spriteFrames(face);assert.ok(clip.duration>=800&&clip.duration<=1400);assert.equal(frames[0].backgroundPosition,'100% 100%');assert.equal(frames.at(-1).backgroundPosition,'100% 100%');assert.equal(frames[0].offset,0);assert.equal(frames.at(-1).offset,1);assert.ok(frames.every(f=>/^([0-9.]+)% ([0-9.]+)%$/.test(f.backgroundPosition)&&f.easing==='cubic-bezier(.25,.7,.2,1)'))}
 });
 test('rapid replays cancel the previous gesture; an old completion never removes the new timeline',async()=>{
  const d=new MotionDirector(),e=element(),first=d.play(e,[]),second=d.play(e,[]);assert.equal(first.cancelled,true);assert.equal(d.active.size,1);await Promise.resolve();assert.equal(d.active.get(e),second);second.finish();await Promise.resolve();assert.equal(d.active.size,0);

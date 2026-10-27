@@ -1,0 +1,218 @@
+[
+  {
+    "name": "pof",
+    "source": "exec-b9841b4f-ae12-43fa-8c53-afd1529fbd43.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 554492,
+    "sha256": "c5a2aed7426cda461b8e1606f1e9e7c2df9dc345deee5e2c8bfd1c618ae5010b",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 13,
+        "visiblePixels": 200776
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 10,
+        "visiblePixels": 197059
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 31,
+        "visiblePixels": 196645
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 31,
+        "visiblePixels": 191468
+      }
+    ]
+  },
+  {
+    "name": "robot",
+    "source": "exec-417ada2d-ecd0-46ef-8c08-a1a17d917482.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 385500,
+    "sha256": "8ece302991249c34ff0abbfd5022aba89d5797f428b925bda286870721ac686c",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 8,
+        "visiblePixels": 142062
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 2,
+        "paddingAboveAlpha32": 11,
+        "visiblePixels": 145413
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 5,
+        "visiblePixels": 134199
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 17,
+        "paddingAboveAlpha32": 1,
+        "visiblePixels": 142737
+      }
+    ]
+  },
+  {
+    "name": "cat",
+    "source": "exec-1eacdfe0-0080-4ad7-a4a9-ab74fcebc701.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 297794,
+    "sha256": "9897d0db33c58c4c4b34d744794de50f60462024b11ec94fc265d3a859cbdfac",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 47,
+        "visiblePixels": 108967
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 50,
+        "visiblePixels": 107280
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 65,
+        "visiblePixels": 104522
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 67,
+        "visiblePixels": 110115
+      }
+    ]
+  },
+  {
+    "name": "cyclops",
+    "source": "exec-fe5180a6-0244-47cb-b212-5adbae874f5a.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 568518,
+    "sha256": "655dbda8791880506245bdb8944b476e68548d16a6fb8060a18cf03e61b7d0ab",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 22,
+        "visiblePixels": 176916
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 22,
+        "visiblePixels": 190042
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 13,
+        "visiblePixels": 167384
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 2,
+        "paddingAboveAlpha32": 7,
+        "visiblePixels": 187503
+      }
+    ]
+  },
+  {
+    "name": "star",
+    "source": "exec-8a340966-6bb8-4f84-b02e-5ff7bf7b478e.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 361188,
+    "sha256": "a17aec52d60e5e6e20399b443d4608f929bda7147af46edeed78d7da0964aa2b",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 28,
+        "visiblePixels": 156710
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 33,
+        "visiblePixels": 166231
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 20,
+        "visiblePixels": 158400
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 0,
+        "paddingAboveAlpha32": 26,
+        "visiblePixels": 167281
+      }
+    ]
+  },
+  {
+    "name": "jelly",
+    "source": "exec-d9a2fcc3-17e3-45a4-9586-9b1c28902a6c.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "bytes": 626338,
+    "sha256": "772b74ece249418e944ffd0ada7d9fa617fb4a6b9c757556e01e2bf0965a8388",
+    "cells": [
+      {
+        "expression": "idle",
+        "borderAlphaMax": 2,
+        "paddingAboveAlpha32": 26,
+        "visiblePixels": 183606
+      },
+      {
+        "expression": "celebrate",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 21,
+        "visiblePixels": 187897
+      },
+      {
+        "expression": "sad",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 25,
+        "visiblePixels": 185042
+      },
+      {
+        "expression": "hello",
+        "borderAlphaMax": 1,
+        "paddingAboveAlpha32": 25,
+        "visiblePixels": 180708
+      }
+    ]
+  }
+]

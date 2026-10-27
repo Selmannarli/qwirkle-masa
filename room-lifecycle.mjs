@@ -10,8 +10,8 @@ export function kickSeat(room,actor,target){
  else{room.seats.splice(target,1);room.messages=(room.messages||[]).filter(m=>m.seat!==target).map(m=>({...m,seat:m.seat>target?m.seat-1:m.seat}));room.reports=(room.reports||[]).filter(r=>r.by!==target&&r.seat!==target).map(r=>({...r,by:r.by>target?r.by-1:r.by,seat:r.seat>target?r.seat-1:r.seat}));}
  return seat;
 }
-export function openRoomEntry(room,uid){
+export function openRoomEntry(room,uid,profiles={}){
  const me=room.seats.findIndex(s=>s.uid===uid&&!s.bot&&!s.kicked);
  if(me<0||room.game&&(room.game.over||room.game.players[me]?.eliminated))return null;
- return {room:room.code,matchId:room.game?.matchId||null,token:room.seats[me].token,updated:room.updated,waiting:!room.game,host:me===0,count:room.seats.length,names:room.seats.filter((s,i)=>i!==me&&!s.kicked).map(s=>s.name),turn:room.game?.turn===me,score:room.game?.players[me]?.score||0,timeouts:room.game?.timeoutCounts?.[me]||0};
+ return {room:room.code,matchId:room.game?.matchId||null,token:room.seats[me].token,updated:room.updated,waiting:!room.game,seats:room.seats.filter(s=>!s.kicked).map(s=>({name:profiles[s.playerId]?.name||s.name,playerId:s.playerId,avatar:profiles[s.playerId]?.avatar||s.avatar})),host:me===0,count:room.seats.length,names:room.seats.filter((s,i)=>i!==me&&!s.kicked).map(s=>s.name),turn:room.game?.turn===me,score:room.game?.players[me]?.score||0,timeouts:room.game?.timeoutCounts?.[me]||0};
 }
