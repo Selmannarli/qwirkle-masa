@@ -7,7 +7,7 @@ export function kickSeat(room,actor,target){
  if(!canKick(room,actor,target))throw Error('Bu oyuncuyu yalnızca masa sahibi çıkarabilir.');
  const seat=room.seats[target];
  if(room.game){resignGame(room.game,target,'Masa sahibi tarafından çıkarıldı');seat.kicked=true;}
- else{room.seats.splice(target,1);room.messages=(room.messages||[]).filter(m=>m.seat!==target).map(m=>({...m,seat:m.seat>target?m.seat-1:m.seat}));room.reports=(room.reports||[]).filter(r=>r.by!==target&&r.seat!==target).map(r=>({...r,by:r.by>target?r.by-1:r.by,seat:r.seat>target?r.seat-1:r.seat}));}
+ else{delete room.tableGame;room.seats.splice(target,1);room.messages=(room.messages||[]).filter(m=>m.seat!==target).map(m=>({...m,seat:m.seat>target?m.seat-1:m.seat}));room.reports=(room.reports||[]).filter(r=>r.by!==target&&r.seat!==target).map(r=>({...r,by:r.by>target?r.by-1:r.by,seat:r.seat>target?r.seat-1:r.seat}));}
  return seat;
 }
 export function openRoomEntry(room,uid,profiles={}){
