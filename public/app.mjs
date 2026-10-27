@@ -298,10 +298,10 @@ async function refreshWallet(){if(!EXPERIMENTAL||!accounts.profile)return;const 
 $('claimReward').onclick=async()=>{if(busy)return;await run(async()=>{await accounts.ensureAccount();wallet=await api('rewards/claim',{accountToken:await accounts.accountToken()});walletOwner=accounts.profile.id;paintReward();$('rewardStatus').textContent='10 elmas eklendi';sound.play('win')})};
 $('homePortrait').onclick=null;$('homePortraitEdit').onclick=()=>editAvatar();$('editName').onclick=()=>openAccount();
 let hubTransition;
-function showHub(page,immediate=false){
- if(!immediate&&document.startViewTransition&&!preferences.reduced&&document.body.dataset.page!==page){hubTransition?.skipTransition();hubTransition=document.startViewTransition(()=>showHub(page,true));hubTransition.finished.catch(()=>{});return}
+function showHub(page,immediate=false,transitioning=false){
+ if(!immediate&&document.startViewTransition&&!preferences.reduced&&document.body.dataset.page!==page){hubTransition?.skipTransition();hubTransition=document.startViewTransition(()=>showHub(page,true,true));hubTransition.ready.catch(()=>{});hubTransition.updateCallbackDone.catch(()=>{});hubTransition.finished.catch(()=>{});return}
 
- if(immediate)hubTransition?.skipTransition();if(page==='home')mode(false); if(page==='friends'&&$('friendsDialog').open&&document.body.dataset.page===page)return;closeDialogs();document.body.dataset.page=page;$('home').classList.toggle('hidden',page!=='home');$('hubPages').classList.toggle('hidden',page==='home'||page==='friends');for(const p of ['leaders','stats','more'])$(p+'Page').classList.toggle('hidden',p!==page);document.querySelectorAll('.bottom-nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.page===page?'page':'false'));
+ if(immediate&&!transitioning)hubTransition?.skipTransition();if(page==='home')mode(false); if(page==='friends'&&$('friendsDialog').open&&document.body.dataset.page===page)return;closeDialogs();document.body.dataset.page=page;$('home').classList.toggle('hidden',page!=='home');$('hubPages').classList.toggle('hidden',page==='home'||page==='friends');for(const p of ['leaders','stats','more'])$(p+'Page').classList.toggle('hidden',p!==page);document.querySelectorAll('.bottom-nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.page===page?'page':'false'));
  if(page==='friends'){const d=$('friendsDialog');d.classList.add('nav-page');d.show();renderFriends();refreshFriends().catch(e=>$('friendsStatus').textContent=e.message)}
  if(page==='stats'){renderStats();refreshArchive().then(renderStats).catch(()=>{})}if(page==='leaders')loadLeaders();scrollTo({top:0,behavior:'instant'});
 }
