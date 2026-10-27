@@ -296,7 +296,10 @@ function paintReward(){
 async function refreshWallet(){if(!EXPERIMENTAL||!accounts.profile)return;const owner=accounts.profile.id;const result=await api('rewards',{accountToken:await accounts.accountToken()},20000);if(owner!==accounts.profile?.id)return;wallet=result;walletOwner=owner;paintReward();if(result.octoberGift&&!read('renkio-october-gift:'+owner)){save('renkio-october-gift:'+owner,true);$('rewardStatus').textContent='Ekim hediyesi: +500 mücevher';toast('Ekim hediyen: 500 mücevher hesabına eklendi.','success')}if(game)renderJokerControl()}
 $('claimReward').onclick=async()=>{if(busy)return;await run(async()=>{await accounts.ensureAccount();wallet=await api('rewards/claim',{accountToken:await accounts.accountToken()});walletOwner=accounts.profile.id;paintReward();$('rewardStatus').textContent='10 elmas eklendi';sound.play('win')})};
 $('homePortrait').onclick=null;$('homePortraitEdit').onclick=()=>editAvatar();$('editName').onclick=()=>openAccount();
-function showHub(page){
+let hubTransition;
+function showHub(page,immediate=false){
+ if(!immediate&&document.startViewTransition&&!preferences.reduced&&document.body.dataset.page!==page){hubTransition?.skipTransition();hubTransition=document.startViewTransition(()=>showHub(page,true));hubTransition.finished.catch(()=>{});return}
+
  if(page==='home')mode(false); if(page==='friends'&&$('friendsDialog').open&&document.body.dataset.page===page)return;closeDialogs();document.body.dataset.page=page;$('home').classList.toggle('hidden',page!=='home');$('hubPages').classList.toggle('hidden',page==='home'||page==='friends');for(const p of ['leaders','stats','more'])$(p+'Page').classList.toggle('hidden',p!==page);document.querySelectorAll('.bottom-nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.page===page?'page':'false'));
  if(page==='friends'){const d=$('friendsDialog');d.classList.add('nav-page');d.show();renderFriends();refreshFriends().catch(e=>$('friendsStatus').textContent=e.message)}
  if(page==='stats'){renderStats();refreshArchive().then(renderStats).catch(()=>{})}if(page==='leaders')loadLeaders();scrollTo({top:0,behavior:'instant'});

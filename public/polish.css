@@ -32,3 +32,108 @@ body .minor-actions #pass>span,body .minor-actions #exchange>span{position:stati
 .table-seat-label.occupied{border:0;background:#24182c99;box-shadow:none;padding:2px 6px;font-size:9px;line-height:13px;transform:translate(-50%,-100%);max-width:90px}.real-table-stage{aspect-ratio:1.23!important}.table-seat-label.empty{background:#aa7bb326;color:#f1daffb3;border-color:#bfa3d05c}
 
 .real-table-stage[data-scene-state=loading]:not([data-scene-ready=true]):before{content:'';position:absolute;left:calc(50% - 14px);top:calc(50% - 14px);width:28px;height:28px;border:2px solid #b88ad129;border-top-color:#c29ce1;border-radius:50%;animation:table-loading .8s linear infinite}@keyframes table-loading{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.real-table-stage:before{animation:none!important}}body[data-motion=reduced] .real-table-stage:before{animation:none!important}
+/* Home atelier: identity, actual 3D table and primary actions form one hierarchy. */
+body[data-view=home]{background:radial-gradient(ellipse at 50% 12%,#332147 0,transparent 55%),#15101e}
+body[data-view=home] .app-header{height:72px;padding:14px 24px;max-width:1040px}
+body[data-view=home] .home-screen{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);align-items:start;max-width:1040px!important;gap:16px!important;padding-top:8px!important}
+body[data-view=home] .home-story{position:relative!important;inset:auto!important;transform:none!important;width:auto;height:38px!important;grid-column:1/-1;order:-5;display:flex;justify-content:center;margin:0!important}
+body[data-view=home] .brand-tiles{height:34px!important;gap:7px!important;transform:none!important}
+body[data-view=home] .brand-tiles .tile{width:32px!important;height:33px!important;flex-basis:32px!important;animation:none!important;transform:none!important;box-shadow:0 3px 6px #0002!important}
+body[data-view=home] .my-table-card{order:-4;grid-column:1;grid-row:2/5;border:1px solid #c8a6e32b;border-radius:28px;padding:16px 14px 0;background:radial-gradient(ellipse at 50% 62%,#62467455,transparent 67%),linear-gradient(155deg,#35263f,#251b30)!important;box-shadow:inset 0 1px 0 #f1dcff12,0 18px 45px #09060f22;position:relative}
+.my-table-card .profile-banner{display:flex!important;min-height:64px!important;padding:0 2px 12px!important;border:0!important;border-bottom:1px solid #dcc4eb15!important;border-radius:0!important;background:none!important;box-shadow:none!important;gap:12px!important;overflow:visible}
+.my-table-card .profile-banner:before{display:none}
+.my-table-card .home-character{width:58px!important;height:58px!important;min-width:58px!important;position:relative}
+.my-table-card .home-character .home-portrait{width:58px!important;height:58px!important;min-width:0!important;border:0!important;border-radius:17px!important;background:#b48ac217!important;padding:0!important;box-shadow:none!important;overflow:visible}
+.my-table-card .home-character .character-art{animation:none!important}
+.my-table-card .portrait-edit{width:23px!important;height:23px!important;min-height:23px!important;right:-3px!important;bottom:0!important;padding:5px!important;background:#533761!important;border:1px solid #b892cd55!important}
+.my-table-card .profile-title{gap:0 4px!important}
+.my-table-card .profile-title #name{font-size:21px!important;letter-spacing:-.4px;min-height:29px!important;font-weight:850!important}
+.my-table-card .profile-title #homePlayerId{font-size:10px!important;opacity:.7;letter-spacing:.6px}
+.my-table-card .profile-title #editName{width:25px;height:25px;padding:6px;background:none}
+.my-table-card .profile-links{display:flex!important;flex-direction:row!important;flex:0 0 auto!important;width:auto!important;gap:6px!important}
+.my-table-card .profile-links .text-button{width:33px!important;height:33px!important;min-width:33px!important;min-height:33px!important;padding:7px!important;font-size:0!important;border:1px solid #c49ed326!important;border-radius:11px!important;background:#b68aca0b!important;color:#dbc0eb!important}
+.my-table-card .profile-links .icon{width:19px!important;height:19px!important}
+.my-table-heading{padding:14px 5px 0;position:relative;z-index:3}
+.my-table-heading h2{font-size:13px;font-weight:750;letter-spacing:.1px;color:#e9d8f3}
+.my-table-heading #homeTableOpen{padding:7px 12px;min-height:33px;border:1px solid #bf95dd3d;border-radius:11px;background:#b886d51c;color:#edd6ff;font-size:11px;font-weight:850}
+.my-table-card .real-table-stage{aspect-ratio:1.18!important;margin:-3px auto 0!important;border-radius:0 0 26px 26px;background:radial-gradient(ellipse at 50% 70%,#ca91e015,transparent 65%);max-width:none}
+body[data-view=home] .play-card{grid-column:2;grid-row:2;order:-3;gap:0!important}
+body[data-view=home] .home-actions{gap:10px}
+body[data-view=home] .home-actions .button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-height:116px;padding:17px;border-radius:21px;font-size:19px;box-shadow:inset 0 1px 0 #ffffff28,0 7px 16px #09051022;border-color:#c49ef15c;background:linear-gradient(135deg,#9b61dd,#6741b8)}
+body[data-view=home] .home-actions .match-button{background:linear-gradient(135deg,#299e7d,#137761);border-color:#78d8b54d}
+body[data-view=home] .home-actions .button>.icon{width:30px;height:30px;padding:0;background:none;border:0;border-radius:0}
+body[data-view=home] .home-actions .button>span{font-size:19px;align-self:auto!important}
+body[data-view=home] .home-actions .button>small{display:none}
+body[data-view=home] .home-actions .button>i{position:absolute;right:14px;top:20px;width:22px;height:22px;background:#00000012}
+body[data-view=home] .join-row{grid-template-columns:minmax(0,1fr) 75px;gap:8px;margin-top:10px;padding:10px;border:1px solid #b18acd24;border-radius:17px;background:#ffffff04}
+body[data-view=home] .join-row label{grid-column:1/-1;font-size:10px;font-weight:700;gap:6px;color:#c3afcf;padding:0 2px}
+body[data-view=home] .join-row label .icon{width:14px;height:14px;background:none;padding:0}
+body[data-view=home] .join-row input{min-height:40px!important;height:40px;padding:8px 11px!important;border-radius:10px!important;border-color:#aa81c332!important;background:#17101f66!important;font-size:11px;letter-spacing:1.4px}
+body[data-view=home] .join-row .button{min-height:40px;padding:7px 10px;border-radius:10px;font-size:12px;background:#715092;border-color:#b58edc3d;box-shadow:none}
+body[data-view=home] .open-games{grid-column:2;order:-2;padding:14px!important;border:1px solid #b999d023!important;border-radius:20px!important;background:#ffffff03!important}
+body[data-view=home] .daily-reward{grid-column:2;min-height:170px;padding:18px;border:1px solid #ae80e541;border-radius:22px;background:radial-gradient(ellipse at 100% 0,#7e47a74d,transparent 65%),#2b1c41;overflow:hidden}
+body[data-view=home] .daily-reward h2{font-size:21px;letter-spacing:-.4px}
+body[data-view=home] .reward-copy{max-width:78%}
+body[data-view=home] .reward-copy p{display:none}
+body[data-view=home] .reward-art{width:150px;height:135px;top:2px;right:-13px;opacity:.8}
+body[data-view=home] .reward-days{display:none}
+body[data-view=home] .reward-claim{grid-column:2;grid-row:2;font-size:12px;min-height:38px;padding:8px 15px;min-width:0;border-radius:12px;z-index:2}
+body[data-view=home] #rewardStatus{grid-row:3;font-size:10px}
+body[data-view=home] .match-archive{grid-column:1/-1;padding:16px!important;background:#ffffff03!important;border:1px solid #b999d023!important;border-radius:22px!important}
+body[data-view=home] .open-games-heading h2,body[data-view=home] .section-heading h2{font-size:15px}
+body[data-view=home] .open-game{border-radius:13px}
+body[data-view=home] .bottom-nav{background:#241b30ed;backdrop-filter:blur(20px);border-color:#bd98dc24;box-shadow:0 -6px 30px #10091830}
+body[data-view=home] .bottom-nav button{transition:color .2s,transform .35s cubic-bezier(.2,.8,.2,1)}
+body[data-view=home] .bottom-nav button:active{transform:scale(.94)}
+body[data-view=home] .bottom-nav [aria-current=page]:after{background:#c18cf1;box-shadow:0 0 14px #bd7cf047}
+body[data-view=home] .my-table-heading button,body[data-view=home] .home-actions .button,body[data-view=home] .join-row .button{transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s}
+body[data-view=home] .home-actions .button:active,body[data-view=home] .my-table-heading button:active,body[data-view=home] .join-row .button:active{transform:scale(.97);filter:brightness(1.08)}
+@keyframes home-arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+body[data-view=home] #home.screen-enter{animation:none!important}
+body[data-view=home] #home.screen-enter>.my-table-card,body[data-view=home] #home.screen-enter>.play-card{animation:home-arrive .55s cubic-bezier(.16,1,.3,1) both}
+body[data-view=home] #home.screen-enter>.play-card{animation-delay:60ms}
+@media(max-width:650px){
+ body[data-view=home] .app-header{height:62px;padding:10px 16px}
+ body[data-view=home] .brand{font-size:27px}
+ body[data-view=home] .brand-app-icon{width:33px;height:33px}
+ body[data-view=home] .header-actions{gap:6px}
+ body[data-view=home] .header-actions .icon-button,body[data-view=home] .help-trigger{width:32px;height:32px;min-height:32px;border-radius:10px;background:#b184c313;border-color:#bd95d12b}
+ body[data-view=home] .home-screen{display:flex!important;flex-direction:column;gap:12px!important;padding:0 12px 18px!important}
+ body[data-view=home] .home-screen>section{width:100%}
+ body[data-view=home] .home-story{height:30px!important;margin:0 0 1px!important}
+ body[data-view=home] .brand-tiles{height:28px!important;gap:7px!important}
+ body[data-view=home] .brand-tiles .tile{width:27px!important;height:28px!important;flex-basis:27px!important;border-radius:7px!important}
+ body[data-view=home] .my-table-card{padding:12px 10px 0;border-radius:24px}
+ .my-table-card .profile-banner{gap:8px!important;padding-bottom:9px!important;min-height:56px!important}
+ .my-table-card .home-character,.my-table-card .home-character .home-portrait{width:49px!important;height:49px!important;min-width:49px!important}
+ .my-table-card .profile-title #name{font-size:19px!important}
+ .my-table-card .profile-title{grid-template-columns:minmax(0,1fr) 22px}
+ .my-table-card .profile-links{gap:4px!important}
+ .my-table-card .profile-links .text-button{width:30px!important;min-width:30px!important;height:30px!important;min-height:30px!important;padding:6px!important}
+ .my-table-heading{padding:11px 4px 0}
+ .my-table-heading h2{font-size:12px}
+ .my-table-heading #homeTableOpen{font-size:10px;min-height:29px;padding:5px 9px}
+ .my-table-card .real-table-stage{height:clamp(220px,32dvh,310px);aspect-ratio:auto!important;margin:-7px auto 0!important}
+ body[data-view=home] .home-actions .button{min-height:87px;gap:7px;padding:13px 15px;border-radius:18px;flex-direction:row;align-items:center;justify-content:flex-start}
+ body[data-view=home] .home-actions .button>.icon{width:25px;height:25px;flex:none}
+ body[data-view=home] .home-actions .button>span{font-size:17px}
+ body[data-view=home] .home-actions .button>i{display:none}
+ body[data-view=home] .join-row{margin-top:9px;padding:9px;grid-template-columns:minmax(0,1fr) 75px;gap:6px 8px}
+ body[data-view=home] .join-row label{display:none}
+ body[data-view=home] .daily-reward{min-height:154px;padding:16px;grid-template-columns:1fr 90px;gap:8px}
+ body[data-view=home] .daily-reward h2{font-size:21px}
+ body[data-view=home] .reward-copy{grid-column:1/3;max-width:80%}
+ body[data-view=home] .reward-wallet{margin-top:8px}
+ body[data-view=home] .reward-claim{grid-column:2;grid-row:2;margin-top:0;min-height:35px;align-self:end}
+ body[data-view=home] .reward-eyebrow{font-size:9px;letter-spacing:1px}
+ body[data-view=home] .bottom-nav{padding-top:9px;border-radius:23px 23px 0 0}
+}
+@media(max-width:350px){.my-table-card .profile-title #name{font-size:16px!important}.my-table-card .profile-links .text-button{width:27px!important;min-width:27px!important}.my-table-card .real-table-stage{height:220px}body[data-view=home] .home-actions .button{gap:7px;padding:12px}body[data-view=home] .home-actions .button>span{font-size:15px}}
+@media(prefers-reduced-motion:reduce){body[data-view=home] #home.screen-enter>section{animation:none!important}body[data-view=home] button{transition:none!important}}
+body[data-motion=reduced][data-view=home] #home.screen-enter>section{animation:none!important}body[data-motion=reduced][data-view=home] button{transition:none!important}
+/* Browser-composited page transitions keep navigation steady. */
+body[data-view=home] .app-header{view-transition-name:home-header}body[data-view=home] .bottom-nav{view-transition-name:home-navigation}
+::view-transition-old(root){animation:home-page-out .15s ease-out both}::view-transition-new(root){animation:home-page-in .28s cubic-bezier(.16,1,.3,1) both}
+@keyframes home-page-out{to{opacity:0;transform:translateY(-4px)}}@keyframes home-page-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+body[data-motion=reduced]::view-transition-group(*),body[data-motion=reduced]::view-transition-old(*),body[data-motion=reduced]::view-transition-new(*){animation:none!important}

@@ -25,3 +25,15 @@ test('the updater ships a self-contained 3D engine, not the rejected flat table 
  const bundle=await clientBundle(fileURLToPath(new URL('..',import.meta.url)));assert.ok(bundle.files.some(f=>f.path==='table-engine.mjs'));for(const name of ['table-v2.webp','seated-a.webp','seated-b.webp'])assert.ok(!bundle.files.some(f=>f.path==='assets/'+name));assert.ok(bundle.files.reduce((n,f)=>n+Buffer.from(f.data,'base64').length,0)<12*1024*1024);
  const source=await readFile(new URL('../public/table.mjs',import.meta.url),'utf8');assert.ok(!source.includes("createElement('img')")&&!source.includes('avatarArt'));const engine=await readFile(new URL('../public/table-engine.mjs',import.meta.url),'utf8');assert.ok(engine.includes('Permission is hereby granted'));assert.ok(!/from[ ]*["']three/.test(engine));
 });
+
+test('camera fitting remains continuous across orbit angles and phone aspect ratios',()=>{
+ for(const aspect of [.7,1.2,2]){const stage={camera:new THREE.PerspectiveCamera(36,aspect,.1,50),target:new THREE.Vector3(0,1,0),people:[{},null,{},{}]};let previous;
+  for(let i=0;i<=360;i++){stage.angle=i*Math.PI/180;TableScene.prototype.positionCamera.call(stage);assert.ok(Number.isFinite(stage.distance)&&stage.distance>5);if(previous)assert.ok(Math.abs(stage.distance-previous)<.3,'orbit must never snap its zoom');previous=stage.distance;}
+ }
+});
+
+test('orbit spring settles without overshooting at 30, 60 and 120Hz and stops requesting frames',()=>{
+ const oldDocument=globalThis.document,oldRAF=globalThis.requestAnimationFrame;
+ globalThis.document={hidden:false};globalThis.requestAnimationFrame=()=>1;
+ try{for(const hz of [30,60,120]){const stage={visible:true,angle:0,angleTarget:Math.PI/2,angularVelocity:0,lastTick:0,poses:new Map(),render(){},tick:TableScene.prototype.tick};let previous=0;for(let n=1;n<=hz*3;n++){stage.tick(n*1000/hz);assert.ok(stage.angle>=previous-1e-6&&stage.angle<=stage.angleTarget+1e-6);previous=stage.angle}assert.equal(stage.angle,stage.angleTarget);assert.equal(stage.frame,null)}}finally{globalThis.document=oldDocument;globalThis.requestAnimationFrame=oldRAF}
+});

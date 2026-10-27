@@ -11,3 +11,10 @@ The rejected furniture and seated-sheet assets remain in Git for rollback but ar
 Verification: 120 automated tests pass, including real volumetric geometry, finite normals, seated axes, independent joints, buffer cleanup and updater contents. A four-occupant local table was inspected from multiple camera angles on the mobile preview; browser error logs were empty. This corrects the table composition, not the gameplay or scoring.
 
 References: https://threejs.org/docs/ and the installed official Three.js source and MIT license.
+
+## Home and motion refinement (27 October)
+The home screen now treats identity and the actual table as one scene card. Primary actions sit beside it on wide screens and directly below it on phones. The daily reward is compact; all account, invitation, room, archive and practice entry points remain available.
+
+Orbit controls use a critically damped spring with release velocity and a bounded inertial destination. Camera framing is solved analytically from the scene bounds, avoiding discrete fit iterations that changed zoom abruptly. Gestures render at the display frame cadence and stop at rest; hidden/reduced-motion states cancel movement. Seated greetings use smooth minimum-jerk envelopes with staggered head, eye and arm timing, without whole-body rocking. Portrait celebration squash and rotation are reduced. Browser-native View Transitions crossfade hub pages, with fixed navigation and reduced-motion fallback.
+
+References: https://motion.dev/docs/animate (velocity-aware spring/inertia behavior), https://developer.chrome.com/docs/web-platform/view-transitions/same-document (native page transitions). No new runtime dependency or game-engine migration was required. Tests cover continuous camera fit and spring convergence/termination at 30/60/120Hz.

@@ -14,8 +14,8 @@ export const EXPRESSIONS={idle:'0% 0%',celebrate:'100% 0%',sad:'0% 100%',hello:'
 export function spriteFrames(face,mood='hello'){
  if(!CHARACTER_CLIPS[face])return [];
  const pose=EXPRESSIONS[mood]||EXPRESSIONS.hello;
- const tilt=[-5,3,-7,5,-9,4][face];
- const transforms=mood==='celebrate'?['translateY(0) scale(1)','translateY(4px) scale(1.08,.92)','translateY(-13px) rotate(-4deg) scale(.96,1.04)','translateY(-3px) rotate(4deg)','translateY(-8px) rotate(-2deg)','translateY(0) scale(1)']:
+ const tilt=[-2,1,-2,1.5,-2,1][face];
+ const transforms=mood==='celebrate'?['translateY(0) scale(1)','translateY(2px) scale(1.015,.985)','translateY(-6px) rotate(-1deg) scale(.995,1.005)','translateY(-2px) rotate(1deg)','translateY(-1px) rotate(0deg)','translateY(0) scale(1)']:
  mood==='sad'?['translateY(0)','translateY(4px) rotate(-3deg) scale(.98,.97)','translateY(3px) rotate(2deg)','translateY(0)']:
  ['translateY(0) rotate(0deg)',`translateY(-3px) rotate(${tilt}deg)`,`translateY(-1px) rotate(${-tilt*.6}deg)`,'translateY(0) rotate(0deg)'];
  return transforms.map((transform,i)=>({backgroundPosition:pose,transform:transform+' scale(var(--portrait-scale,1))',offset:i/(transforms.length-1),easing:'cubic-bezier(.25,.7,.2,1)'}));
