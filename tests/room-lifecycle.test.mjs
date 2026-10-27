@@ -39,6 +39,6 @@ test('multiplayer API revokes removed sessions, informs the removed client and p
   const d=(await call('join',{room:a.code,name:'D'})).v;const started=(await call('start',aa)).v;const target=started.game.turn===0?2:started.game.turn;
   const result=await call('kick',{...aa,seat:target,seatId:started.seats[target].seatId});assert.equal(result.status,200);assert.equal(result.v.game.players[target].eliminated,true);assert.equal(result.v.game.over,false);assert.equal(result.v.seats.length,3);
   const old=target===1?cc:{room:a.code,token:d.token};assert.equal((await call('state',old)).status,403);assert.equal((await call('chat',{...old,text:'hello'})).status,403);
-  const survivor=target===1?{room:a.code,token:d.token}:cc;await call('resign',survivor);const rematch=await call('start',aa);assert.equal(rematch.status,200);assert.equal(rematch.v.seats.length,2);assert.equal(rematch.v.game.players.length,2);assert.equal((await call('state',survivor)).v.me,1);
+  const survivor=target===1?{room:a.code,token:d.token}:cc;await call('resign',survivor);const rematch=await call('start',aa);assert.equal(rematch.status,200);assert.equal(rematch.v.game.matchId,started.game.matchId);assert.equal(rematch.v.seats.length,3);assert.equal(rematch.v.game.players.length,3);assert.equal(rematch.v.game.over,true);
  }finally{if(child?.exitCode===null)await stop();await rm(data,{recursive:true,force:true})}
 });

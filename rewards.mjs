@@ -1,3 +1,4 @@
+import {accessoryById,ACCESSORIES} from './public/character-style.mjs';
 const dayFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'});
 export const rewardDay=(now=Date.now())=>dayFormat.format(new Date(now));
 export const SUPPORT_PRICE=5;
@@ -10,7 +11,7 @@ export function grantOctoberGift(profile,now=Date.now()){
  if(!Number.isFinite(profile.createdAt)||profile.createdAt>=OCTOBER_GIFT_CUTOFF||profile.createdAt>now||profile.octoberGift2026)return false;
  const e=economy(profile);e.diamonds+=500;profile.octoberGift2026={amount:500,at:now};return true;
 }
-export function rewardView(profile,now=Date.now()){const e=economy(profile);return {octoberGift:profile.octoberGift2026||null,diamonds:e.diamonds,inventory:{...e.inventory},balance:e.inventory.joker,available:e.lastClaim!==rewardDay(now),claimedDays:e.claimedDays,day:rewardDay(now)}}
+export function rewardView(profile,now=Date.now()){const e=economy(profile);return {octoberGift:profile.octoberGift2026||null,diamonds:e.diamonds,inventory:{...e.inventory},balance:e.inventory.joker,available:e.lastClaim!==rewardDay(now),claimedDays:e.claimedDays,day:rewardDay(now),accessories:[...new Set([...ACCESSORIES.filter(a=>!a.price).map(a=>a.id),...(e.accessories||[])])]}}
 export function claimReward(profile,now=Date.now()){
  if(!rewardView(profile,now).available)throw Error('Bugünün ödülünü zaten topladın.');
  const e=economy(profile);e.diamonds+=10;e.lastClaim=rewardDay(now);e.claimedDays++;return rewardView(profile,now);
@@ -37,3 +38,6 @@ export function prepareJoker(game,actor,id){
  if(!p.hand.some(t=>t.joker))p.hand.push({id,c:0,s:0,joker:true});
  return p.hand.find(t=>t.joker);
 }
+
+export function buyAccessory(profile,id,receipt){const item=accessoryById(id);if(!item)throw Error('Aksesuar bulunamadı.');const e=economy(profile);e.accessories??=[];if(!item.price||e.accessories.includes(id))return rewardView(profile);if(receiptCheck(e,receipt,id,'cosmetic'))return rewardView(profile);if(e.diamonds<item.price)throw Error('Yeterli elmasın yok.');e.diamonds-=item.price;e.accessories.push(id);remember(e,receipt,id,'cosmetic');return rewardView(profile)}
+export function ownsAccessory(profile,id){const item=accessoryById(id||'none');return !!(item&&(!item.price||economy(profile).accessories?.includes(id)))}

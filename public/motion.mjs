@@ -62,9 +62,15 @@ export class CharacterReactions{
  }
 }
 const reactions=new CharacterReactions();
+let heroKey=null,heroNode=null;
+function scoreHero(game){
+ const h=game.history?.[0],key=game.matchId+':'+game.revision;if(heroKey===null||!heroKey.startsWith(game.matchId+':')){heroKey=key;return}if(heroKey===key)return;heroKey=key;if(!h||!h.tiles?.length||h.score<12)return;if(document.hidden||document.body.dataset.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const actor=Number.isInteger(h.actor)?h.actor:game.players.findIndex(p=>p.name===h.name),source=document.querySelector('#scores [data-seat="'+actor+'"] .character-art');if(!source)return;heroNode?.remove();const rect=source.getBoundingClientRect(),hero=document.createElement('div'),art=source.cloneNode(false);hero.className='character-hero';hero.setAttribute('aria-hidden','true');hero.append(art);hero.style.left=(innerWidth/2-78)+'px';hero.style.top=(innerHeight*.40-95)+'px';document.body.append(hero);heroNode=hero;const dx=rect.left+rect.width/2-innerWidth/2,dy=rect.top+rect.height/2-innerHeight*.40;playCharacter(art,'impact');const motion=hero.animate([{transform:`translate(${dx}px,${dy}px) scale(.35)`,opacity:0},{transform:'translate(0,0) scale(1)',opacity:1,offset:.22},{transform:'translate(0,0) scale(1.16)',opacity:1,offset:.45},{transform:'translate(0,0) scale(1)',opacity:1,offset:.78},{transform:`translate(${dx}px,${dy}px) scale(.35)`,opacity:0}],{duration:2200,easing:'cubic-bezier(.22,.65,.32,1)'});motion.finished.finally(()=>{hero.remove();if(heroNode===hero)heroNode=null});
+}
 export function reactToGame(game){
+ scoreHero(game);
  for(const event of reactions.update(game)){
   const host=document.querySelector('#scores [data-seat="'+event.seat+'"] .illustrated-avatar'),art=host?.querySelector('.character-art');
-  if(art&&art.dataset.emotion!==event.mood)playCharacter(host,event.mood,event.remaining);
+  const mood=event.mood==='sad'&&!game.over?(game.history?.[0]?.score>=24?'surprise':(game.timeoutCounts?.[event.seat]||0)>=2?'angry':'sad'):event.mood;if(art&&art.dataset.emotion!==mood)playCharacter(host,mood,Math.min(event.remaining,mood==='surprise'?1500:mood==='angry'?1800:event.remaining));
  }
 }

@@ -1,0 +1,11 @@
+# Lobby and character v2
+
+Table means an unstarted lobby; a match has its own immutable identity. Starting is idempotent and never replaces an ongoing or archived match. A later create operation can create a new lobby while previous matches continue independently. Returning home preserves lobby membership; leaving is explicit, transfers hosting to the next remaining seat, and cancels a mini-game. Disbanding is host-only, closes all seats and outstanding invitations, and rejects stale links. Moving to an invited lobby requires a confirmation; an existing hosted lobby is disbanded, while guest membership is left. Joining a full, closed or started destination never discards the source lobby.
+
+Invitations to the same recipient and table are idempotent. A newer table invitation from the same sender replaces their older invitation. Invitations are hidden if the sender left, the table filled, started, closed, or the invitation expired. Joining and changing lobby membership mutate together before persistence to avoid concurrent joins creating two memberships.
+
+The gamepad opens three direct hand choices. First choice starts one shared 3-second round; each choice is immutable. SSE hides opponents' hands until everyone chooses or the deadline expires. Nonresponders are skipped, not declared losers. One response alone is a draw. All three hand types or a single type tie; two types use standard RPS. Results are shown for 8 seconds beside the actual characters, whose articulated win/lose gestures match the result. Duplicate request receipts cannot start a new round.
+
+A single shared character mesh and rig serves portrait, table, and celebration. Accessories are part of that model and propagate with profile state. Glasses and bow tie are free; cap costs 20 gems, crown 30. Server ownership checks prevent equipping unowned paid items; purchase retries do not charge twice. No real money billing was added.
+
+Last-move heat is reconstructed from the most recent scored tile action, including on reconnect and after passing. It uses the committed score, not tile count. Last tiles stay still, with a warm face and slower flame motion; pending tiles use faster flame motion and an eager wobble. Invisible boards and reduced-motion users do not run continuous fire frames. The high-score character cameo is a real rig animation, not a sprite/image replacement.
