@@ -1,6 +1,7 @@
+import {HERO_TIMING} from '../public/character-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:2.2});
+export const CHARACTER_DURATIONS=Object.freeze({hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -8,7 +9,7 @@ const rise=(t,a,b)=>smooth((t-a)/(b-a));
 const envelope=(t,a,b,c,d)=>rise(t,a,b)*(1-rise(t,c,d));
 const vec=n=>[n?.x||0,n?.y||0,n?.z||0];
 const values=(a,v)=>{if(a?.set)a.set(...v);else if(a){a.x=v[0];a.y=v[1];a.z=v[2]}};
-const nodes=rig=>[rig.head,rig.body,...(rig.eyes||[]),...(rig.lids||[]),...(rig.arms||[]),...(rig.legs||[]),...(rig.brows||[]),rig.tail,rig.accent,...Object.values(rig.mouth||{})].filter(Boolean);
+const nodes=rig=>[rig.head,rig.body,...(rig.eyes||[]),...(rig.lids||[]),...(rig.arms||[]),...(rig.legs||[]),...(rig.brows||[]),rig.tail,rig.accent,rig.hips,...Object.values(rig.mouth||{})].filter(Boolean);
 function remember(n){return {position:vec(n.position),rotation:vec(n.rotation),scale:n.scale?vec(n.scale):[1,1,1],visible:n.visible!==false}}
 export function captureRest(root){
  const rig=root?.userData?.rig;if(!rig)return null;
@@ -119,10 +120,13 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
  if(rig.mouth?.happy&&emotion==='happy')stretch(rig.mouth.happy,1,1+Math.sin(elapsed*15)*.10,1);
  if(mood==='angry'){const a=envelope(elapsed,0,.25,1.1,1.8);setMouth(rig,'sad');brow(rig,'angry',a);rotate(rig.head,.08*a,Math.sin(elapsed*15)*.035*a,0);arm(rig,0,.45*a);arm(rig,1,.45*a);if(rig.pose!=='seated')move(root,0,jump(elapsed,.3,.25,.025),0)}
  else if(mood==='surprise'){const a=envelope(elapsed,0,.18,.8,1.5);brow(rig,'happy',a);rotate(rig.head,-.1*a,0,0);stretch(rig.mouth.happy,.65,1+.7*a,1);arm(rig,0,.75*a);arm(rig,1,.75*a)}
- else if(mood==='impact'){const spin=key(elapsed,[[0,0],[.35,0],[.7,Math.PI],[1.1,Math.PI],[1.55,Math.PI*2],[2.2,Math.PI*2]]),bump=envelope(elapsed,.72,.88,1.02,1.25);celebrate(rig,root,elapsed,face,2.2);if(rig.pose!=='seated'){rotate(root,-bump*.28,spin,0);move(root,0,.08*bump,.25*bump);stretch(rig.body,1+.12*bump,1-.08*bump,1+.17*bump)}}
+ else if(mood==='impact'){
+  const t=elapsed,turn=key(t,[[0,0],[.65,0],[1.30,Math.PI],[2.35,Math.PI],[3.1,0],[4.8,0]]),contact=envelope(t,1.42,1.78,1.93,2.30),cheer=envelope(t,2.45,2.95,3.95,4.50),anticip=envelope(t,.8,1.10,1.30,1.58);
+  brow(rig,'happy',.75);blink(rig,Math.max(blinkAt(t,.4),blinkAt(t,3.25,.12)));rotate(rig.head,-cheer*.10,contact*.38,cheer*Math.sin(t*5)*.035);arm(rig,0,cheer*1.85+anticip*.25,-cheer*.20);arm(rig,1,cheer*2.05+anticip*.25,-cheer*.20);
+  if(rig.pose!=='seated'){rotate(root,-contact*.35,turn,0);move(root,0,-anticip*.045+contact*.025+jump(t,2.65,.65,.09)+jump(t,3.5,.55,.06),contact*.32);stretch(rig.body,1+contact*.06,1-contact*.05,1+contact*.10);stretch(rig.hips,1+contact*.15,1-contact*.08,1+contact*.32);move(rig.hips,0,0,-contact*.06);(rig.legs||[]).forEach((n,i)=>rotate(n,contact*.12,0,(i?1:-1)*contact*.055))}
+ }
  else if(mood==='hello')greet(rig,elapsed,face);
- else if(emotion==='angry'){rotate(n,0,0,side*.30*strength);move(n,0,-.014*strength,0)}
-  else if(emotion==='happy')celebrate(rig,root,elapsed,face,duration);
+ else if(emotion==='happy')celebrate(rig,root,elapsed,face,duration);
  else disappointment(rig,elapsed,face,duration);
  return true;
 }

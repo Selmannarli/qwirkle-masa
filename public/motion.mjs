@@ -1,3 +1,4 @@
+import {HERO_TIMING} from './character-style.mjs';
 import {t} from './i18n.mjs';
 export const CHARACTER_CLIPS=['El salla','Selam ver','Göz kırp','Ayağını kaldır','Göz kırp ve eğil','Kollarını dalgalandır'].map(name=>({name,duration:1850}));
 let portraits,loading,installed=false;
@@ -62,10 +63,16 @@ export class CharacterReactions{
  }
 }
 const reactions=new CharacterReactions();
-let heroKey=null,heroNode=null;
+let heroKey=null,heroNode=null,heroCancel=null;
+function launchHero(source){
+ if(!source||document.hidden||reduced())return;heroCancel?.();const rect=source.getBoundingClientRect(),hero=document.createElement('div'),art=source.cloneNode(false),x=innerWidth/2,y=innerHeight*.43;hero.className='character-hero';hero.setAttribute('aria-hidden','true');hero.append(art);hero.style.left=(x-120)+'px';hero.style.top=(y-140)+'px';(document.querySelector('dialog[open]:modal')||document.body).append(hero);heroNode=hero;const previousVisibility=source.style.visibility;source.style.visibility='hidden';const light=document.createElement('div');light.className='character-stage-light';hero.parentNode.insertBefore(light,hero);let cleaned=false;const cleanup=()=>{if(cleaned)return;cleaned=true;source.style.visibility=previousVisibility;hero.remove();light.remove();if(heroNode===hero){heroNode=null;heroCancel=null}};heroCancel=cleanup;const dx=rect.left+rect.width/2-x,dy=rect.top+rect.height/2-y;playCharacter(art,'impact');
+ const frames=[[0,dx,dy,.26,0],[.16,0,0,1,1],[.29,0,9,.96,1],[HERO_TIMING.impact/HERO_TIMING.duration,0,0,1.30,1],[.46,0,2,1.14,1],[.66,0,0,1,1],[.86,0,-5,1,1],[1,dx,dy,.26,0]],started=performance.now();let frame;
+ const tick=now=>{if(cleaned)return;const t=Math.min(1,(now-started)/HERO_TIMING.duration);let i=1;while(i<frames.length-1&&t>frames[i][0])i++;const a=frames[i-1],b=frames[i],u=(t-a[0])/(b[0]-a[0]),ease=u*u*(3-2*u),mix=j=>a[j]+(b[j]-a[j])*ease;hero.style.transform=`translate3d(${mix(1)}px,${mix(2)}px,0) scale(${mix(3)})`;hero.style.opacity=String(mix(4));light.style.opacity=String(Math.min(1,t/.12,(1-t)/.12));if(t<1)frame=requestAnimationFrame(tick);else cleanup()};light.style.animation='none';hero.style.willChange='transform,opacity';frame=requestAnimationFrame(tick);
+
+}
+export function previewCelebration(host){const source=host?.querySelector('.character-art');if(!source)return;launchHero(source);document.dispatchEvent(new CustomEvent('renkio-preview'))}
 function scoreHero(game){
- const h=game.history?.[0],key=game.matchId+':'+game.revision;if(heroKey===null||!heroKey.startsWith(game.matchId+':')){heroKey=key;return}if(heroKey===key)return;heroKey=key;if(!h||!h.tiles?.length||h.score<12)return;if(document.hidden||document.body.dataset.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- const actor=Number.isInteger(h.actor)?h.actor:game.players.findIndex(p=>p.name===h.name),source=document.querySelector('#scores [data-seat="'+actor+'"] .character-art');if(!source)return;heroNode?.remove();const rect=source.getBoundingClientRect(),hero=document.createElement('div'),art=source.cloneNode(false);hero.className='character-hero';hero.setAttribute('aria-hidden','true');hero.append(art);hero.style.left=(innerWidth/2-78)+'px';hero.style.top=(innerHeight*.40-95)+'px';document.body.append(hero);heroNode=hero;const dx=rect.left+rect.width/2-innerWidth/2,dy=rect.top+rect.height/2-innerHeight*.40;playCharacter(art,'impact');const motion=hero.animate([{transform:`translate(${dx}px,${dy}px) scale(.35)`,opacity:0},{transform:'translate(0,0) scale(1)',opacity:1,offset:.22},{transform:'translate(0,0) scale(1.16)',opacity:1,offset:.45},{transform:'translate(0,0) scale(1)',opacity:1,offset:.78},{transform:`translate(${dx}px,${dy}px) scale(.35)`,opacity:0}],{duration:2200,easing:'cubic-bezier(.22,.65,.32,1)'});motion.finished.finally(()=>{hero.remove();if(heroNode===hero)heroNode=null});
+ const h=game.history?.[0],key=game.matchId+':'+game.revision;if(heroKey===null||!heroKey.startsWith(game.matchId+':')){heroKey=key;return}if(heroKey===key)return;heroKey=key;if(!h?.tiles?.length||h.score<12)return;const actor=Number.isInteger(h.actor)?h.actor:game.players.findIndex(p=>p.name===h.name);launchHero(document.querySelector('#scores [data-seat="'+actor+'"] .character-art'));
 }
 export function reactToGame(game){
  scoreHero(game);

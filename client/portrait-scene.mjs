@@ -36,7 +36,7 @@ export class CharacterPortraits{
  tick(now){
   this.frame=null;if(document.hidden||this.lost)return;this.prune();const reduced=this.reduced(),modal=document.querySelector('dialog[open]:modal');let alive=false;
   for(const r of this.records.values()){
-   const {art}=r;if(!r.visible||!art.getClientRects().length||modal&&!modal.contains(art))continue;
+   const {art}=r;if(!r.visible||!art.getClientRects().length||modal&&!modal.contains(art)&&!art.closest('.character-hero'))continue;
    const rect=art.getBoundingClientRect();if(rect.bottom<=0||rect.top>=innerHeight||rect.width<1||rect.height<1)continue;
    const idle=!!art.closest('#scores,.home-portrait,.avatar-preview,#winnerPortrait'),active=r.mood!=='idle',animate=!reduced&&(idle||active);alive||=animate;
    if(!r.dirty&&!this.dirty&&(!animate||now-r.last<(active?15:32)))continue;
