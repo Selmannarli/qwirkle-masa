@@ -1,5 +1,7 @@
 # Renkio visual and sound update · 27 October 2026
 
+The flat table composition described below was rejected and replaced by the real 3D scene documented in `table-scene-v5.md`. Character portraits outside the table remain expression sprites.
+
 ## Shipped behaviour
 
 - A wand directly below the bag discloses three compact boost choices. Wild tile and hint use their existing inventories. +30 seconds is free once per player per match and absent from untimed games. The server verifies ownership, turn, expiry and prior use before changing the shared deadline. It never changes hands, points or turns.
