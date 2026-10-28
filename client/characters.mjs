@@ -257,7 +257,7 @@ function addAccessory(root,id,colours={}){
  }
  clearAccessorySurface(root,mount,id);
  batchColours(mount,{roughness:.36,metalness:id==='crown'?.28:.06});
- const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children[0],source=piece.geometry;piece.geometry=geometry('fitted-piece:'+rig.face+':'+id,()=>{let g=piece.geometry.clone();const p=g.attributes.position;for(let i=0;i<baked.patch.length;i+=4)p.setXYZ(baked.patch[i],baked.patch[i+1],baked.patch[i+2],baked.patch[i+3]);if(baked.patch.length){g.deleteAttribute('normal');const smooth=mergeVertices(g,1e-5);g.dispose();g=smooth;g.computeVertexNormals()}g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
+ const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children[0],source=piece.geometry;piece.geometry=geometry('fitted-piece:'+rig.face+':'+id+':'+accessoryColour(colours,mount.userData.slot,'original'),()=>{let g=piece.geometry.clone();const p=g.attributes.position;for(let i=0;i<baked.patch.length;i+=4)p.setXYZ(baked.patch[i],baked.patch[i+1],baked.patch[i+2],baked.patch[i+3]);if(baked.patch.length){g.deleteAttribute('normal');const smooth=mergeVertices(g,1e-5);g.dispose();g=smooth;g.computeVertexNormals()}g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
 }
 
 function hasAccessoryParent(node){for(let n=node;n;n=n.parent)if(n.userData.attachment)return true;return false}
