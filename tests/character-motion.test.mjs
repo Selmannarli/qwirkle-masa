@@ -39,7 +39,7 @@ test('gestures have bounded lifetimes, settle to rest and preserve the correct f
  for(const [mood,duration]of Object.entries(CHARACTER_DURATIONS)){
   const root=actor();assert.equal(animateCharacter(root,{mood,elapsed:duration-.01}),true);assert.equal(animateCharacter(root,{mood,elapsed:duration}),false);
   assert.deepEqual(root.userData.rig.arms.map(a=>a.rotation.toArray().slice(0,3)),[[0,0,0],[0,0,0]]);assert.deepEqual(root.userData.rig.head.rotation.toArray().slice(0,3),[0,0,.015]);
-  const expression=mood==='hello'?'neutral':mood==='lose'||mood==='sad'?'sad':'happy';assert.equal(root.userData.rig.mouth[expression].visible,true);
+  const expression=['hello','knock'].includes(mood)?'neutral':mood==='lose'||mood==='sad'?'sad':'happy';assert.equal(root.userData.rig.mouth[expression].visible,true);
  }
 });
 
@@ -68,3 +68,16 @@ test('the six production models share the same expression and articulated motion
  }
 });
 
+
+test('glass knocking articulates all six rigs three times without moving the actor out of its card',()=>{
+ for(let face=0;face<6;face++){
+  const root=createCharacter(face,0,'standing');captureRest(root);const origin=root.position.clone(),rotation=root.rotation.clone();
+  for(const contact of [.42,.76,1.10]){
+   animateCharacter(root,{face,mood:'knock',elapsed:contact-.12});const before=root.userData.rig.arms[1].rotation.x;
+   animateCharacter(root,{face,mood:'knock',elapsed:contact});assert.ok(root.userData.rig.arms[1].rotation.x<before-.2);
+   assert.ok(root.position.equals(origin));assert.ok(root.rotation.equals(rotation));assert.equal(root.userData.rig.mouth.neutral.visible,true);
+   for(const n of snapshot(root))for(const v of [...n.position,...n.rotation,...n.scale])assert.ok(Number.isFinite(v));
+  }
+  assert.equal(animateCharacter(root,{mood:'knock',elapsed:1.8}),false);disposePerson(root);
+ }
+});

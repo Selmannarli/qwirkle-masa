@@ -11,7 +11,7 @@ import {mergeOpenGames,playerCode} from './room-cache.mjs';
 import {remainingTiles} from './tile-inventory.mjs';
 import {bindTileDrag,isTileDragging,cancelTileDrag,animateRack} from './tile-motion.mjs';
 import {matchRecord,versus,competitiveMatches,matchOutcome} from './match-records.mjs';
-import {GameAlerts} from './alerts.mjs';
+import {GameAlerts,TurnWarning} from './alerts.mjs';
 import {playerAvatar,openAvatarPicker,setAvatarOwner,readAvatar,saveAvatar,hasAvatar} from './profile-art.mjs';
 import * as accounts from './account.mjs';
 import {key,validate,createGame,play,exchange,pass,celebrationLocked,expireTurn,resignGame,resolveTimeout} from './engine.mjs';
@@ -189,6 +189,22 @@ window.addEventListener('beforeunload',()=>{saveSolo();if(!local&&room?.game)rem
 
 
 
+const turnWarning=new TurnWarning();
+let warningArt=null,warningKey=null;
+function updateTurnWarning(){
+ const host=document.querySelector('#scores [data-seat="'+me+'"] .illustrated-avatar');
+ const state=turnWarning.update(game,me,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!document.hidden&&!!host&&!document.querySelector('dialog[open]'),blocked:visualLocked()||!!practicePausedAt});
+ if(!state){if(warningArt?.isConnected&&warningArt.dataset.emotion==='knock')playCharacter(warningArt,'idle',1);warningArt=null;warningKey=null;return}
+ const art=host.querySelector('.character-art');
+ if(art&&(art!==warningArt||state.key!==warningKey)){warningArt=art;warningKey=state.key;playCharacter(art,'knock',state.remaining)}
+ if(state.knock){
+  if(preferences.sound)sound.glassKnock();
+  const mark=node('span','glass-knock');mark.setAttribute('aria-hidden','true');
+  mark.innerHTML='<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="22" rx="9" ry="7"/><ellipse cx="20" cy="22" rx="15" ry="12"/><path d="m10 10-4-5m15 2 1-6m10 12 6-3M12 31l-4 5"/></svg>';
+  host.append(mark);setTimeout(()=>mark.remove(),390);
+ }
+}
+setInterval(updateTurnWarning,80);
 function updateClock(){if(!game||view!=='game')return;const n=$('turnClock'),remaining=game.turnDeadline?Math.max(0,Math.ceil((game.turnDeadline-Date.now()-(local?0:serverOffset))/1000)):0;n.classList.toggle('hidden',!game.turnSeconds||game.over);n.textContent=remaining>=60?Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'):String(remaining);n.style.setProperty('--remaining',String(Math.max(0,Math.min(1,remaining/(game.turnSeconds||1)))));n.classList.toggle('urgent',remaining<=10);n.title='Kalan tur süresi: '+remaining+' saniye'}
 setInterval(()=>{const locked=visualLocked();if(!locked&&wasCelebrationLocked&&game&&view==='game')render();wasCelebrationLocked=locked;updateClock();if(local&&game&&!practicePausedAt&&!busy&&!coachingBusy&&expireTurn(game)){clearTimeout(botTimer);epoch++;swapping=false;swapIds.clear();selected=null;pending=rebaseDraft(game.board,game.players[me].hand,pending);lastRevision=game.revision;render();saveSolo();scheduleBot();if(!game.timeoutDecision)toast('Süre doldu; sıra geçti.')}},250);
 function chatIsOpen(){return $('game').classList.contains('chat-open')}
