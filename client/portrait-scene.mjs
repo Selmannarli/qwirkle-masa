@@ -27,7 +27,7 @@ export class CharacterPortraits{
   const host=r.art.closest('.avatar-preview');let press=null;
   r.touch={x:0,y:0,sx:0,sy:0,until:0,kind:'',start:0};
   const point=e=>{const b=host.getBoundingClientRect();return {x:Math.max(-1,Math.min(1,(e.clientX-b.left)/b.width*2-1)),y:Math.max(-1,Math.min(1,1-(e.clientY-b.top)/b.height*2))}};
-  const react=kind=>{if(!['idle','hello'].includes(r.mood))return;r.touch.kind=kind;r.touch.start=performance.now();r.art.dataset.touchReaction=kind;this.request()};
+  const react=kind=>{if(!['idle','hello'].includes(r.mood))return;if(r.mood==='hello'){r.transition={mood:r.mood,start:r.start,at:performance.now()};r.mood='idle';r.until=0;clearTimeout(r.timer);delete r.art.dataset.emotion}r.touch.kind=kind;r.touch.start=performance.now();r.art.dataset.touchReaction=kind;this.request()};
   host.addEventListener('pointermove',e=>{Object.assign(r.touch,point(e),{until:performance.now()+1300});if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>12){clearTimeout(r.holdTimer);press.moved=true}this.request()},{passive:true});
   host.addEventListener('pointerdown',e=>{if(e.isPrimary===false||e.button>0)return;Object.assign(r.touch,point(e),{until:performance.now()+1800});press={x:e.clientX,y:e.clientY,moved:false,held:false};clearTimeout(r.holdTimer);r.holdTimer=setTimeout(()=>{if(press&&!press.moved){press.held=true;react('curious')}},550);this.request()},{passive:true});
   host.addEventListener('pointerup',e=>{clearTimeout(r.holdTimer);if(press&&!press.moved&&!press.held){const p=point(e);react(p.y>-.12?'pat':'tickle')}press=null;r.touch.until=performance.now()+1000},{passive:true});
