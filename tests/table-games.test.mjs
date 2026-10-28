@@ -9,15 +9,15 @@ import {leaveLobby,waitingRoomFor,openRoomEntry} from '../room-lifecycle.mjs';
 import {buyAccessory,ownsAccessory,rewardView} from '../rewards.mjs';
 const room=(n=4)=>({code:'TEST12',seats:Array.from({length:n},(_,i)=>({name:'P'+i,uid:'uid'+i,token:'secret-seat-'+i})),game:null});
 
-test('quick RPS first pick starts three seconds; secrets survive reconnect until all picks',()=>{
- const r=room(),g=pickTableGame(r,0,null,'rock',10000,'receipt-a');assert.equal(g.expiresAt,13000);assert.equal(g.status,'choosing');pickTableGame(r,1,g.id,'scissors',10001);
+test('quick RPS second pick starts three seconds; secrets survive reconnect until all picks',()=>{
+ const r=room(),g=pickTableGame(r,0,null,'rock',10000,'receipt-a');assert.equal(g.expiresAt,null);assert.equal(g.status,'choosing');pickTableGame(r,1,g.id,'scissors',10001);
  const before=tableGameView(structuredClone(r),2,10002);assert.equal(before.ownChoice,undefined);assert.equal(before.participants[0].picked,true);assert.equal(before.participants[0].choice,undefined);assert.ok(!JSON.stringify(before).includes('secret-seat'));assert.equal(tableGameView(r,0,10002).ownChoice,'rock');
  assert.throws(()=>pickTableGame(r,0,g.id,'paper',10003));pickTableGame(r,2,g.id,'rock',10004);pickTableGame(r,3,g.id,'scissors',10005);assert.equal(g.status,'finished');assert.deepEqual(tableGameView(r,1,10006).participants.map(p=>p.result),['win','lose','win','lose']);
  pickTableGame(r,0,null,'rock',10007,'receipt-a');assert.equal(r.tableGame.id,g.id);
 });
 test('RPS deadline skips unselected players; one choice is a draw, never a free win',()=>{
- const r=room();pickTableGame(r,0,null,'rock',10000);pickTableGame(r,1,r.tableGame.id,'paper',10001);assert.equal(expireTableGame(r,12999),false);assert.equal(expireTableGame(r,13000),true);assert.deepEqual(r.tableGame.participants.map(p=>p.result),['lose','win',undefined,undefined]);assert.equal(r.tableGame.participants[2].state,'skipped');assert.equal(expireTableGame(r,21000),true);assert.equal(r.tableGame,undefined);
- const single=room(2);pickTableGame(single,0,null,'rock',10000);expireTableGame(single,13000);assert.equal(single.tableGame.reason,'alone');assert.equal(single.tableGame.participants[0].result,'draw');
+ const r=room();pickTableGame(r,0,null,'rock',10000);pickTableGame(r,1,r.tableGame.id,'paper',10001);assert.equal(expireTableGame(r,13000),false);assert.equal(expireTableGame(r,13001),true);assert.deepEqual(r.tableGame.participants.map(p=>p.result),['lose','win',undefined,undefined]);assert.equal(r.tableGame.participants[2].state,'skipped');assert.equal(expireTableGame(r,21001),true);assert.equal(r.tableGame,undefined);
+ const single=room(2);pickTableGame(single,0,null,'rock',10000);assert.equal(expireTableGame(single,999999),false);pickTableGame(single,1,single.tableGame.id,'paper',1000000);assert.equal(single.tableGame.status,'finished');assert.equal(single.tableGame.participants[1].result,'win');
 });
 test('simultaneous requests share one round and reject stale IDs, bad choices and spectators',()=>{
  const r=room(3);const a=pickTableGame(r,0,null,'rock',10000);const b=pickTableGame(r,1,null,'paper',10000);assert.equal(a.id,b.id);assert.throws(()=>pickTableGame(r,2,'stale','rock',10001));assert.throws(()=>pickTableGame(r,-1,a.id,'paper',10001));assert.throws(()=>pickTableGame(r,2,a.id,'laser',10001));pickTableGame(r,2,a.id,'scissors',10001);assert.deepEqual(a.participants.map(p=>p.result),['draw','draw','draw']);r.game={};assert.equal(expireTableGame(r,10002),true);assert.equal(tableGameView(r,0),null);assert.throws(()=>pickTableGame(r,0,null,'rock'));
@@ -38,4 +38,4 @@ test('live lobby API chats, handles quick RPS, leaves/transfers and disbands ind
  }finally{child.kill();await new Promise(resolve=>child.exitCode===null?child.once('exit',resolve):resolve());await rm(data,{recursive:true,force:true})}
 });
 
-test('a choice arriving at the deadline returns the resolved round without counting the late hand',()=>{const r=room(3),g=pickTableGame(r,0,null,'rock',10000);pickTableGame(r,1,g.id,'paper',10001);assert.equal(pickTableGame(r,2,g.id,'scissors',13000).status,'finished');assert.equal(g.participants[2].choice,undefined);assert.equal(g.participants[2].state,'skipped');assert.deepEqual(g.participants.slice(0,2).map(p=>p.result),['lose','win'])});
+test('a choice arriving at the deadline returns the resolved round without counting the late hand',()=>{const r=room(3),g=pickTableGame(r,0,null,'rock',10000);pickTableGame(r,1,g.id,'paper',10001);assert.equal(pickTableGame(r,2,g.id,'scissors',13001).status,'finished');assert.equal(g.participants[2].choice,undefined);assert.equal(g.participants[2].state,'skipped');assert.deepEqual(g.participants.slice(0,2).map(p=>p.result),['lose','win'])});

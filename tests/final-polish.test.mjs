@@ -11,7 +11,7 @@ import {localizedPush} from '../push-notifications.mjs';
 import {LEGAL_EN} from '../public/legal-copy.mjs';
 import {AudioStudio} from '../public/audio-studio.mjs';
 
-test('free +30 seconds is per player per match, persistent and never revives an expired turn',()=>{
+test('paid +30 seconds is once per turn, persistent and never revives an expired turn',()=>{
  const g=createGame(['A','B'],{turnSeconds:60,experimental:true});g.turn=0;const now=Date.now(),old=g.turnDeadline,bag=JSON.stringify(g.bag),hands=JSON.stringify(g.players.map(p=>p.hand));
  assert.equal(extendTurn(g,0,now),old+30000);assert.equal(g.turn,0);assert.equal(JSON.stringify(g.bag),bag);assert.equal(JSON.stringify(g.players.map(p=>p.hand)),hands);
  assert.throws(()=>extendTurn(g,0,now),/kullandın/);assert.throws(()=>extendTurn(g,1,now),/sıran/);

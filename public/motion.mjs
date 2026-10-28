@@ -1,3 +1,4 @@
+import {celebrationLocked} from './engine.mjs';
 import {HERO_TIMING} from './character-style.mjs';
 import {t} from './i18n.mjs';
 export const CHARACTER_CLIPS=['El salla','Selam ver','Göz kırp','Ayağını kaldır','Göz kırp ve eğil','Kollarını dalgalandır'].map(name=>({name,duration:1850}));
@@ -98,6 +99,25 @@ export class WaitingCharacters{
  }
 }
 // Frame-exit scenes are disabled until their layout and camera are stable.
-export function updateWaitingCharacters(){}
+const waitingSeen=new Set();let visitor=null;
+export function cancelCharacterVisit(){visitor?.();visitor=null}
+export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={}){
+ if(!game||game.over||document.hidden||document.querySelector('dialog[open]')||reduced()||game.timeoutDecision||celebrationLocked(game,now)){cancelCharacterVisit();return}
+ const stamp=[game.matchId,game.turn,game.turnSerial||game.history?.length||0].join(':'),started=game.turnStartedAt||(game.turnDeadline?game.turnDeadline-game.turnSeconds*1000:now),wait=now-started;
+ if(visitor&&visitor.stamp!==stamp)cancelCharacterVisit();
+ if(game.turnDeadline&&game.turnDeadline-now<12000){cancelCharacterVisit();return}if(wait<18000)return;
+ for(const host of document.querySelectorAll('#scores .illustrated-avatar')){
+  const seat=Number(host.closest('[data-seat]').dataset.seat),key=stamp+':idle:'+seat;
+  if(waitingSeen.has(key))continue;waitingSeen.add(key);playCharacter(host,'bored');
+ }
+ if(game.turn!==me||wait<25000||!button||game.turnDeadline&&game.turnDeadline-now<18000||waitingSeen.has(stamp+':visit'))return;
+ if(visitor)return;
+ const source=document.querySelector('#scores [data-seat="'+me+'"] .character-art');if(!source)return;waitingSeen.add(stamp+':visit');while(waitingSeen.size>120)waitingSeen.delete(waitingSeen.values().next().value);
+ source.dataset.lastVisit=stamp;const from=source.getBoundingClientRect(),to=button.getBoundingClientRect(),wrap=document.createElement('div'),art=source.cloneNode(false);wrap.className='character-visitor';wrap.setAttribute('aria-hidden','true');wrap.append(art);document.body.append(wrap);
+ const x=from.left+from.width/2-48,y=from.top+from.height/2-48,tx=Math.max(0,to.left-72),ty=Math.max(0,to.top-66),old=source.style.visibility;source.style.visibility='hidden';
+ const edge=Math.max(0,innerWidth-96),pose=(px,py,offset)=>({transform:'translate('+px+'px,'+py+'px)',...(offset==null?{}:{offset})});const animation=wrap.animate([pose(x,y,0),pose(edge,y,.12),pose(edge,ty,.34),pose(tx,ty,.40),pose(tx,ty,.68),pose(edge,ty,.73),pose(edge,y,.92),pose(x,y,1)],{duration:4800,easing:'ease-in-out'});
+ playCharacter(art,'buttonPunch');let pulse=setTimeout(()=>{button.classList.add('character-bop');setTimeout(()=>button.classList.remove('character-bop'),450)},2050),done=false;
+ const cleanup=()=>{if(done)return;done=true;clearTimeout(pulse);animation.cancel();wrap.remove();source.style.visibility=old;button.classList.remove('character-bop');if(visitor===cleanup)visitor=null};cleanup.stamp=stamp;visitor=cleanup;animation.finished.then(cleanup).catch(()=>{});
+}
 
 export function scoreStripKey(game,me,room,ownAvatar){return JSON.stringify([game.matchId,me,game.turn,game.over,game.timeoutCounts,ownAvatar,game.players.map((p,i)=>[p.name,p.score,p.eliminated,p.count??p.hand?.length,room?.seats[i]?.kicked,room?.seats[i]?.avatar,room?.seats[i]?.playerId])])}

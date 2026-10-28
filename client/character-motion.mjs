@@ -1,7 +1,7 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
+export const CHARACTER_DURATIONS=Object.freeze({bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -161,7 +161,21 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
  if(reduced){brow(rig,emotion,.5);return false}
  if(elapsed>=duration){brow(rig,emotion,.45);return false}
 
- if(mood==='angry'){const a=envelope(elapsed,0,.25,1.1,1.8);setMouth(rig,'sad');brow(rig,'angry',a);rotate(rig.head,.08*a,Math.sin(elapsed*15)*.035*a,0);arm(rig,0,.25*a);arm(rig,1,.25*a);bend(rig,0,a*.75);bend(rig,1,a*.75);if(rig.pose!=='seated')move(root,0,jump(elapsed,.3,.25,.025),0)}
+ if(mood==='bored'){
+  const a=envelope(elapsed,.1,.8,3.7,5.5),yawn=envelope(elapsed,1.1,1.7,2.4,3.2);
+  setMouth(rig,'neutral');if(yawn>.1)rig.facial?.expression('surprise');brow(rig,'sad',a*.45);
+  rotate(rig.head,a*.10,Math.sin(elapsed*1.4)*a*.15,a*(face%2?-.075:.075));
+  arm(rig,face%2,a*.7,-a*.40);bend(rig,face%2,a*1.25,a*.35);
+  blink(rig,Math.max(blinkAt(elapsed,.7,.14),yawn*.8));
+  (rig.legs||[]).forEach((leg,i)=>rotate(leg,0,0,i===face%2?Math.sin(elapsed*7)*a*.055:0));
+  if(face===5)(rig.arms||[]).forEach((n,i)=>rotate(n,0,0,Math.sin(elapsed*1.8+i*.8)*a*.07));
+ }else if(mood==='buttonPunch'){
+  const walking=elapsed<1.65||elapsed>3.35,step=walking?Math.sin(elapsed*13):0,hit=envelope(elapsed,1.75,2.1,2.2,2.65);
+  (rig.legs||[]).forEach((leg,i)=>rotate(leg,step*(i?1:-1)*.24,0,0));
+  arm(rig,0,.12,-step*.18);arm(rig,1,.15+hit*1.6,step*.18-hit*.55);bend(rig,1,.2+hit*.65);
+  rotate(rig.head,hit*.06,hit*.15,0);brow(rig,'happy',hit);setMouth(rig,'happy');
+ }else if(mood==='angry'){
+const a=envelope(elapsed,0,.25,1.1,1.8);setMouth(rig,'sad');brow(rig,'angry',a);rotate(rig.head,.08*a,Math.sin(elapsed*15)*.035*a,0);arm(rig,0,.25*a);arm(rig,1,.25*a);bend(rig,0,a*.75);bend(rig,1,a*.75);if(rig.pose!=='seated')move(root,0,jump(elapsed,.3,.25,.025),0)}
  else if(mood==='draw'){const a=envelope(elapsed,.03,.35,1.15,1.78);brow(rig,'happy',a*.6);rotate(rig.head,-a*.035,a*.04,0);arm(rig,0,a*.25);arm(rig,1,a*.25);bend(rig,0,a*.25);bend(rig,1,a*.25)}
  else if(mood==='surprise'){const a=envelope(elapsed,0,.18,.8,1.5);brow(rig,'happy',a);rotate(rig.head,-.1*a,0,0);rig.facial?.expression('surprise');arm(rig,0,.65*a);arm(rig,1,.65*a);bend(rig,0,a*.35);bend(rig,1,a*.35)}
  else if(mood==='impact'){

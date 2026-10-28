@@ -1,0 +1,58 @@
+/* Shared layout for both languages and both lighting palettes. */
+button,input,select{min-width:0}.button,.menu-link,.friend-entry,.leader-row{min-width:0}
+.period-tabs{display:flex;gap:6px;margin:0 0 20px;padding:5px;border-radius:18px;background:#ae87df15}
+.period-tabs button{flex:1;padding:10px 8px;border-radius:13px;font-size:13px;font-weight:850;line-height:1.2}
+.period-tabs button[aria-pressed=true]{background:#8b51d4;color:white;box-shadow:0 4px 12px #481a7a30}
+.profile-gifts{margin:16px 0;border:1px solid #9e7ec13b;border-radius:18px;padding:12px}
+.profile-gifts summary{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;list-style:none}
+.gift-form{display:grid;grid-template-columns:minmax(0,1fr) 70px auto;gap:8px;margin-top:14px}
+.gift-form select,.gift-form input{width:100%;border:1px solid #a982d33b;border-radius:12px;padding:10px;background:var(--surface);color:var(--ink)}
+.gift-form .button{padding:9px 13px}.gift-status{display:block;margin-top:10px}
+#commit .turn-clock{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);font-size:14px!important;font-weight:900!important;line-height:1;min-width:0!important;height:auto!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;color:inherit!important;z-index:3;pointer-events:none}
+#commit:has(.turn-clock:not(.hidden))>.icon{transform:translateY(-9px)}
+.player-card{overflow:visible!important}.urgent-extension{position:absolute;left:8px;bottom:-20px;z-index:12;background:#a96ce3;color:#fff;border:1px solid #d6b6ff;border-radius:12px;padding:6px 9px;font-size:11px;font-weight:900;box-shadow:0 4px 14px #24103755;white-space:nowrap}
+.profile-dialog>.illustrated-avatar{margin:12px auto}.friend-entry .friend-name{flex:1;min-width:0;text-align:left}
+.friend-entry b,.leader-row>span{overflow:hidden;text-overflow:ellipsis}.friend-entry .icon-button{flex:0 0 38px}
+.avatar-preview{touch-action:pan-y;user-select:none;-webkit-user-select:none}.character-stage{position:relative}
+.character-rotate-hint{display:flex;justify-content:center;gap:5px;color:var(--muted);font-size:10px;margin:4px 0 0}.character-rotate-hint svg{width:13px;height:13px}
+.home-profile-actions{gap:6px}.profile-gifts .gift-status:empty{display:none}
+[data-theme=day]{--bg:#f3eff9;--surface:#fffdfd;--ink:#352a49;--muted:#776684;--line:#dfd4ec;--board:#eee7f5;--grid-color:#ac98c433;color:var(--ink)!important;background:#f3eff9!important;color-scheme:light}
+[data-theme=day] :is(.game-screen,.home-screen,.hub-pages){background:transparent!important;color:var(--ink)!important}
+[data-theme=day] :is(dialog,.bottom-nav,.hand-panel,.board-area,.home-profile,.profile-banner,.home-identity,.game-topline,.friends-panel,.hub-page,.leader-row,.friend-entry,.profile-stat,.stat-card,.account-card,.conversation-heading,.chat-panel,.supports-menu,.profile-gifts){background:#fffdfd!important;border-color:#dacbea!important;color:#352a49!important;box-shadow:0 5px 22px #73588b0d!important}
+[data-theme=day] :is(.player-card,.saved-match,.open-game,.menu-link,.period-tabs,.accessory-item,.avatar-option,.setting-row,.invite-chip,.bag-pill,.board-tools,.nickname-panel){background:#f3edf9!important;color:#4b365f!important;border-color:#ddccec!important}
+[data-theme=day] .player-card.active{background:#ddf4e5!important;border-color:#54b386!important}
+[data-theme=day] :is(h1,h2,h3,.player-name,.player-score,.avatar-character-name,.friend-name,.profile-name,.name-input,#name,.drawer-heading,.page-heading,.last-move-name,.home-name){color:#352a49!important}
+[data-theme=day] :is(input,textarea,select){background:#faf7fd!important;color:#352a49!important;border-color:#cfbde1!important}
+[data-theme=day] :is(.icon-button,.text-button,.bottom-nav button,.accessory-categories button){color:#7952a0!important}
+[data-theme=day] .bottom-nav [aria-current=page]{color:#8b3dd1!important}
+[data-theme=day] .chat-message{background:#ede5f6!important;color:#352a49!important}[data-theme=day] .chat-message.own{background:#dec9f2!important}
+[data-theme=day] .ambient{opacity:.08}[data-theme=day] .home-table-card{background:#e5d9f1!important}
+[data-theme=day] :is(.quick-message,.expression-preview button,.accessory-categories button){background:#eee5f6!important;border-color:#d3bde8!important}
+@media(max-width:600px){
+ .bottom-nav{gap:0!important;padding-inline:5px!important}.bottom-nav button{min-width:0!important;font-size:10px!important;padding-inline:3px!important;line-height:1.15;white-space:normal}
+ .minor-actions{column-gap:6px!important}.minor-actions button{font-size:11px!important;padding-inline:7px!important;line-height:1.15;white-space:normal;min-height:34px}
+ .home-actions,.play-actions{gap:10px!important}.home-profile,.profile-banner{padding:14px!important}
+ .friend-entry{gap:9px!important;padding:10px!important}.friend-entry .avatar{flex-shrink:0}
+ .page-heading h1{font-size:24px!important}.support-item{min-width:0}.support-item small{white-space:normal}
+ .setting-row>span{min-width:0;flex:1}.setting-row small{white-space:normal!important}
+ .gift-form{grid-template-columns:minmax(0,1fr) 56px auto;gap:5px}.gift-form .button{font-size:12px}
+ .period-tabs button{font-size:12px;padding:10px 5px}.hand-panel{max-width:100%}
+ html[lang=en] .minor-actions button{font-size:10px!important}html[lang=en] .home-profile-actions button{font-size:11px!important}
+}
+body[data-theme=day][data-view=home] .my-table-card{background:linear-gradient(145deg,#fff,#eee4f8)!important;border-color:#d4bee8!important}
+body[data-theme=day][data-view=home] .profile-banner{background:transparent!important;border-bottom:1px solid #dacdea!important}
+body[data-theme=day][data-view=home] .my-table-card .profile-title #name,body[data-theme=day][data-view=home] .brand,body[data-theme=day][data-view=home] .brand b{color:#553278!important}
+body[data-theme=day] :is(#code,#nickname,#friendId,#name){background:#faf6ff!important;color:#48315d!important}
+body[data-theme=day] :is(.my-table-heading h2,.my-table-heading button,.join-panel label,.join-label,.page-heading p,.reward-copy p,.saved-match small,.friend-name small,.profile-dialog small){color:#6c4d84!important}
+body[data-theme=day] :is(.my-table-card,.daily-reward,.join-panel,.open-games-section,.match-archive,.home-archive,.conversation-empty,.canvas-wrap){border-color:#dac8eb!important}
+body[data-theme=day] .daily-reward{background:linear-gradient(110deg,#e7d7ff,#f5eaff)!important;color:#50316e!important}
+body[data-theme=day] .daily-reward h2,body[data-theme=day] .daily-reward b{color:#50316e!important}
+body[data-theme=day] :is(dialog .drawer-heading h2,.avatar-character-name,.accessory-heading,.setting-row b,.profile-stats b){color:#4c3164!important}
+body[data-theme=day] .app-header .icon-button{background:#ede0fa!important;color:#7641a6!important;border-color:#d6bde9!important}
+.character-visitor{position:fixed;left:0;top:0;width:96px;height:96px;z-index:1400;pointer-events:none;contain:layout paint;will-change:transform}.character-visitor>.character-art{width:100%;height:100%}
+.character-bop{animation:character-button-bop .42s ease-out!important}@keyframes character-button-bop{25%{transform:translateY(4px) rotate(-3deg)}60%{transform:translateY(-2px) rotate(1deg)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.character-visitor{display:none}.character-bop{animation:none!important}}
+.avatar-dialog .accessory-shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.avatar-dialog .accessory-item{min-width:0!important;padding:12px 8px!important}.accessory-item small{font-size:11px;color:#d5b0ff}.accessory-item:has(small){position:relative}.accessory-item:has(small):after{content:'♦';position:absolute;right:9px;top:9px;font-size:9px;color:#e7b8ff}
+@media(max-width:600px){.daily-reward{min-height:0!important;padding:17px!important;display:grid!important;grid-template-columns:1fr auto!important;gap:12px!important}.daily-reward .reward-art,.daily-reward .reward-days,.daily-reward .reward-copy>p,.daily-reward .reward-eyebrow{display:none!important}.daily-reward h2{font-size:16px!important;margin:0 0 5px!important}.daily-reward .reward-wallet{position:static!important;display:flex!important;gap:5px!important}.daily-reward #claimReward{position:static!important;align-self:center!important;min-width:90px!important;padding:10px 14px!important}.daily-reward #rewardStatus{grid-column:1/-1;font-size:11px}.profile-links{gap:7px!important}.friends-dialog .drawer-heading{padding-bottom:10px!important}}
+#commit .turn-clock:not(.hidden){display:block!important}#commit.waiting:disabled{opacity:.9!important}
+body[data-theme=day] .join-panel :is(label,.join-label,.join-heading),body[data-theme=day] .join-row>label{color:#73538d!important}

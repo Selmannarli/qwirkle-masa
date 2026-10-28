@@ -25,7 +25,7 @@ function tapered(parent,m,points,radii){
  });return mesh(parent,g,m);
 }
 function remember(n){n.userData.rest={position:n.position.toArray(),rotation:[n.rotation.x,n.rotation.y,n.rotation.z],scale:n.scale.toArray()};return n}
-function skin(face,colour){return mat(characterBodyColour(face,colour),face===1?.27:face===5?.2:.43,face===1?.14:0,{sheen:face===0||face===2?.35:0,sheenColor:new T.Color('#ffffff'),sheenRoughness:.65})}
+function skin(face,colour){return mat(characterBodyColour(face,colour),face===1?.38:face===5?.30:.52,face===1?.06:0,{sheen:face===0||face===2?.35:0,sheenColor:new T.Color('#ffffff'),sheenRoughness:.65})}
 const INK=()=>mat('#21172f',.28),CREAM=()=>mat('#fff0dc',.57),PINK=()=>mat('#ed9bac',.5),BROW=()=>mat('#714270',.5);
 function cloudHull(){return geometry('smooth-cloud',()=>{
  const puffs=[[0,.68,0,.58,.49,.34],[-.38,.90,-.035,.31,.31,.31],[-.45,.57,-.015,.27,.27,.31],[0,1.12,-.035,.35,.35,.31],[.40,.82,-.025,.32,.32,.31]],k=.11;
@@ -53,7 +53,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='surface-fits-v6';
+export const CHARACTER_MODEL_VERSION='wardrobe-v7';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -125,7 +125,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   const ceramic=mat('#eee6ff',.32,.03),dark=mat('#212039',.3,.15),trim=mat('#bb9cdf',.31,.24);
   box(torso,body,[0,.29,0],[.61,.64,.48],.17);box(torso,ceramic,[0,.32,.24],[.43,.36,.058],.11);
   // Three quiet battery pips are body detail, not pre-equipped accessories.
-  for(let i=0;i<3;i++)box(torso,mat('#8260b1',.32),[(i-1)*.082,.31,.276],[.045,.11,.018],.015);
+  const heart=new T.Shape();heart.moveTo(0,-.06);heart.bezierCurveTo(-.12,.01,-.06,.12,0,.055);heart.bezierCurveTo(.06,.12,.12,.01,0,-.06);mesh(torso,geometry('robot-heart',()=>new T.ExtrudeGeometry(heart,{depth:.009,bevelEnabled:true,bevelSize:.006,bevelThickness:.004,bevelSegments:3,steps:1})),mat('#a585d4',.4,0,{emissive:'#8d67ba',emissiveIntensity:.10}),[0,.32,.28]);
   orb(torso,trim,[0,.65,0],[.13,.08,.13]);
   box(head,body,[0,1.02,0],[1.08,.80,.67],.23);
   box(head,ceramic,[0,1.025,.25],[1.015,.70,.25],.20);
@@ -200,6 +200,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
  const forearms=arms.map(a=>a.userData.elbow).filter(Boolean),hands=arms.map(a=>a.userData.wrist).filter(Boolean),knees=feet.map(a=>a.getObjectByName('Knee')).filter(Boolean);
  root.userData.rig={face,pose,facial,rear,head,body:torso,eyes,pupils:eyes.flatMap(e=>e.children.filter(n=>n.name==='Pupil')),lids,arms,forearms,hands,legs:feet,knees,brows:eyebrows,mouth,tail,accent,ears,hips};
  root.userData.pose=pose;
+ for(const eye of eyes)for(const pupil of eye.children.filter(n=>n.name==='Pupil'))pupil.scale.setScalar(1.08);
  for(const id of accessoryList(accessory))addAccessory(root,id,accessoryColours);
  // Preserve articulation; merge colour details only within each rigid joint.
  for(const parent of [torso,hips,...arms,...forearms,...hands,...feet,...knees,...eyes,...eyebrows])batchColours(parent,{roughness:face===1?.34:.48,metalness:face===1?.08:0});
@@ -212,11 +213,12 @@ export function characterContactPoint(root,camera){
  return node.getWorldPosition(new T.Vector3()).project(camera);
 }
 
-function addAccessory(root,id,colours={}){
+function addAccessory(root,requested,colours={}){
+ const id=({shades:'glasses',stargaze:'glasses',silkBow:'bow',royalBow:'bow',beanie:'cap',astralCrown:'crown'})[requested]||requested;
  const rig=root.userData.rig,head=rig.head,fit=accessoryFit(rig.face,id);
  const parent=fit.parent==='body'?rig.body:head;
- const mount=group(parent,'Accessory-'+id),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
- mount.userData.attachment=id;mount.userData.fit=fit;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
+ const mount=group(parent,'Accessory-'+requested),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
+ mount.userData.attachment=requested;mount.userData.fit=fit;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
  if(id==='glasses'){
   const ink=mat(accessoryColour(colours,'face','#302b48'),.34),points=rig.eyes.map(e=>e.position.clone());
   for(let i=0;i<points.length;i++){
@@ -258,7 +260,20 @@ function addAccessory(root,id,colours={}){
  clearAccessorySurface(root,mount,id);
  batchColours(mount,{roughness:.36,metalness:id==='crown'?.28:.06});
  const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children[0],source=piece.geometry;piece.geometry=geometry('fitted-piece:'+rig.face+':'+id+':'+accessoryColour(colours,mount.userData.slot,'original'),()=>{let g=piece.geometry.clone();const p=g.attributes.position;for(let i=0;i<baked.patch.length;i+=4)p.setXYZ(baked.patch[i],baked.patch[i+1],baked.patch[i+2],baked.patch[i+3]);if(baked.patch.length){g.deleteAttribute('normal');const smooth=mergeVertices(g,1e-5);g.dispose();g=smooth;g.computeVertexNormals()}g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
+ if(requested==='shades'||requested==='stargaze'){
+  for(const eye of rig.eyes){const p=eye.position,size=eye.userData.eyeScale||1,z=p.z+fit.depth*size;
+   if(requested==='shades')orb(mount,mat('#292f52',.14,.22,{transparent:true,opacity:.65}),[p.x,p.y,z],[.153*size,.174*size,.006]);
+   else for(const sign of [-1,1]){const gem=mesh(mount,geometry('wardrobe-diamond',()=>new T.OctahedronGeometry(.027)),gold,[p.x+sign*.13*size,p.y+.17*size,z]);gem.rotation.z=Math.PI/4;}
+  }
+ }
+ if(requested==='silkBow'||requested==='royalBow'){
+  const jewel=mat(requested==='royalBow'?'#75e6e2':'#f4d9ed',.17,.35);mesh(mount,geometry('bow-jewel',()=>new T.OctahedronGeometry(.036)),jewel,[0,0,.065]);
+  if(requested==='royalBow')for(const side of [-1,1])tube(mount,gold,[[side*.035,0,.049],[side*.132,.060,.049],[side*.132,-.060,.049],[side*.035,0,.049]],.004);
+ }
+ if(requested==='beanie'){const h=fit.size[1];orb(mount,violet,[0,h+.04,0],[.065,.065,.065])}
+ if(requested==='astralCrown'){const gem=mat('#7ceade',.16,.35),z=fit.size[2];tube(mount,gold,[[0,.17,z],[0,.23,z]],.006);mesh(mount,puffyStar(),gem,[0,.24,z],[.10,.10,.10])}
 }
+
 
 function hasAccessoryParent(node){for(let n=node;n;n=n.parent)if(n.userData.attachment)return true;return false}
 

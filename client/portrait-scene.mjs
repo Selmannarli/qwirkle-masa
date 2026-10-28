@@ -25,11 +25,11 @@ export class CharacterPortraits{
  installTouch(r){
   if(!r.art.closest('.avatar-preview'))return;
   const host=r.art.closest('.avatar-preview');let press=null;
-  r.touch={x:0,y:0,sx:0,sy:0,until:0,kind:'',start:0};
+  r.touch={x:0,y:0,sx:0,sy:0,until:0,kind:'',start:0,yaw:0,syaw:0};
   const point=e=>{const b=host.getBoundingClientRect();return {x:Math.max(-1,Math.min(1,(e.clientX-b.left)/b.width*2-1)),y:Math.max(-1,Math.min(1,1-(e.clientY-b.top)/b.height*2))}};
   const react=kind=>{if(!['idle','hello'].includes(r.mood))return;if(r.mood==='hello'){r.transition={mood:r.mood,start:r.start,at:performance.now()};r.mood='idle';r.until=0;clearTimeout(r.timer);delete r.art.dataset.emotion}r.touch.kind=kind;r.touch.start=performance.now();r.art.dataset.touchReaction=kind;this.request()};
-  host.addEventListener('pointermove',e=>{Object.assign(r.touch,point(e),{until:performance.now()+1300});if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>12){clearTimeout(r.holdTimer);press.moved=true}this.request()},{passive:true});
-  host.addEventListener('pointerdown',e=>{if(e.isPrimary===false||e.button>0)return;Object.assign(r.touch,point(e),{until:performance.now()+1800});press={x:e.clientX,y:e.clientY,moved:false,held:false};clearTimeout(r.holdTimer);r.holdTimer=setTimeout(()=>{if(press&&!press.moved){press.held=true;react('curious')}},550);this.request()},{passive:true});
+  host.addEventListener('pointermove',e=>{Object.assign(r.touch,point(e),{until:performance.now()+1300});if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>12){clearTimeout(r.holdTimer);press.moved=true;if(Math.abs(e.clientX-press.x)>Math.abs(e.clientY-press.y)){r.touch.yaw=press.yaw+(e.clientX-press.x)*.016}}this.request()},{passive:true});
+  host.addEventListener('pointerdown',e=>{if(e.isPrimary===false||e.button>0)return;Object.assign(r.touch,point(e),{until:performance.now()+1800});press={x:e.clientX,y:e.clientY,moved:false,held:false,yaw:r.touch.yaw};clearTimeout(r.holdTimer);r.holdTimer=setTimeout(()=>{if(press&&!press.moved){press.held=true;react('curious')}},550);this.request()},{passive:true});
   host.addEventListener('pointerup',e=>{clearTimeout(r.holdTimer);if(press&&!press.moved&&!press.held){const p=point(e);react(p.y>-.12?'pat':'tickle')}press=null;r.touch.until=performance.now()+1000},{passive:true});
   const cancel=()=>{clearTimeout(r.holdTimer);press=null;r.touch.until=0};host.addEventListener('pointercancel',cancel);host.addEventListener('pointerleave',cancel);
   host.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){react('pat')}});
@@ -52,7 +52,7 @@ export class CharacterPortraits{
   for(const r of this.records.values()){
    const {art}=r;if(!r.visible||!art.getClientRects().length||modal&&!modal.contains(art)&&!art.closest('.character-hero'))continue;
    const rect=art.getBoundingClientRect();if(rect.bottom<=0||rect.top>=innerHeight||rect.width<1||rect.height<1)continue;
-   const touching=r.touch&&(now<r.touch.until||now-r.touch.start<(TOUCH_DURATIONS[r.touch.kind]||0)||Math.abs(r.touch.sx)+Math.abs(r.touch.sy)>.002);
+   const touching=r.touch&&(now<r.touch.until||now-r.touch.start<(TOUCH_DURATIONS[r.touch.kind]||0)||Math.abs(r.touch.sx)+Math.abs(r.touch.sy)+Math.abs(r.touch.yaw-r.touch.syaw)>.002);
    const idle=!!art.closest('#scores,.home-portrait,.avatar-preview,#winnerPortrait'),active=r.mood!=='idle',animate=!!touching||!reduced&&(idle||active);alive||=animate;
    if(!r.dirty&&!this.dirty&&(!animate||now-r.last<(active?15:32)))continue;
    const pixels=Math.max(64,Math.min(384,Math.ceil(Math.max(rect.width,rect.height)*Math.min(devicePixelRatio||1,1.5))));
@@ -62,7 +62,7 @@ export class CharacterPortraits{
    resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
    if(r.touch&&['idle','hello'].includes(r.mood)){
     const touch=r.touch,tracking=now<touch.until,step=1-Math.exp(-Math.min(64,Math.max(1,now-r.last))/110);
-    touch.sx+=((tracking?touch.x:0)-touch.sx)*step;touch.sy+=((tracking?touch.y:0)-touch.sy)*step;
+    touch.syaw+=(touch.yaw-touch.syaw)*step;root.rotation.y+=touch.syaw;touch.sx+=((tracking?touch.x:0)-touch.sx)*step;touch.sy+=((tracking?touch.y:0)-touch.sy)*step;
     const elapsed=(now-touch.start)/1000,kind=elapsed*1000<(TOUCH_DURATIONS[touch.kind]||0)?touch.kind:'';
     applyCharacterTouch(root,{x:touch.sx,y:touch.sy,strength:1,kind,elapsed,reduced});
     if(!kind)delete art.dataset.touchReaction;
