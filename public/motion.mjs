@@ -19,7 +19,7 @@ export function installCharacterMotion(root=document){
   for(const art of arts)if(art.isConnected)studio.add(art);studio.prune();studio.invalidate();
  };
  const schedule=()=>{if(!frame)frame=requestAnimationFrame(sync)};
- root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host)playCharacter(host)},{capture:true});
+ root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host&&!host.matches(".avatar-preview"))playCharacter(host)},{capture:true});
  root.addEventListener('keydown',event=>{const host=event.target.closest?.('[data-motion-only="true"]');if(host&&['Enter',' '].includes(event.key)){event.preventDefault();host.click()}});
  const containsArt=n=>n.nodeType===1&&(n.matches('.character-art')||n.querySelector('.character-art'));
  new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||[...r.addedNodes,...r.removedNodes].some(containsArt)))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','data-character','data-colour','data-accessory','data-accessory-colours']});
