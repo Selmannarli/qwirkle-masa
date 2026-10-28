@@ -205,6 +205,7 @@ function updateTurnWarning(){
  if(state.knock){
   if(preferences.sound)sound.glassKnock();
   const mark=node('span','glass-knock');mark.setAttribute('aria-hidden','true');
+  mark.style.left=art.dataset.knockX||'70%';mark.style.top=art.dataset.knockY||'50%';
   mark.innerHTML='<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="22" rx="9" ry="7"/><ellipse cx="20" cy="22" rx="15" ry="12"/><path d="m10 10-4-5m15 2 1-6m10 12 6-3M12 31l-4 5"/></svg>';
   host.append(mark);setTimeout(()=>mark.remove(),390);
  }

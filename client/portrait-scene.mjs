@@ -1,8 +1,8 @@
-import {frameLedge,frameReveal,FRAME_SIZE} from '../public/frame-scenes.mjs';
 import * as T from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {createCharacter,disposePerson} from './characters.mjs';
-import {animateCharacter,resetCharacter,CHARACTER_DURATIONS} from './character-motion.mjs';
+import {createCharacter,disposePerson,characterContactPoint,CHARACTER_MODEL_VERSION} from './characters.mjs';
+import {animateCharacter,resetCharacter,captureCharacterPose,blendCharacterPose,CHARACTER_DURATIONS} from './character-motion.mjs';
+import {acceptsCharacterGesture} from '../public/character-style.mjs';
 
 // One GPU context paints all DOM portraits. Their small 2D canvases follow normal
 // stacking, clipping and dialog rules, and never create another WebGL context.
@@ -12,13 +12,13 @@ export class CharacterPortraits{
   this.renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});this.renderer.setPixelRatio(1);this.renderer.setSize(384,384,false);this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=.94;this.renderer.setClearColor(0,0);
   this.scene=new T.Scene();const room=new RoomEnvironment(),pmrem=new T.PMREMGenerator(this.renderer);this.environment=pmrem.fromScene(room,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.45;room.dispose();pmrem.dispose();
   this.scene.add(new T.HemisphereLight('#fff3ff','#64506d',.65));const key=new T.DirectionalLight('#fff1df',2.1);key.position.set(-3,5,6);this.scene.add(key);const rim=new T.DirectionalLight('#c9b4ff',1.15);rim.position.set(4,3,-3);this.scene.add(rim);
-  this.camera=new T.PerspectiveCamera(31,1,.1,30);this.frameCamera=new T.OrthographicCamera(-1.4,1.4,1.4,-1.4,.1,30);
+  this.camera=new T.PerspectiveCamera(31,1,.1,30);
   this.observer=new IntersectionObserver(entries=>{for(const e of entries){const r=this.records.get(e.target);if(r){r.visible=e.isIntersecting;r.dirty=true}}this.request()},{threshold:.01});
   this.resizeObserver=new ResizeObserver(()=>this.invalidate());
   this.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;this.pause()});this.renderer.domElement.addEventListener('webglcontextrestored',()=>{this.lost=false;this.invalidate()});
  }
  add(art){
-  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
+  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.mood='idle';record.until=0;record.transition=null;clearTimeout(record.timer);delete art.dataset.emotion;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
   const r={art,canvas,ctx,face:Number(art.dataset.character)||0,colour:Number(art.dataset.colour)||0,accessory:art.dataset.accessory||'none',visible:false,dirty:true,mood:'idle',start:0,until:0,phase:Math.random()*15,last:0};this.records.set(art,r);this.observer.observe(art);this.resizeObserver.observe(art);this.request();
  }
  model(face,colour,accessory='none'){
@@ -27,8 +27,8 @@ export class CharacterPortraits{
   while(this.models.size>12){const oldest=this.models.keys().next().value,old=this.models.get(oldest);this.models.delete(oldest);disposePerson(old.root)}return entry;
  }
  play(art,mood='hello',remaining=null){
-  this.add(art);const r=this.records.get(art);if(!r)return;const duration=(CHARACTER_DURATIONS[mood]||1.85)*1000,now=performance.now();r.mood=mood;r.start=now-Math.max(0,duration-(remaining??duration));r.until=now+(remaining??duration);r.dirty=true;art.dataset.emotion=mood;
-  clearTimeout(r.timer);r.timer=setTimeout(()=>{if(this.records.get(art)!==r)return;r.mood='idle';delete art.dataset.emotion;r.dirty=true;this.request()},Math.max(0,r.until-now));this.request();
+  this.add(art);const r=this.records.get(art);if(!r)return false;const duration=(CHARACTER_DURATIONS[mood]||1.85)*1000,now=performance.now();if(!acceptsCharacterGesture(r.mood,mood,r.until-now))return false;r.transition={mood:r.mood,start:r.start,at:now};r.mood=mood;r.start=now-Math.max(0,duration-(remaining??duration));r.until=now+(remaining??duration);r.dirty=true;art.dataset.emotion=mood;
+  clearTimeout(r.timer);r.timer=setTimeout(()=>{if(this.records.get(art)!==r)return;r.transition={mood:r.mood,start:r.start,at:performance.now()};r.mood='idle';delete art.dataset.emotion;r.dirty=true;this.request()},Math.max(0,r.until-now));this.request();return true;
  }
  invalidate(){this.dirty=true;for(const r of this.records.values())r.dirty=true;this.request()}
  prune(){for(const [art,r]of this.records)if(!art.isConnected){clearTimeout(r.timer);this.observer.unobserve(art);this.resizeObserver.unobserve(art);this.records.delete(art)}}
@@ -43,16 +43,13 @@ export class CharacterPortraits{
    if(!r.dirty&&!this.dirty&&(!animate||now-r.last<(active?15:32)))continue;
    const pixels=Math.max(64,Math.min(384,Math.ceil(Math.max(rect.width,rect.height)*Math.min(devicePixelRatio||1,1.5))));
    if(r.canvas.width!==pixels||r.canvas.height!==pixels){r.canvas.width=r.canvas.height=pixels}
-   const entry=this.model(r.face,r.colour,r.accessory),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced,direction:Number(art.dataset.frameDirection)||1,reach:Number(art.dataset.frameReach)||1.18});
-   const camera=art.dataset.frameScene?this.frameCamera:this.camera;if(art.dataset.frameScene){
-    const u=frameReveal(art.dataset.frameScene,Math.max(0,(now-r.start)/1000)),sourceWidth=Number(art.dataset.frameSource)||43;
-    const fromSpan=FRAME_SIZE/sourceWidth*2*entry.headRadius*1.14/Math.cos(this.camera.fov*Math.PI/360),span=fromSpan+(2.8-fromSpan)*u;
-    const fromY=entry.headCenter.y+((Number(art.dataset.frameSourceCy)||.38)-.5)*fromSpan,y=fromY+(frameLedge(r.face)+.42-fromY)*u;
-    camera.left=-span/2;camera.right=span/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();
-    camera.position.set(.18*(1-u)*4,y+.12*(1-u)*4,4);camera.lookAt(0,y,0);
-   }
+   const entry=this.model(r.face,r.colour,r.accessory),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;
+   let previous=null;if(r.transition&&!reduced&&now-r.transition.at<180){animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.transition.mood,elapsed:Math.max(0,(now-r.transition.start)/1000)});previous=captureCharacterPose(root)}else r.transition=null;
+   resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
+   const camera=this.camera;
    this.scene.add(root);const distance=radius/Math.sin(this.camera.fov*Math.PI/360)*1.14;this.camera.position.copy(center).add(new T.Vector3(.18,.12,1).normalize().multiplyScalar(distance));this.camera.lookAt(center);this.renderer.setScissorTest(true);this.renderer.setScissor(0,0,pixels,pixels);this.renderer.setViewport(0,0,pixels,pixels);this.renderer.render(this.scene,camera);r.ctx.globalCompositeOperation='copy';r.ctx.drawImage(this.renderer.domElement,0,384-pixels,pixels,pixels,0,0,pixels,pixels);this.scene.remove(root);
-   r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion='shared-3d-v1'}
+   if(r.mood==='knock'){const point=characterContactPoint(root,camera);art.dataset.knockX=((point.x+1)*50).toFixed(1)+'%';art.dataset.knockY=((1-point.y)*50).toFixed(1)+'%'}
+   r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion=CHARACTER_MODEL_VERSION}
   }
   this.dirty=false;this.lastFrame=now;if(alive)this.request();
  }

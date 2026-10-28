@@ -198,9 +198,9 @@ dialog.table-quick-game{position:fixed;inset:auto;margin:0;width:224px;max-width
 .character-stage-light{position:fixed;inset:0;z-index:1798;pointer-events:none;background:radial-gradient(ellipse at 50% 44%,#8051b431 0%,#150d29ac 75%);animation:character-spotlight 4.8s both}@keyframes character-spotlight{0%,100%{opacity:0}12%,88%{opacity:1}}
 
 #scores .illustrated-avatar{position:relative}
-.glass-knock{position:absolute;pointer-events:none;z-index:5;width:30px;height:30px;left:48%;top:30%;color:#ffe6a3;animation:glass-contact .38s ease-out both}
+.glass-knock{position:absolute;pointer-events:none;z-index:5;width:22px;height:22px;left:70%;top:50%;color:#ffe6a3;animation:glass-contact .38s ease-out both}
 .glass-knock svg{width:100%;height:100%;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;filter:drop-shadow(0 0 3px #a56cff)}
-@keyframes glass-contact{0%{opacity:0;transform:scale(.65)}15%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.16)}}
+@keyframes glass-contact{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.16)}}
 body[data-motion="reduced"] .glass-knock{animation:glass-contact-still .38s linear both}
 @keyframes glass-contact-still{0%,100%{opacity:0}20%,65%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.glass-knock{animation-name:glass-contact-still}}
@@ -228,6 +228,18 @@ body[data-motion="reduced"] .glass-knock{animation:glass-contact-still .38s line
 .frame-character{position:fixed;z-index:32;pointer-events:none;opacity:0;contain:layout style;isolation:isolate}
 .frame-character .character-art{width:100%;height:100%;display:block;clip-path:inset(0 0 31.5% 0)}
 .frame-character .character-canvas{width:100%;height:100%;display:block}
+
+/* The character studio keeps its controls usable on short and long phones. */
+.avatar-dialog .character-stage{--portrait-size:clamp(132px,22dvh,190px);margin-top:0}
+.avatar-dialog .avatar-option{--choice-size:clamp(44px,7dvh,60px);height:calc(var(--choice-size) + 24px)!important}
+.avatar-dialog[open]{display:flex!important;flex-direction:column;overflow:hidden!important}
+.avatar-dialog .drawer-heading,.avatar-dialog .avatar-save{flex:none}
+.avatar-editor-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:0 4px 8px;margin:0 -4px}
+.avatar-dialog .avatar-save{position:static;z-index:3;margin-top:8px!important}
+.avatar-dialog .accessory-shelf{min-height:90px;padding-top:10px}
+.avatar-dialog .accessory-item{padding:8px 14px}
+.avatar-dialog .accessory-item>svg{width:46px;height:46px}
+@media(max-height:650px){.avatar-dialog .character-stage{--portrait-size:118px}.avatar-dialog .avatar-choices{gap:5px!important}.avatar-dialog .avatar-option{--choice-size:36px;height:60px!important}.avatar-dialog .accessory-heading{margin:8px 0}.avatar-dialog .accessory-shelf{min-height:80px}.avatar-dialog .avatar-character-name{margin-bottom:5px!important}}
 .frame-contact{position:absolute;left:0;right:0;height:2px;opacity:0;pointer-events:none}
 .frame-contact i{position:absolute;width:13px;height:3px;border-radius:50%;background:#10091c80;filter:blur(1px);left:0;transform:translate(-50%,-20%)}
 .frame-contact i+i{left:100%}

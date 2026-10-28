@@ -18,7 +18,7 @@ test('six seated characters are genuine volumetric geometry with finite normals,
 });
 test('replacing or removing a seated player preserves other joints and disposes only owned buffers',()=>{
  const stage={scene:new THREE.Scene(),people:Array(4).fill(null),poses:new Map()};const seats=[{face:0,colour:0},{face:1,colour:0},{face:2,colour:0},{face:3,colour:0}];TableScene.prototype.setSeats.call(stage,seats);
- stage.people.forEach((person,i)=>{assert.deepEqual(person.root.position.toArray(),[TABLE_SEATS[i].x,SEAT_HEIGHT,TABLE_SEATS[i].z]);assert.equal(person.root.rotation.y,TABLE_SEATS[i].yaw)});
+ stage.people.forEach((person,i)=>{assert.deepEqual(person.root.position.toArray(),[TABLE_SEATS[i].x,SEAT_HEIGHT+(person.root.userData.seatOffset||0),TABLE_SEATS[i].z]);assert.equal(person.root.rotation.y,TABLE_SEATS[i].yaw);if(person.root.userData.rig.legs.length)assert.ok(Math.abs(person.root.position.y+person.root.userData.rig.legs[0].position.y-(SEAT_HEIGHT+.09))<1e-9)});
  const old=stage.people[0].root,other=stage.people[1].root;old.userData.rig.head.rotation.z=.2;assert.equal(other.userData.rig.head.rotation.z,0);let disposed=0;old.traverse(n=>{if(n.isMesh&&n.geometry.userData.owned)n.geometry.addEventListener('dispose',()=>disposed++)});TableScene.prototype.setSeats.call(stage,[null,...seats.slice(1)]);assert.equal(old.parent,null);assert.equal(stage.people[1].root,other);assert.ok(disposed>0);
 });
 test('the updater ships a self-contained 3D engine, not the rejected flat table or seated cutouts',async()=>{
@@ -36,4 +36,22 @@ test('orbit spring settles without overshooting at 30, 60 and 120Hz and stops re
  const oldDocument=globalThis.document,oldRAF=globalThis.requestAnimationFrame;
  globalThis.document={hidden:false};globalThis.requestAnimationFrame=()=>1;
  try{for(const hz of [30,60,120]){const stage={visible:true,angle:0,angleTarget:Math.PI/2,angularVelocity:0,lastTick:0,poses:new Map(),render(){},tick:TableScene.prototype.tick};let previous=0;for(let n=1;n<=hz*3;n++){stage.tick(n*1000/hz);assert.ok(stage.angle>=previous-1e-6&&stage.angle<=stage.angleTarget+1e-6);previous=stage.angle}assert.equal(stage.angle,stage.angleTarget);assert.equal(stage.frame,null)}}finally{globalThis.document=oldDocument;globalThis.requestAnimationFrame=oldRAF}
+});
+
+test('high refresh displays cap idle table drawing at 30Hz and gestures at 60Hz',()=>{
+ const oldDocument=globalThis.document,oldRAF=globalThis.requestAnimationFrame;
+ globalThis.document={hidden:false};globalThis.requestAnimationFrame=()=>1;
+ try{for(const active of [false,true]){
+  const root=createSeatedCharacter(1,0);let draws=0;
+  const stage={visible:true,reduced:false,angle:0,angleTarget:0,angularVelocity:0,lastTick:0,lastDraw:0,people:[{root}],poses:new Map(active?[[0,{start:0,mood:'win'}]]:[]),render(){draws++;this.lastDraw=this.lastTick},tick:TableScene.prototype.tick};
+  for(let n=1;n<=240;n++)stage.tick(n*1000/120);
+  assert.ok(draws>=(active?110:55)&&draws<=(active?121:61),String(draws));
+ }}finally{globalThis.document=oldDocument;globalThis.requestAnimationFrame=oldRAF}
+});
+
+test('reduced motion at the table does not silently mute a character greeting',()=>{
+ const oldDocument=globalThis.document;globalThis.document={hidden:false};
+ try{let voices=0;const stage={people:[{}],visible:true,reduced:true,poses:new Map(),onGreet(){voices++}};
+  TableScene.prototype.greet.call(stage,0);assert.equal(voices,1);assert.equal(stage.poses.size,0);
+ }finally{globalThis.document=oldDocument}
 });
