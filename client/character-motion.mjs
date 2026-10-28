@@ -1,7 +1,9 @@
+import {Vector3,Quaternion} from 'three';
+import {FRAME_SCENES,frameLedge,sampleFrameScene} from '../public/frame-scenes.mjs';
 import {HERO_TIMING} from '../public/character-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({pace:4.6,dance:4.6,five:4.6,wiggle:4.6,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
+export const CHARACTER_DURATIONS=Object.freeze({...FRAME_SCENES,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -59,7 +61,7 @@ function idle(rig,time,face){
  const periods=[5.7,6.9,7.4,5.3,6.5,6.1],phase=((time+face*.73)%periods[face]+periods[face])%periods[face];
  let close=blinkAt(phase,1.27,face===2?.075:.026,face===2?.095:.062,face===2?.16:.11);
  if(face===3)close=Math.max(close,blinkAt(phase,1.58));
- blink(rig,close);
+ blink(rig,close);const watch=envelope(phase,2.0,2.8,3.5,4.3);rotate(rig.head,watch*.035,(face%2?1:-1)*watch*.075,0);
  const breath=Math.sin(time*1.24+face*.5)*.5+.5;
  switch(face){
   case 0:stretch(rig.body||rig.head,1+breath*.003,1+breath*.009,1+breath*.003);move(rig.head,0,breath*.002,0);arm(rig,0,breath*.008);arm(rig,1,breath*.008);break;
@@ -108,12 +110,34 @@ function disappointment(rig,t,face,duration){
  if(face===4)rotate(rig.accent,0,0,slump*.12);
  if(face===5){(rig.arms||[]).forEach((n,i)=>rotate(n,slump*.045,0,(i<(rig.arms?.length||2)/2?1:-1)*slump*.08));move(rig.head,0,-slump*.012,0)}
 }
+// Palm target stays attached to the sill while the shoulder/body bears weight.
+function pinPalm(root,rig,state,index,target,weight){
+ const n=rig.arms?.[index];if(!n||!weight)return;const grip=new Vector3(...(n.userData.grip||[0,-.285,.07]));
+ const delta=new Vector3(root.position.x-state.root.position[0],root.position.y-state.root.position[1],root.position.z-state.root.position[2]);
+ const desired=new Vector3(...target).sub(delta).sub(n.position),q=new Quaternion().setFromUnitVectors(grip.clone().normalize(),desired.clone().normalize());
+ n.quaternion.slerp(q,Math.min(1,weight));const scale=Math.max(.55,Math.min(1.65,desired.length()/grip.length()));n.scale.multiplyScalar(1+(scale-1)*weight);
+}
+function frameGesture(root,rig,state,mood,t,face,direction=1,reach=1.18){
+ const s=sampleFrameScene(mood,t),ledge=frameLedge(face),arms=rig.arms||[],right=face===5?arms.length-1:1;
+ setMouth(rig,'neutral');blink(rig,Math.max(blinkAt(t,1.15),s.sleep*.98));
+ move(root,direction*s.slide,s.lift,s.out*.10);rotate(rig.head,s.sleep*.22-s.wake*.13+s.lean*.06,s.peek*.27, s.lean*-.10);
+ move(rig.head,-s.lean*.025+s.peek*.075,-s.lean*.018-s.react*.035,0);brow(rig,s.wake?'happy':'sad',s.sleep*.25+s.wake*.5);
+ (rig.legs||[]).forEach((leg,i)=>rotate(leg,-s.sit*((mood==='frameVault'?1.35:.9)+(i?-.08:.08))+(i?-1:1)*s.step,0,(i?1:-1)*s.sit*.05));
+ if(face===5)arms.slice(1,-1).forEach((n,i)=>rotate(n,-s.sit*.25,0,Math.sin(t*2+i)*s.sit*.04));
+ for(const i of [0,right]){const n=arms[i];if(!n)continue;const rest=state.nodes.get(n),grip=n.userData.grip||[0,-.285,.07],x=rest.position[0]+grip[0];pinPalm(root,rig,state,i,[x,ledge,.24],s.grip)}
+ if(s.lean)pinPalm(root,rig,state,0,[-.27,ledge+.48,.30],s.lean*(1-s.react));
+ if(s.wipe)pinPalm(root,rig,state,right,[Math.sin(t*4)*.20,ledge+.48+Math.cos(t*4)*.07,.46],s.wipe);
+ if(s.fix){rotate(rig.head,.035,Math.sin(t*1.5)*.08,0);stretch(rig.body,1,1-Math.sin(t*5)*.006*s.fix,1)}
+ if(s.yawn){rotate(rig.head,-s.yawn*.08,0,0);pinPalm(root,rig,state,right,[.08,ledge+.40,.42],s.yawn);setMouth(rig,'happy');stretch(rig.mouth.happy,.6,1+s.yawn*.9,1);blink(rig,s.yawn*.95)}
+ if(s.five)pinPalm(root,rig,state,direction>0?right:0,[direction*reach,ledge+.38,.27],s.five);
+ if(s.wake){arm(rig,0,s.wake*.25);arm(rig,right,s.wake*.25)}
+}
 /** Returns true while the supplied gesture needs another sample. Units are seconds. */
-export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false}={}){
+export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false,direction=1,reach=1.18}={}){
  const state=stateFor(root);if(!state)return false;resetCharacter(root);const rig=state.rig;
  face=Number.isInteger(face)&&face>=0&&face<6?face:0;time=Number.isFinite(time)?Math.max(0,time):0;elapsed=Number.isFinite(elapsed)?Math.max(0,elapsed):0;
  if(mood==='idle'||!CHARACTER_DURATIONS[mood]){if(!reduced)idle(rig,time,face);return !reduced}
- const emotion=mood==='sad'||mood==='lose'?'sad':['hello','knock'].includes(mood)?'neutral':'happy',duration=CHARACTER_DURATIONS[mood];
+ const emotion=mood==='sad'||mood==='lose'?'sad':(['hello','knock'].includes(mood)||FRAME_SCENES[mood])?'neutral':'happy',duration=CHARACTER_DURATIONS[mood];
  setMouth(rig,emotion);
  if(reduced){brow(rig,emotion,.5);return false}
  if(elapsed>=duration){brow(rig,emotion,.45);return false}
@@ -125,14 +149,7 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
   brow(rig,'happy',.75);blink(rig,Math.max(blinkAt(t,.4),blinkAt(t,3.25,.12)));rotate(rig.head,-cheer*.10,contact*.38,cheer*Math.sin(t*5)*.035);arm(rig,0,cheer*1.85+anticip*.25,-cheer*.20);arm(rig,1,cheer*2.05+anticip*.25,-cheer*.20);
   if(rig.pose!=='seated'){rotate(root,-contact*.35,turn,0);move(root,0,-anticip*.045+contact*.025+jump(t,2.65,.65,.09)+jump(t,3.5,.55,.06),contact*.32);stretch(rig.body,1+contact*.06,1-contact*.05,1+contact*.10);stretch(rig.hips,1+contact*.15,1-contact*.08,1+contact*.32);move(rig.hips,0,0,-contact*.06);(rig.legs||[]).forEach((n,i)=>rotate(n,contact*.12,0,(i?1:-1)*contact*.055))}
  }
- else if(['pace','dance','five','wiggle'].includes(mood)){
-  const t=elapsed,a=envelope(t,.05,.45,3.95,4.6),beat=Math.sin(t*7),step=Math.sin(t*9);
-  brow(rig,'happy',a*.6);blink(rig,blinkAt(t,1.15));
-  if(mood==='pace'){rotate(rig.head,0,Math.sin(t*2)*a*.2,0);arm(rig,0,step*a*.25);arm(rig,1,-step*a*.25);(rig.legs||[]).forEach((n,i)=>rotate(n,step*a*(i?-1:1)*.3,0,0));move(root,0,Math.abs(step)*a*.012,0)}
-  if(mood==='dance'){rotate(root,0,Math.sin(t*3)*a*.18,beat*a*.06);arm(rig,0,a*(1.3+beat*.25));arm(rig,1,a*(1.3-beat*.25));move(root,0,Math.abs(beat)*a*.025,0)}
-  if(mood==='five'){arm(rig,1,a*(1.8+envelope(t,1.4,1.8,2.1,2.5)*.3),-a*.15);rotate(rig.head,0,a*.12,0);arm(rig,0,a*.15)}
-  if(mood==='wiggle'){rotate(root,0,key(t,[[0,0],[1,Math.PI],[3.4,Math.PI],[4.6,0]]),0);rotate(rig.hips,0,0,beat*a*.12);rotate(rig.head,0,a*.3,0);arm(rig,0,a*.5);arm(rig,1,a*.5)}
- }
+ else if(FRAME_SCENES[mood])frameGesture(root,rig,state,mood,elapsed,face,direction,reach);
  else if(mood==='knock'){
   const t=elapsed,reach=envelope(t,.02,.30,1.34,1.78);
   const contact=[.42,.76,1.10].reduce((a,at)=>a+envelope(t,at-.09,at,at+.025,at+.14),0);

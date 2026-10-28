@@ -1,3 +1,4 @@
+import {FRAME_SCENES,FRAME_SIZE,FRAME_SILL,sampleFrameScene,frameMask,framePalmX,frameReveal} from './frame-scenes.mjs';
 import {HERO_TIMING} from './character-style.mjs';
 import {t} from './i18n.mjs';
 export const CHARACTER_CLIPS=['El salla','Selam ver','Göz kırp','Ayağını kaldır','Göz kırp ve eğil','Kollarını dalgalandır'].map(name=>({name,duration:1850}));
@@ -19,7 +20,7 @@ export function installCharacterMotion(root=document){
   for(const art of arts)if(art.isConnected)studio.add(art);studio.prune();studio.invalidate();
  };
  const schedule=()=>{if(!frame)frame=requestAnimationFrame(sync)};
- root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host)playCharacter(host)},{capture:true});
+ root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host){const art=host.querySelector('.character-art');if(host.closest('#scores')&&art&&!reduced()){const mood=['frameSit','frameClean','framePeek','frameSleep','frameVault','frameLean'][Number(art.dataset.character)||0];playFrameStory([art],mood,waitingCharacters.key)}else playCharacter(host)}},{capture:true});
  root.addEventListener('keydown',event=>{const host=event.target.closest?.('[data-motion-only="true"]');if(host&&['Enter',' '].includes(event.key)){event.preventDefault();host.click()}});
  new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','class']});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)portraits?.pause();else schedule()});window.addEventListener('scroll',()=>portraits?.request(),{passive:true});window.addEventListener('resize',()=>portraits?.invalidate(),{passive:true});window.addEventListener('pagehide',()=>portraits?.pause());window.addEventListener('pageshow',schedule);matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change',schedule);schedule();
@@ -90,31 +91,51 @@ export class WaitingCharacters{
   if(key!==this.key){this.key=key;this.started=now;this.seen.clear()}
   if(!visible||blocked||!game||game.over||game.timeoutDecision)return null;
   const since=game.turnDeadline&&game.turnSeconds?now-(game.turnDeadline-game.turnSeconds*1000):now-this.started;
-  const threshold=game.turnSeconds?Math.min(35000,Math.max(12000,game.turnSeconds*300)):18000;
-  const cycle=Math.floor((since-threshold)/24000);if(cycle<0||cycle>2||this.seen.has(cycle))return null;
+  const cycle=Math.floor((since-6000)/26000);if(cycle<0||cycle>8||this.seen.has(cycle))return null;
   this.seen.add(cycle);const seats=game.players.map((p,i)=>!p.eliminated&&i!==game.turn?i:-1).filter(i=>i>=0);
-  return {key,seats,mood:seats.length>1?['five','dance','wiggle'][cycle]:['pace','dance','wiggle'][cycle]};
+  const script=['frameLean','frameSit','framePeek','frameVault','frameSleep','frameClean','frameFix','frameYawn','frameHighFive'];
+  return {key,seats,mood:script[(cycle+(game.history?.length||0))%script.length]};
  }
 }
 const waitingCharacters=new WaitingCharacters();let waitingFlight=null;
 export function updateWaitingCharacters(game,now,options={}){
- const blocked=options.blocked||reduced()||document.hidden||!!document.querySelector('dialog[open]');
+ const blocked=options.blocked||reduced()||document.hidden||!!document.querySelector('dialog[open],#scores [data-emotion="knock"]');
  const event=waitingCharacters.update(game,now,{...options,blocked});
  if(waitingFlight&&(blocked||!options.visible||waitingFlight.key!==waitingCharacters.key))waitingFlight.cancel();
  if(!event||waitingFlight||!event.seats.length)return;
  let actors=event.seats.map(seat=>document.querySelector('#scores [data-seat="'+seat+'"] .character-art')).filter(a=>a&&!a.dataset.emotion);
  if(!actors.length)return;
- if(actors.length>2){let pair=[actors[0],actors[1]],distance=Infinity;for(let i=0;i<actors.length;i++)for(let j=i+1;j<actors.length;j++){const d=Math.abs(actors[i].getBoundingClientRect().left-actors[j].getBoundingClientRect().left);if(d<distance){distance=d;pair=[actors[i],actors[j]]}}actors=pair}
- if(event.mood==='five'&&actors.length>1&&Math.abs(actors[0].getBoundingClientRect().left-actors[1].getBoundingClientRect().left)>170)event.mood='dance';
- let frame,done=false;const records=actors.map(source=>{
-  const rect=source.getBoundingClientRect(),host=document.createElement('div'),art=source.cloneNode(false);host.className='waiting-character';if(actors.length>1&&source===actors[1])art.style.transform='scaleX(-1)';host.setAttribute('aria-hidden','true');host.append(art);document.body.append(host);
-  host.style.left=(rect.left+rect.width/2-31)+'px';host.style.top=(rect.top+rect.height/2-38)+'px';const visibility=source.style.visibility;source.style.visibility='hidden';playCharacter(art,event.mood,4600);return {source,host,visibility,rect};
- });
+ if(actors.length>1){let pair=[actors[0],actors[1]],distance=Infinity;for(let i=0;i<actors.length;i++)for(let j=i+1;j<actors.length;j++){const d=Math.abs(actors[i].getBoundingClientRect().left-actors[j].getBoundingClientRect().left);if(d<distance){distance=d;pair=[actors[i],actors[j]]}}actors=pair.sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left)}
+ const social=['frameHighFive','frameYawn','framePeek'].includes(event.mood);if(!social)actors=[actors[(game.history?.length||0)%actors.length]];
+ if(event.mood==='frameHighFive'&&(actors.length<2||Math.abs(actors[1].getBoundingClientRect().left-actors[0].getBoundingClientRect().left)>105))event.mood=actors.length>1?'frameYawn':'framePeek';
+ playFrameStory(actors,event.mood,event.key);
+}
+function playFrameStory(actors,mood,key){
+ waitingFlight?.cancel();const event={mood,key};
+ const duration=FRAME_SCENES[event.mood]*1000,studioPromise=portraitRuntime();let frame,done=false,started=null,records=[];
  const cleanup=()=>{if(done)return;done=true;cancelAnimationFrame(frame);for(const r of records){r.source.style.visibility=r.visibility;r.host.remove()}waitingFlight=null};waitingFlight={key:event.key,cancel:cleanup};
- const started=performance.now(),tick=time=>{
-  const t=Math.min(1,(time-started)/4600);if(records.some(r=>!r.source.isConnected)||document.hidden){cleanup();return}
-  const ease=t<.22?Math.sin(t/.22*Math.PI/2):t>.78?Math.sin((1-t)/.22*Math.PI/2):1;
-  records.forEach((r,i)=>{let x=0,y=0;if(records.length===1){x=Math.sin(t*Math.PI*2)*18;y=-Math.sin(t*Math.PI)*9}else{const other=records[1-i],toward=(other.rect.left-r.rect.left)/2;x=Math.max(-35,Math.min(35,toward))*ease;y=-Math.sin(t*Math.PI)*7}r.host.style.transform='translate3d('+x+'px,'+y+'px,0)';r.host.style.opacity=String(Math.min(1,t/.07,(1-t)/.07))});
-  if(t<1)frame=requestAnimationFrame(tick);else cleanup();
- };frame=requestAnimationFrame(tick);
+ const queuedAt=performance.now(),viewportWidth=innerWidth,viewportHeight=innerHeight;
+ studioPromise.then(studio=>{
+  if(done||!studio||actors.some(a=>!a.isConnected)){cleanup();return}
+  const gap=actors.length>1?Math.abs(actors[1].getBoundingClientRect().left-actors[0].getBoundingClientRect().left):0;
+  records=actors.map((source,i)=>{
+   const card=source.closest('.player-card'),rect=source.getBoundingClientRect(),bounds=card.getBoundingClientRect(),host=document.createElement('div'),art=source.cloneNode(false),shadow=document.createElement('div'),fog=document.createElement('div');
+   const mood=i===1&&event.mood==='frameYawn'?'frameCopy':i===1&&event.mood==='framePeek'?'frameReact':event.mood;
+   host.className='frame-character';host.setAttribute('aria-hidden','true');host.dataset.scene=mood;delete art.dataset.modelReady;art.dataset.frameSource=String(rect.width);art.dataset.frameSourceCy=String((rect.top+rect.height/2-bounds.bottom+FRAME_SIZE*FRAME_SILL)/FRAME_SIZE);art.dataset.frameScene=mood;art.dataset.frameDirection=i===1?'-1':'1';art.dataset.frameReach=String(gap/(2*(FRAME_SIZE/2.8)));
+   shadow.className='frame-contact';shadow.innerHTML='<i></i><i></i>';framePalmX(Number(art.dataset.character)||0).forEach((x,j)=>shadow.children[j].style.left=(50+x/2.8*100)+'%');fog.className='frame-fog';host.append(art,shadow,fog);host.style.width=host.style.height=FRAME_SIZE+'px';host.style.left=(rect.left+rect.width/2-FRAME_SIZE/2)+'px';host.style.top=(bounds.bottom-FRAME_SIZE*FRAME_SILL)+'px';
+   const side=(FRAME_SIZE-rect.width)/FRAME_SIZE*50,top=(rect.top-bounds.bottom+FRAME_SIZE*FRAME_SILL)/FRAME_SIZE*100,bottom=(bounds.bottom+FRAME_SIZE*(1-FRAME_SILL)-rect.bottom)/FRAME_SIZE*100;art.style.clipPath='inset('+top+'% '+side+'% '+bottom+'% '+side+'%)';
+   document.body.append(host);const visibility=source.style.visibility;studio.add(art);return {source,card,rect,bounds,host,art,shadow,fog,visibility,mood};
+  });
+  // Wait for a real rendered model before hiding the portrait: never a blank swap.
+  const ready=time=>{if(done)return;if(time-queuedAt>3000){cleanup();return}if(records.some(r=>!r.source.isConnected)){cleanup();return}if(records.some(r=>!r.art.dataset.modelReady)){frame=requestAnimationFrame(ready);return}
+   started=time;for(const r of records){r.source.style.visibility='hidden';studio.play(r.art,r.mood,duration);r.host.style.opacity='1'}frame=requestAnimationFrame(tick);
+  };
+  const tick=time=>{
+   if(done)return;if(document.hidden||innerWidth!==viewportWidth||innerHeight!==viewportHeight||records.some(r=>!r.source.isConnected)){cleanup();return}
+   const elapsed=(time-started)/1000;
+   for(const r of records){const pose=sampleFrameScene(r.mood,elapsed),u=frameReveal(r.mood,elapsed),side=(FRAME_SIZE-r.rect.width)/FRAME_SIZE*50*(1-u),top=(r.rect.top-r.bounds.bottom+FRAME_SIZE*FRAME_SILL)/FRAME_SIZE*100*(1-u),fromBottom=(r.bounds.bottom+FRAME_SIZE*(1-FRAME_SILL)-r.rect.bottom)/FRAME_SIZE*100;
+    r.art.style.clipPath='inset('+top+'% '+side+'% '+(fromBottom+(frameMask(pose)-fromBottom)*u)+'% '+side+'%)';r.shadow.style.top=(FRAME_SILL*100)+'%';r.shadow.style.opacity=String(pose.grip*.6);r.fog.style.opacity=String(pose.breath*.26);}
+   if(elapsed<duration/1000)frame=requestAnimationFrame(tick);else cleanup();
+  };frame=requestAnimationFrame(ready);
+ }).catch(()=>cleanup());
 }

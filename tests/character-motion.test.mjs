@@ -39,7 +39,7 @@ test('gestures have bounded lifetimes, settle to rest and preserve the correct f
  for(const [mood,duration]of Object.entries(CHARACTER_DURATIONS)){
   const root=actor();assert.equal(animateCharacter(root,{mood,elapsed:duration-.01}),true);assert.equal(animateCharacter(root,{mood,elapsed:duration}),false);
   assert.deepEqual(root.userData.rig.arms.map(a=>a.rotation.toArray().slice(0,3)),[[0,0,0],[0,0,0]]);assert.deepEqual(root.userData.rig.head.rotation.toArray().slice(0,3),[0,0,.015]);
-  const expression=['hello','knock'].includes(mood)?'neutral':mood==='lose'||mood==='sad'?'sad':'happy';assert.equal(root.userData.rig.mouth[expression].visible,true);
+  const expression=(['hello','knock'].includes(mood)||mood.startsWith('frame'))?'neutral':mood==='lose'||mood==='sad'?'sad':'happy';assert.equal(root.userData.rig.mouth[expression].visible,true);
  }
 });
 

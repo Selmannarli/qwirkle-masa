@@ -1,3 +1,4 @@
+import {frameLedge,frameReveal,FRAME_SIZE} from '../public/frame-scenes.mjs';
 import * as T from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createCharacter,disposePerson} from './characters.mjs';
@@ -11,7 +12,7 @@ export class CharacterPortraits{
   this.renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});this.renderer.setPixelRatio(1);this.renderer.setSize(384,384,false);this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=.94;this.renderer.setClearColor(0,0);
   this.scene=new T.Scene();const room=new RoomEnvironment(),pmrem=new T.PMREMGenerator(this.renderer);this.environment=pmrem.fromScene(room,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.45;room.dispose();pmrem.dispose();
   this.scene.add(new T.HemisphereLight('#fff3ff','#64506d',.65));const key=new T.DirectionalLight('#fff1df',2.1);key.position.set(-3,5,6);this.scene.add(key);const rim=new T.DirectionalLight('#c9b4ff',1.15);rim.position.set(4,3,-3);this.scene.add(rim);
-  this.camera=new T.PerspectiveCamera(31,1,.1,30);
+  this.camera=new T.PerspectiveCamera(31,1,.1,30);this.frameCamera=new T.OrthographicCamera(-1.4,1.4,1.4,-1.4,.1,30);
   this.observer=new IntersectionObserver(entries=>{for(const e of entries){const r=this.records.get(e.target);if(r){r.visible=e.isIntersecting;r.dirty=true}}this.request()},{threshold:.01});
   this.resizeObserver=new ResizeObserver(()=>this.invalidate());
   this.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;this.pause()});this.renderer.domElement.addEventListener('webglcontextrestored',()=>{this.lost=false;this.invalidate()});
@@ -42,8 +43,15 @@ export class CharacterPortraits{
    if(!r.dirty&&!this.dirty&&(!animate||now-r.last<(active?15:32)))continue;
    const pixels=Math.max(64,Math.min(384,Math.ceil(Math.max(rect.width,rect.height)*Math.min(devicePixelRatio||1,1.5))));
    if(r.canvas.width!==pixels||r.canvas.height!==pixels){r.canvas.width=r.canvas.height=pixels}
-   const entry=this.model(r.face,r.colour,r.accessory),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced});
-   this.scene.add(root);const distance=radius/Math.sin(this.camera.fov*Math.PI/360)*1.14;this.camera.position.copy(center).add(new T.Vector3(.18,.12,1).normalize().multiplyScalar(distance));this.camera.lookAt(center);this.renderer.setScissorTest(true);this.renderer.setScissor(0,0,pixels,pixels);this.renderer.setViewport(0,0,pixels,pixels);this.renderer.render(this.scene,this.camera);r.ctx.globalCompositeOperation='copy';r.ctx.drawImage(this.renderer.domElement,0,384-pixels,pixels,pixels,0,0,pixels,pixels);this.scene.remove(root);
+   const entry=this.model(r.face,r.colour,r.accessory),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced,direction:Number(art.dataset.frameDirection)||1,reach:Number(art.dataset.frameReach)||1.18});
+   const camera=art.dataset.frameScene?this.frameCamera:this.camera;if(art.dataset.frameScene){
+    const u=frameReveal(art.dataset.frameScene,Math.max(0,(now-r.start)/1000)),sourceWidth=Number(art.dataset.frameSource)||43;
+    const fromSpan=FRAME_SIZE/sourceWidth*2*entry.headRadius*1.14/Math.cos(this.camera.fov*Math.PI/360),span=fromSpan+(2.8-fromSpan)*u;
+    const fromY=entry.headCenter.y+((Number(art.dataset.frameSourceCy)||.38)-.5)*fromSpan,y=fromY+(frameLedge(r.face)+.42-fromY)*u;
+    camera.left=-span/2;camera.right=span/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();
+    camera.position.set(.18*(1-u)*4,y+.12*(1-u)*4,4);camera.lookAt(0,y,0);
+   }
+   this.scene.add(root);const distance=radius/Math.sin(this.camera.fov*Math.PI/360)*1.14;this.camera.position.copy(center).add(new T.Vector3(.18,.12,1).normalize().multiplyScalar(distance));this.camera.lookAt(center);this.renderer.setScissorTest(true);this.renderer.setScissor(0,0,pixels,pixels);this.renderer.setViewport(0,0,pixels,pixels);this.renderer.render(this.scene,camera);r.ctx.globalCompositeOperation='copy';r.ctx.drawImage(this.renderer.domElement,0,384-pixels,pixels,pixels,0,0,pixels,pixels);this.scene.remove(root);
    r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion='shared-3d-v1'}
   }
   this.dirty=false;this.lastFrame=now;if(alive)this.request();

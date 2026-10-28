@@ -22,5 +22,5 @@ test('portrait renderer multiplexes one context and cancels hidden rendering, ne
 
 test('waiting scenes skip the active and eliminated seats, run briefly at spaced intervals and reset on a new turn',async()=>{
  const {WaitingCharacters}=await import('../public/motion.mjs'),w=new WaitingCharacters(),g={matchId:'wait',turn:0,history:[],players:[{},{},{},{eliminated:true}],turnSeconds:60,turnDeadline:60000};
- assert.equal(w.update(g,17000),null);assert.deepEqual(w.update(g,18000).seats,[1,2]);assert.equal(w.update(g,19000),null);assert.equal(w.update(g,42000).mood,'dance');assert.equal(w.update(g,66000,{blocked:true}),null);g.turn=1;g.history.push({});g.turnDeadline=130000;assert.equal(w.update(g,71000),null);assert.deepEqual(w.update(g,88000).seats,[0,2]);g.over=true;assert.equal(w.update(g,112000),null);
+ assert.equal(w.update(g,5999),null);assert.deepEqual(w.update(g,6000).seats,[1,2]);assert.equal(w.update(g,7000),null);assert.equal(w.update(g,32000).mood,'frameSit');assert.equal(w.update(g,66000,{blocked:true}),null);g.turn=1;g.history.push({});g.turnDeadline=130000;assert.equal(w.update(g,71000),null);assert.deepEqual(w.update(g,76000).seats,[0,2]);g.over=true;assert.equal(w.update(g,112000),null);
 });
