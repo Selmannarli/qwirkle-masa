@@ -115,7 +115,7 @@ function pinPalm(root,rig,state,index,target,weight){
  const n=rig.arms?.[index];if(!n||!weight)return;const grip=new Vector3(...(n.userData.grip||[0,-.285,.07]));
  const delta=new Vector3(root.position.x-state.root.position[0],root.position.y-state.root.position[1],root.position.z-state.root.position[2]);
  const desired=new Vector3(...target).sub(delta).sub(n.position),q=new Quaternion().setFromUnitVectors(grip.clone().normalize(),desired.clone().normalize());
- n.quaternion.slerp(q,Math.min(1,weight));const scale=Math.max(.55,Math.min(1.65,desired.length()/grip.length()));n.scale.multiplyScalar(1+(scale-1)*weight);
+ n.quaternion.slerp(q,Math.min(1,weight));const scale=Math.max(.55,Math.min(1.65,desired.length()/grip.length()));n.scale.lerp(new Vector3(...state.nodes.get(n).scale).multiplyScalar(scale),weight);
 }
 function frameGesture(root,rig,state,mood,t,face,direction=1,reach=1.18){
  const s=sampleFrameScene(mood,t),ledge=frameLedge(face),arms=rig.arms||[],right=face===5?arms.length-1:1;
@@ -124,7 +124,7 @@ function frameGesture(root,rig,state,mood,t,face,direction=1,reach=1.18){
  move(rig.head,-s.lean*.025+s.peek*.075,-s.lean*.018-s.react*.035,0);brow(rig,s.wake?'happy':'sad',s.sleep*.25+s.wake*.5);
  (rig.legs||[]).forEach((leg,i)=>rotate(leg,-s.sit*((mood==='frameVault'?1.35:.9)+(i?-.08:.08))+(i?-1:1)*s.step,0,(i?1:-1)*s.sit*.05));
  if(face===5)arms.slice(1,-1).forEach((n,i)=>rotate(n,-s.sit*.25,0,Math.sin(t*2+i)*s.sit*.04));
- for(const i of [0,right]){const n=arms[i];if(!n)continue;const rest=state.nodes.get(n),grip=n.userData.grip||[0,-.285,.07],x=rest.position[0]+grip[0];pinPalm(root,rig,state,i,[x,ledge,.24],s.grip)}
+ for(const i of [0,right]){const n=arms[i];if(!n)continue;const rest=state.nodes.get(n),grip=n.userData.grip||[0,-.285,.07],x=rest.position[0]+grip[0]+(mood==='frameHighFive'?direction*s.slide:0);pinPalm(root,rig,state,i,[x,ledge,.24],s.grip)}
  if(s.lean)pinPalm(root,rig,state,0,[-.27,ledge+.48,.30],s.lean*(1-s.react));
  if(s.wipe)pinPalm(root,rig,state,right,[Math.sin(t*4)*.20,ledge+.48+Math.cos(t*4)*.07,.46],s.wipe);
  if(s.fix){rotate(rig.head,.035,Math.sin(t*1.5)*.08,0);stretch(rig.body,1,1-Math.sin(t*5)*.006*s.fix,1)}

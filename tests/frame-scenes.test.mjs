@@ -29,3 +29,10 @@ test('sitting and leaving the frame reveal the feet; the portrait framing return
  assert.ok(frameMask(sampleFrameScene('frameSit',0))>30);assert.equal(frameMask(sampleFrameScene('frameSit',4)),0);assert.equal(frameMask(sampleFrameScene('frameVault',4)),0);
  for(const name of Object.keys(FRAME_SCENES)){assert.equal(frameReveal(name,0),0);assert.equal(frameReveal(name,1),1);assert.equal(frameReveal(name,FRAME_SCENES[name]),0)}
 });
+
+test('neighbour high-five palms meet at the same screen-plane target for all six bodies',()=>{
+ for(let face=0;face<6;face++)for(const direction of [-1,1]){const root=createCharacter(face,0,'standing');captureRest(root);const reach=1.3125;
+  animateCharacter(root,{mood:'frameHighFive',elapsed:3,direction,reach});root.updateMatrixWorld(true);const arm=root.userData.rig.arms[direction>0?(face===5?5:1):0];
+  const palm=arm.localToWorld(new Vector3(...arm.userData.grip));assert.ok(palm.distanceTo(new Vector3(direction*reach,frameLedge(face)+.38,.27))<1e-5);disposePerson(root);
+ }
+});

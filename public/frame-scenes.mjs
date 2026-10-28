@@ -12,7 +12,7 @@ export const frameReveal=(name,t)=>e(t,0,.72,(FRAME_SCENES[name]||1)-.75,FRAME_S
 export function sampleFrameScene(name,t){
  const duration=FRAME_SCENES[name]||0;t=Math.max(0,Math.min(duration,t));const a=e(t,.15,.9,duration-1.1,duration-.05);
  const s={duration,grip:0,lift:0,sit:0,step:0,lean:0,peek:0,wipe:0,sleep:0,wake:0,fix:0,react:0,yawn:0,out:0,slide:0,five:0,clip:FRAME_SILL,breath:0};
- if(name==='frameHighFive'){s.sit=e(t,.6,1.5,5.8,7.7);s.slide=e(t,1,2,5,6.6)*.35;s.five=e(t,1.8,2.7,4.2,5.5);s.grip=a;s.clip=FRAME_SILL*(1-s.sit)}
+ if(name==='frameHighFive'){s.sit=e(t,.6,1.5,5.8,7.7);s.slide=e(t,1,2,5,6.6)*.58;s.five=e(t,1.8,2.7,4.2,5.5);s.grip=a;s.clip=FRAME_SILL*(1-s.sit)}
  if(name==='frameSit'){s.grip=e(t,.15,.85,7.8,8.8);s.sit=e(t,1.2,2.3,6.5,8.5);s.lift=frameKey(t,[[0,0],[.9,0],[1.5,.11],[2.4,.025],[6.3,.025],[7.1,.11],[8.8,0],[9,0]]);s.step=Math.sin((t-2.3)*2.2)*e(t,2.4,3,5.8,6.4)*.10;s.grip*=1-e(t,2.3,3,5.8,6.5);s.clip=FRAME_SILL*(1-s.sit)}
  if(name==='frameVault'){s.grip=Math.max(e(t,.2,.85,1.9,2.5),e(t,6.5,7,8.6,9.8));s.lift=frameKey(t,[[0,0],[.8,0],[1.6,.12],[2.1,.12],[2.8,-.30],[3,-.34],[3.3,-.30],[6,-.30],[6.6,-.18],[7.2,.12],[8.2,.06],[9.8,0],[10,0]]);s.sit=Math.max(e(t,1,1.7,2.1,2.6),e(t,6.5,7.2,8.2,9.5));s.out=e(t,1.4,2.6,6.5,8.3);s.clip=FRAME_SILL*(1-e(t,1,2.2,8.8,9.9));s.peek=e(t,3.5,4.2,5.1,5.8)*.6}
  if(name==='frameLean'){s.lean=a;s.grip=a;s.react=e(t,4.4,4.7,4.85,5.3);}
