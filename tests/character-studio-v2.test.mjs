@@ -1,3 +1,4 @@
+import {accessoryFit} from '../client/character-fit.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Vector3,Box3,PerspectiveCamera} from 'three';
@@ -31,7 +32,7 @@ test('every colour and compatible cosmetic combination stays mounted to its anat
   const root=createCharacter(face,colour,'standing',loadout),rig=root.userData.rig,mounts=[];
   root.traverse(n=>{if(n.userData.attachment)mounts.push(n)});
   assert.deepEqual(mounts.map(n=>n.userData.attachment).sort(),accessoryList(loadout).sort());
-  for(const n of mounts)assert.equal(n.parent.uuid,(n.userData.attachment==='bow'?rig.body:rig.head).uuid);
+  for(const n of mounts)assert.equal(n.parent.uuid,(accessoryFit(face,n.userData.attachment).parent==='body'?rig.body:rig.head).uuid);
   const local=mounts.map(n=>n.matrix.clone());
   for(const mood of ['hello','win','lose','knock','impact']){
    animateCharacter(root,{mood,elapsed:.85});root.updateMatrixWorld(true);

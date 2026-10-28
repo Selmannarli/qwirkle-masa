@@ -1,3 +1,4 @@
+import {accessoryFit,REAR_PROFILES} from './character-fit.mjs';
 import {createFacialRig} from './facial-rig.mjs';
 import {characterBodyColour,accessoryList,accessoryColour} from '../public/character-style.mjs';
 import * as T from 'three';
@@ -5,7 +6,7 @@ import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 // A single model library is used by the table, portraits and expression previews.
-const geometries=new Map(),materials=new Map();
+const geometries=new Map(),materials=new Map(),contactPoints=new Map();
 function geometry(key,make){if(!geometries.has(key))geometries.set(key,make());return geometries.get(key)}
 function mat(colour,roughness=.4,metalness=0,options={}){const key=JSON.stringify([colour,roughness,metalness,options]);if(!materials.has(key))materials.set(key,new T.MeshPhysicalMaterial({color:colour,roughness,metalness,clearcoat:.24,clearcoatRoughness:.24,...options}));return materials.get(key)}
 function group(parent,name,at=[0,0,0]){const n=new T.Group();n.name=name;n.position.set(...at);parent.add(n);return n}
@@ -51,7 +52,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='surface-faces-v3';
+export const CHARACTER_MODEL_VERSION='anatomy-fits-v4';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -109,7 +110,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
  const addEye=(at,size=1,iris='#8054bb',robot=false)=>{const e=eyesV2(head,at,size,iris,robot);eyes.push(e.eye);lids.push(e.lid)};
  const cheek=(x,y,z,r=.06)=>orb(head,mat('#f1a1ad',.65),[x,y,z],[r,r*.48,.015]);
  const armPair=(x,y,z,options={})=>{for(const side of [-1,1])arms.push(limb(root,body,side,[side*x,y,z],options))};
- let headPivot=.84,top=1.40,neck=.40,width=.48;
+ let headPivot=.84;
  if(face===0){
   // A continuous soft cloud, not intersecting cropped puff pictures.
   mesh(head,cloudHull(),body,[0,0,0],[.94,.91,1.06]);
@@ -118,7 +119,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   cheek(-.34,.57,.325);cheek(.34,.57,.325);
   accent=group(head,'CloudCurl',[.19,1.15,-.01]);orb(accent,body,[0,0,0],[.24,.20,.24]);
   armPair(.45,.49,.025,{short:true});feet=legsV2(root,body,pose,{short:true,paw:true});
-  headPivot=.70;top=1.34;neck=.38;width=.45;
+  headPivot=.70;
  }else if(face===1){
   const ceramic=mat('#eee6ff',.32,.03),dark=mat('#212039',.3,.15),trim=mat('#bb9cdf',.31,.24);
   box(torso,body,[0,.29,0],[.61,.64,.48],.17);box(torso,ceramic,[0,.32,.24],[.43,.36,.058],.11);
@@ -134,7 +135,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
 
   accent=group(head,'Antenna',[0,1.42,-.05]);tube(accent,trim,[[0,0,0],[0,.07,0],[.035,.13,0]],.025);orb(accent,light,[.035,.14,0],[.055,.055,.055]);
   armPair(.34,.52,.015,{robot:true});feet=legsV2(root,body,pose,{robot:true});
-  headPivot=1.0;top=1.43;neck=.64;width=.49;
+  headPivot=1.0;
  }else if(face===2){
   orb(torso,body,[0,.32,0],[.35,.43,.275]);orb(torso,CREAM(),[0,.275,.24],[.20,.27,.055]);
   orb(head,body,[0,1.01,0],[.535,.43,.355]);
@@ -152,7 +153,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   for(const x of [-.12,0,.12]){const s=orb(head,mat('#b9704b',.6),[x,1.34,.20],[.026,.075,.02]);s.rotation.z=x*-.8}
   tail=group(root,'Tail',[0,.08,-.18]);tapered(tail,body,[[0,0,0],[.36,-.07,-.10],[.50,.13,-.12],[.46,.37,-.09],[.32,.39,-.02]],[.085,.095,.09,.10,.055]);orb(tail,CREAM(),[.32,.39,-.02],[.10,.10,.085]);
   armPair(.33,.52,.015,{paw:true});feet=legsV2(root,body,pose,{paw:true});
-  headPivot=.96;top=1.42;neck=.62;width=.45;
+  headPivot=.96;
  }else if(face===3){
   orb(torso,body,[0,.35,0],[.43,.47,.32]);orb(torso,mat('#b9e8cd',.6),[0,.265,.285],[.26,.30,.055]);
   orb(head,body,[0,.89,0],[.49,.51,.36]);
@@ -164,14 +165,14 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
 
   accent=group(head,'Sprout',[0,1.36,-.07]);for(const side of [-1,1]){const leaf=orb(accent,mat('#268b75',.55),[side*.045,.055,0],[.042,.10,.043]);leaf.rotation.z=-side*.4}
   armPair(.40,.56,0);feet=legsV2(root,body,pose);
-  headPivot=.87;top=1.40;neck=.47;width=.45;
+  headPivot=.87;
  }else if(face===4){
   mesh(head,puffyStar(),body,[0,.75,0],[.94,.94,1.13]);
   addEye([-.175,.835,.269],.87,'#a35b38');addEye([.175,.835,.269],.87,'#a35b38');
 
   cheek(-.30,.66,.258,.057);cheek(.30,.66,.258,.057);
   armPair(.34,.58,.005,{short:true});feet=legsV2(root,body,pose,{short:true});
-  headPivot=.74;top=1.20;neck=.38;width=.40;
+  headPivot=.74;
  }else{
   const jelly=body.clone();jelly.userData.instanceOwned=true;jelly.roughness=.27;jelly.clearcoat=.7;jelly.clearcoatRoughness=.27;
   orb(head,jelly,[0,.89,-.015],[.55,.47,.365]);
@@ -186,19 +187,20 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
    n.userData.grip=[side*.205,-.388,.095];n.userData.elbow=elbow;arms.push(n);
   });
   accent=group(head,'BellGlint',[.17,1.19,.22]);orb(accent,mat('#d5f3ff',.4),[0,0,0],[.037,.08,.012]);accent.rotation.z=-.5;
-  headPivot=.87;top=1.34;neck=.49;width=.46;
+  headPivot=.87;
  }
  if(face===0||face===4){const rise=face===0?.12:.24;for(const leg of feet)leg.position.y+=rise;root.userData.seatOffset=-rise}
- const hips=group(root,'Hips',[0,face===0?.24:face===4?.36:.12,-.22]);for(const side of [-1,1])orb(hips,body,[side*.09,0,0],[.12,.11,.10]);
+ const rear=REAR_PROFILES[face],hips=group(rear.parent==='head'?head:torso,'Hips',rear.at);hips.userData.anatomy=rear.name;
+ if(face===1)box(hips,body,[0,0,0],rear.size,.055);else orb(hips,body,[0,0,0],rear.size);
  const facial=createFacialRig(head,face);mouth=facial.mouth;eyebrows.push(...facial.brows);
  pivotHead(head,headPivot);
  const forearms=arms.map(a=>a.userData.elbow).filter(Boolean),hands=arms.map(a=>a.userData.wrist).filter(Boolean),knees=feet.map(a=>a.getObjectByName('Knee')).filter(Boolean);
- root.userData.rig={face,pose,facial,head,body:torso,eyes,pupils:eyes.flatMap(e=>e.children.filter(n=>n.name==='Pupil')),lids,arms,forearms,hands,legs:feet,knees,brows:eyebrows,mouth,tail,accent,ears,hips,mounts:{top:top-headPivot,neck:neck-headPivot,z:face===1?.45:face===4?.32:.37,width}};
+ root.userData.rig={face,pose,facial,rear,head,body:torso,eyes,pupils:eyes.flatMap(e=>e.children.filter(n=>n.name==='Pupil')),lids,arms,forearms,hands,legs:feet,knees,brows:eyebrows,mouth,tail,accent,ears,hips};
  root.userData.pose=pose;
  for(const id of accessoryList(accessory))addAccessory(root,id,accessoryColours);
  // Preserve articulation; merge colour details only within each rigid joint.
  for(const parent of [torso,hips,...arms,...forearms,...hands,...feet,...knees,...eyes,...eyebrows])batchColours(parent,{roughness:face===1?.34:.48,metalness:face===1?.08:0});
- bakeRigid(root);return root;
+ bakeRigid(root);root.updateMatrixWorld(true);return root;
 }
 export const createSeatedCharacter=(face,colour,accessory='none',colours={})=>createCharacter(face,colour,'seated',accessory,colours);
 
@@ -208,34 +210,52 @@ export function characterContactPoint(root,camera){
 }
 
 function addAccessory(root,id,colours={}){
- const rig=root.userData.rig,head=rig.head,a=rig.mounts;
- const mount=group(id==='bow'?rig.body:head,'Accessory-'+id),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
- mount.userData.attachment=id;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
+ const rig=root.userData.rig,head=rig.head,fit=accessoryFit(rig.face,id);
+ const parent=fit.parent==='body'?rig.body:head;
+ const mount=group(parent,'Accessory-'+id),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
+ mount.userData.attachment=id;mount.userData.fit=fit;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
  if(id==='glasses'){
   const ink=mat(accessoryColour(colours,'face','#302b48'),.34),points=rig.eyes.map(e=>e.position.clone());
   for(let i=0;i<points.length;i++){
-   const p=points[i],scale=rig.eyes[i].userData.eyeScale||1,r=.173*scale,z=p.z+.13*scale;
+   const p=points[i],scale=rig.eyes[i].userData.eyeScale||1,r=.173*scale,z=p.z+fit.depth*scale;
    const ring=torus(mount,ink,[p.x,p.y,z],r,.017);ring.scale.y=1.12;
-   for(const side of points.length===1?[-1,1]:[i===0?-1:1])tube(mount,ink,[[p.x+side*r,p.y,z],[side*(a.width+.025),p.y+.01,.07],[side*a.width,p.y-.015,-.07]],.012);
+   for(const side of points.length===1?[-1,1]:[i===0?-1:1]){
+    const wrap=[[.22,0],[.055,-.006],[fit.back,-.025]].map(([depth,dy])=>sideContact(root,side,p.y+head.position.y+dy,depth,fit.side));
+    tube(mount,ink,[[p.x+side*r,p.y,z],...wrap],.012);
+   }
   }
-  if(points.length===2){const [l,r]=points;tube(mount,ink,[[l.x+.16,l.y,l.z+.14],[0,l.y+.027,Math.max(l.z,r.z)+.155],[r.x-.16,r.y,r.z+.14]],.014)}
+  if(points.length===2){const [l,r]=points,contact=frontContact(root,0,l.y+head.position.y+fit.bridge);const z=contact.z+.014;
+   tube(mount,ink,[[l.x+.16,l.y,l.z+fit.depth],[0,l.y+fit.bridge,z],[r.x-.16,r.y,r.z+fit.depth]],.014);
+   orb(mount,ink,[0,l.y+fit.bridge,z-.006],[.022,.012,.018]);
+  }
  }else if(id==='bow'){
-  const neckY=a.neck+head.position.y;
-  for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.023,-.029);shape.lineTo(side*.145,-.078);shape.lineTo(side*.145,.078);shape.lineTo(side*.023,.029);shape.closePath();const g=geometry('angular-bow-'+side,()=>new T.ExtrudeGeometry(shape,{depth:.032,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:2}));mesh(mount,g,violet,[0,neckY,a.z]);tube(mount,mat(accessoryColour(colours,'neck','#a58ae1'),.65),[[side*.035,neckY,a.z+.038],[side*.105,neckY+.027,a.z+.038]],.003)}
-  box(mount,violet,[0,neckY,a.z+.025],[.060,.080,.057],.01);
- }else if(id==='cap'){
+  root.updateMatrixWorld(true);const skin=[rig.head,rig.body],ray=new T.Raycaster(new T.Vector3(fit.at[0],fit.at[1],3),new T.Vector3(0,0,-1));
+  const hit=ray.intersectObjects(skin,true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));if(!hit)throw Error('Neck contact missing for '+rig.face);
+  const at=parent.worldToLocal(new T.Vector3(fit.at[0],fit.at[1],hit.point.z+.005));mount.position.copy(at);mount.scale.set(...fit.size);mount.rotation.set(...fit.rotation);const neckY=0;const bowZ=0;
+  for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.023,-.029);shape.lineTo(side*.145,-.078);shape.lineTo(side*.145,.078);shape.lineTo(side*.023,.029);shape.closePath();const g=geometry('angular-bow-'+side,()=>new T.ExtrudeGeometry(shape,{depth:.032,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:2}));mesh(mount,g,violet,[0,neckY,bowZ]);tube(mount,mat(accessoryColour(colours,'neck','#a58ae1'),.65),[[side*.035,neckY,bowZ+.038],[side*.105,neckY+.027,bowZ+.038]],.003)}
+  box(mount,violet,[0,neckY,bowZ+.025],[.060,.080,.057],.01);
+ }else if(id==='cap'||id==='crown'){
   if(rig.face===1)rig.accent.visible=false;
-  const width=a.width*(rig.face===2?.46:.75);orb(mount,violet,[0,a.top-.028,-.015],[width,.15,width*.8]);
-  box(mount,mat(accessoryColour(colours,'head','#a58ae1'),.45),[0,a.top-.093,width*.63],[width*1.9,.042,width*.95],.035);
-  orb(mount,gold,[0,a.top+.115,-.015],[.026,.019,.026]);
- }else if(id==='crown'){
-  if(rig.face===1)rig.accent.visible=false;
-  const width=a.width*(rig.face===2?.43:.64);
-  torus(mount,gold,[0,a.top-.015,0],width,.031).rotation.x=Math.PI/2;
-  for(let i=0;i<5;i++){const angle=i*Math.PI*2/5,x=Math.sin(angle)*width,z=Math.cos(angle)*width;
-   mesh(mount,geometry('studio-crown-spike',()=>new T.ConeGeometry(.057,.15,4)),gold,[x,a.top+.05,z]);
-   orb(mount,mat('#d96eab',.27),[x,a.top+.128,z],[.024,.025,.024]);
+  mount.position.set(fit.at[0],fit.at[1]-head.position.y,fit.at[2]);mount.rotation.set(...fit.rotation);
+  const [rx,height,rz]=fit.size;
+  if(id==='cap'){
+   mesh(mount,geometry('cap-open-dome',()=>new T.SphereGeometry(1,32,18,0,Math.PI*2,0,Math.PI/2)),violet,[0,0,0],[rx,height,rz]);
+   const rim=torus(mount,violet,[0,0,0],1,.018);rim.rotation.x=Math.PI/2;rim.scale.set(rx,rz,1);
+   const brim=orb(mount,mat(accessoryColour(colours,'head','#a58ae1'),.45),[0,-.008,rz*.97],[rx*1.06,.022,rz*.70]);brim.rotation.x=.06;
+   orb(mount,gold,[0,height,0],[.022,.013,.022]);
+  }else{
+   const band=mesh(mount,geometry('crown-open-band',()=>new T.CylinderGeometry(1,1,.065,40,1,true)),gold,[0,.025,0],[rx,1,rz]);
+   for(const y of [0,.06]){const rim=torus(mount,gold,[0,y,0],1,.015);rim.rotation.x=Math.PI/2;rim.scale.set(rx,rz,1)}
+   for(let i=0;i<5;i++){const angle=i*Math.PI*2/5,x=Math.sin(angle)*rx,z=Math.cos(angle)*rz;
+    mesh(mount,geometry('fitted-crown-spike',()=>new T.ConeGeometry(.042,.15,4)),gold,[x,.10,z],[1,height/.20,1]);
+    orb(mount,mat('#d96eab',.27),[x,.10+.075*height/.20,z],[.021,.023,.021]);
+   }
   }
  }
  batchColours(mount,{roughness:.36,metalness:id==='crown'?.28:.06});
 }
+
+function hasAccessoryParent(node){for(let n=node;n;n=n.parent)if(n.userData.attachment)return true;return false}
+
+function frontContact(root,x,y){root.updateMatrixWorld(true);const rig=root.userData.rig,ray=new T.Raycaster(new T.Vector3(x,y,3),new T.Vector3(0,0,-1));const hit=ray.intersectObjects([rig.head,rig.body],true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));if(!hit)throw Error('Accessory contact missing for '+rig.face);return rig.head.worldToLocal(hit.point.clone())}
+function sideContact(root,side,y,z,fallback){const key=[root.userData.face,side,y,z].join(':');if(contactPoints.has(key))return [...contactPoints.get(key)];root.updateMatrixWorld(true);const head=root.userData.rig.head,ray=new T.Raycaster(new T.Vector3(side*3,y,z),new T.Vector3(-side,0,0)),hit=ray.intersectObject(head,true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));const p=hit?head.worldToLocal(hit.point.clone()):new T.Vector3(side*fallback,y-head.position.y,z);p.x+=side*.016;const result=p.toArray();contactPoints.set(key,result);return [...result]}

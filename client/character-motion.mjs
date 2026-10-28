@@ -167,7 +167,7 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
  else if(mood==='impact'){
   const t=elapsed,turn=key(t,[[0,0],[.65,0],[1.30,Math.PI],[2.35,Math.PI],[3.1,0],[4.8,0]]),contact=envelope(t,1.42,1.78,1.93,2.30),cheer=envelope(t,2.45,2.95,3.95,4.50),anticip=envelope(t,.8,1.10,1.30,1.58);
   brow(rig,'happy',.75);blink(rig,Math.max(blinkAt(t,.4),blinkAt(t,3.25,.12)));rotate(rig.head,-cheer*.10,contact*.38,cheer*Math.sin(t*5)*.035);arm(rig,0,cheer*1.60+anticip*.25,-cheer*.20);arm(rig,1,cheer*1.72+anticip*.25,-cheer*.20);bend(rig,0,cheer*.55+anticip*.25,cheer*.08);bend(rig,1,cheer*.60+anticip*.25,-cheer*.08);
-  if(rig.pose!=='seated'){rotate(root,-contact*.35,turn,0);move(root,0,-anticip*.045+contact*.025+jump(t,2.65,.65,.09)+jump(t,3.5,.55,.06),contact*.32);stretch(rig.body,1+contact*.06,1-contact*.05,1+contact*.10);stretch(rig.hips,1+contact*.15,1-contact*.08,1+contact*.32);move(rig.hips,0,0,-contact*.06);(rig.legs||[]).forEach((n,i)=>rotate(n,contact*.12,0,(i?1:-1)*contact*.055))}
+  if(rig.pose!=='seated'){rotate(root,-contact*.35,turn,0);move(root,0,-anticip*.045+contact*.025+jump(t,2.65,.65,.09)+jump(t,3.5,.55,.06),contact*.32);if(face!==1)stretch(rig.body,1+contact*.025,1-contact*.025,1+contact*.035);const softness=rig.rear?.softness??.025;stretch(rig.hips,1+contact*softness,1-contact*softness*.5,1+contact*softness);move(rig.hips,0,0,-contact*softness*.25);(rig.legs||[]).forEach((n,i)=>rotate(n,contact*.12,0,(i?1:-1)*contact*.055))}
  }
  else if(mood==='knock'){
   const t=elapsed,reach=envelope(t,.02,.30,1.34,1.78);
