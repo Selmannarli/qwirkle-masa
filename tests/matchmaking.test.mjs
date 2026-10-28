@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Matchmaker,BOT_PLAYERS,BOT_WAIT_MS,serverBotDelay,matchTimer,planBotTurn} from '../matchmaking.mjs';
+import {Matchmaker,BOT_PLAYERS,BOT_WAIT_MS,serverBotDelay,matchTimer,planBotTurn,updateBotPace,ensureBotProfiles} from '../matchmaking.mjs';
 import {createGame,play,validate} from '../public/engine.mjs';
 import {BotRunner} from '../server-bots.mjs';
 import {playerId,publicProfile} from '../account.mjs';
@@ -19,13 +19,26 @@ test('only matching timers pair, changing a timer restarts the wait and preserve
  assert.throws(()=>f.enter(player('x'),15));for(const seconds of [30,60,120,43200])assert.equal(matchTimer(String(seconds)),seconds);
 });
 test('bot timing spans human-sized thinking windows and twelve-hour turns stay under ten minutes',()=>{
- for(const [seconds,min,max]of [[30,5000,25000],[60,10000,50000],[120,20000,100000],[43200,2000,600000]]){
+ for(const [seconds,min,max]of [[30,2000,10000],[60,4000,20000],[120,8000,40000],[43200,2000,600000]]){
   assert.equal(serverBotDelay(seconds,()=>0),min);assert.equal(serverBotDelay(seconds,()=>1),max);assert.ok(serverBotDelay(seconds,()=>.5)>min);
  }
 });
 
 test('saved bot plans survive reloads, do not reroll on polling and leave deadline room to solve',()=>{
- const game={revision:3,turn:1,turnSeconds:60,turnDeadline:61000};const plan=planBotTurn(game,null,1000,()=>1);assert.equal(plan.at,51000);
+ const game={revision:3,turn:1,turnSeconds:60,turnDeadline:61000};const plan=planBotTurn(game,null,1000,()=>1);assert.equal(plan.at,21000);
  assert.deepEqual(planBotTurn(game,JSON.parse(JSON.stringify(plan)),40000,()=>0),plan);
  const next=planBotTurn({...game,revision:4},plan,60000,()=>1);assert.equal(next.at,60000);assert.equal(next.revision,4);
+});
+
+test('bot answers account for human thinking, become slower with progress and stay quick after long waits',()=>{
+ for(const humanSeconds of [20,30,40,50,10]){const values=[0,.5,1].map(n=>serverBotDelay(60,()=>n,{humanSeconds,moves:14}));if(humanSeconds>=40)assert.ok(values.every(v=>v<=10000));if(humanSeconds===20)assert.equal(values[1],20000);if(humanSeconds===30)assert.equal(values[1],10000);if(humanSeconds===10)assert.deepEqual(values,[15000,25000,35000])}
+ assert.ok(serverBotDelay(60,()=>.5,{humanSeconds:20,moves:0})<serverBotDelay(60,()=>.5,{humanSeconds:20,moves:14}));
+ const room={seats:[{}, {bot:true}],game:{matchId:'a',turn:0,history:[],turnSeconds:60,turnDeadline:61000}};updateBotPace(room,1000);updateBotPace(room,9000);room.game.turn=1;room.game.history.push({});room.game.turnDeadline=81000;updateBotPace(room,21000);assert.equal(room.lastHumanSeconds,20);updateBotPace(room,40000);assert.equal(room.lastHumanSeconds,20);
+});
+
+test('all five server players support actual persisted friend requests by public tag',async()=>{
+ const {Friends}=await import('../friends.mjs');const {resolvePlayerId}=await import('../player-tags.mjs');
+ const state={profiles:ensureBotProfiles({'100000000001':{name:'Ada',tag:'12345'}})},friends=new Friends(state);
+ for(const bot of BOT_PLAYERS){const id=resolvePlayerId(state.profiles,bot.tag);assert.equal(id,bot.id);friends.request('100000000001',id);friends.request('100000000001',id)}
+ assert.equal(state.friends.length,5);assert.equal(friends.view('100000000001',new Map()).outgoing.length,5);
 });

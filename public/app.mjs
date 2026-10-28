@@ -2,7 +2,7 @@ import {MIKO_AVATAR} from './character-style.mjs';
 import {extendTurn} from './time-support.mjs';
 import {t,installLanguage,locale} from './i18n.mjs';
 import {renderTable,updateTableRound} from './table.mjs';
-import {installCharacterMotion,playCharacter,reactToGame,gameOutcomes} from './motion.mjs';
+import {installCharacterMotion,playCharacter,reactToGame,gameOutcomes,updateWaitingCharacters} from './motion.mjs';
 import {syncPush,removePush,nativePushState} from './push-client.mjs';
 import {botThinkDelay,practiceAvailable,practiceSnapshot,restorePractice} from './practice.mjs';
 import {GameFeel,moveEnergy,movePower} from './game-feel.mjs';
@@ -208,6 +208,7 @@ function updateTurnWarning(){
  }
 }
 setInterval(updateTurnWarning,80);
+setInterval(()=>updateWaitingCharacters(game,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!chatIsOpen(),blocked:visualLocked()||!!practicePausedAt}),250);
 function updateClock(){if(!game||view!=='game')return;const n=$('turnClock'),remaining=game.turnDeadline?Math.max(0,Math.ceil((game.turnDeadline-Date.now()-(local?0:serverOffset))/1000)):0;n.classList.toggle('hidden',!game.turnSeconds||game.over);n.textContent=remaining>=3600?Math.floor(remaining/3600)+':'+String(Math.floor(remaining%3600/60)).padStart(2,'0'):remaining>=60?Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'):String(remaining);n.style.setProperty('--remaining',String(Math.max(0,Math.min(1,remaining/(game.turnSeconds||1)))));n.classList.toggle('urgent',remaining<=10);n.title='Kalan tur süresi: '+remaining+' saniye'}
 setInterval(()=>{const locked=visualLocked();if(!locked&&wasCelebrationLocked&&game&&view==='game')render();wasCelebrationLocked=locked;updateClock();if(local&&game&&!practicePausedAt&&!busy&&!coachingBusy&&expireTurn(game)){clearTimeout(botTimer);epoch++;swapping=false;swapIds.clear();selected=null;pending=rebaseDraft(game.board,game.players[me].hand,pending);lastRevision=game.revision;render();saveSolo();scheduleBot();if(!game.timeoutDecision)toast('Süre doldu; sıra geçti.')}},250);
 function chatIsOpen(){return $('game').classList.contains('chat-open')}

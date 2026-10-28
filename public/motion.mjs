@@ -82,3 +82,39 @@ export function reactToGame(game,options={}){
   const mood=event.mood==='sad'&&!game.over?(game.history?.[0]?.score>=24?'surprise':(game.timeoutCounts?.[event.seat]||0)>=2?'angry':'sad'):event.mood;if(art&&art.dataset.emotion!==mood)playCharacter(host,mood,Math.min(event.remaining,mood==='surprise'?1500:mood==='angry'?1800:event.remaining));
  }
 }
+
+export class WaitingCharacters{
+ constructor(){this.key=null;this.started=0;this.seen=new Set()}
+ update(game,now,{visible=true,blocked=false}={}){
+  const key=game?[game.matchId,game.turn,game.history?.length||0].join(':'):null;
+  if(key!==this.key){this.key=key;this.started=now;this.seen.clear()}
+  if(!visible||blocked||!game||game.over||game.timeoutDecision)return null;
+  const since=game.turnDeadline&&game.turnSeconds?now-(game.turnDeadline-game.turnSeconds*1000):now-this.started;
+  const threshold=game.turnSeconds?Math.min(35000,Math.max(12000,game.turnSeconds*300)):18000;
+  const cycle=Math.floor((since-threshold)/24000);if(cycle<0||cycle>2||this.seen.has(cycle))return null;
+  this.seen.add(cycle);const seats=game.players.map((p,i)=>!p.eliminated&&i!==game.turn?i:-1).filter(i=>i>=0);
+  return {key,seats,mood:seats.length>1?['five','dance','wiggle'][cycle]:['pace','dance','wiggle'][cycle]};
+ }
+}
+const waitingCharacters=new WaitingCharacters();let waitingFlight=null;
+export function updateWaitingCharacters(game,now,options={}){
+ const blocked=options.blocked||reduced()||document.hidden||!!document.querySelector('dialog[open]');
+ const event=waitingCharacters.update(game,now,{...options,blocked});
+ if(waitingFlight&&(blocked||!options.visible||waitingFlight.key!==waitingCharacters.key))waitingFlight.cancel();
+ if(!event||waitingFlight||!event.seats.length)return;
+ let actors=event.seats.map(seat=>document.querySelector('#scores [data-seat="'+seat+'"] .character-art')).filter(a=>a&&!a.dataset.emotion);
+ if(!actors.length)return;
+ if(actors.length>2){let pair=[actors[0],actors[1]],distance=Infinity;for(let i=0;i<actors.length;i++)for(let j=i+1;j<actors.length;j++){const d=Math.abs(actors[i].getBoundingClientRect().left-actors[j].getBoundingClientRect().left);if(d<distance){distance=d;pair=[actors[i],actors[j]]}}actors=pair}
+ if(event.mood==='five'&&actors.length>1&&Math.abs(actors[0].getBoundingClientRect().left-actors[1].getBoundingClientRect().left)>170)event.mood='dance';
+ let frame,done=false;const records=actors.map(source=>{
+  const rect=source.getBoundingClientRect(),host=document.createElement('div'),art=source.cloneNode(false);host.className='waiting-character';if(actors.length>1&&source===actors[1])art.style.transform='scaleX(-1)';host.setAttribute('aria-hidden','true');host.append(art);document.body.append(host);
+  host.style.left=(rect.left+rect.width/2-31)+'px';host.style.top=(rect.top+rect.height/2-38)+'px';const visibility=source.style.visibility;source.style.visibility='hidden';playCharacter(art,event.mood,4600);return {source,host,visibility,rect};
+ });
+ const cleanup=()=>{if(done)return;done=true;cancelAnimationFrame(frame);for(const r of records){r.source.style.visibility=r.visibility;r.host.remove()}waitingFlight=null};waitingFlight={key:event.key,cancel:cleanup};
+ const started=performance.now(),tick=time=>{
+  const t=Math.min(1,(time-started)/4600);if(records.some(r=>!r.source.isConnected)||document.hidden){cleanup();return}
+  const ease=t<.22?Math.sin(t/.22*Math.PI/2):t>.78?Math.sin((1-t)/.22*Math.PI/2):1;
+  records.forEach((r,i)=>{let x=0,y=0;if(records.length===1){x=Math.sin(t*Math.PI*2)*18;y=-Math.sin(t*Math.PI)*9}else{const other=records[1-i],toward=(other.rect.left-r.rect.left)/2;x=Math.max(-35,Math.min(35,toward))*ease;y=-Math.sin(t*Math.PI)*7}r.host.style.transform='translate3d('+x+'px,'+y+'px,0)';r.host.style.opacity=String(Math.min(1,t/.07,(1-t)/.07))});
+  if(t<1)frame=requestAnimationFrame(tick);else cleanup();
+ };frame=requestAnimationFrame(tick);
+}

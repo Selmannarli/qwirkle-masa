@@ -19,3 +19,8 @@ test('reaction lifetimes match the articulated clips so redraws cannot skip anti
 test('portrait renderer multiplexes one context and cancels hidden rendering, never uses atlas transforms',async()=>{
  const source=await readFile(new URL('../client/portrait-scene.mjs',import.meta.url),'utf8'),motion=await readFile(new URL('../public/motion.mjs',import.meta.url),'utf8');assert.equal((source.match(/new T.WebGLRenderer/g)||[]).length,1);assert.ok(source.includes('this.observer.unobserve(art)')&&source.includes('document.hidden'));assert.ok(source.includes("createCharacter(face,colour,'standing',accessory)"));assert.ok(!motion.includes('spriteFrames')&&!motion.includes('prepareAtlas')&&!motion.includes('portrait-eyelid'));
 });
+
+test('waiting scenes skip the active and eliminated seats, run briefly at spaced intervals and reset on a new turn',async()=>{
+ const {WaitingCharacters}=await import('../public/motion.mjs'),w=new WaitingCharacters(),g={matchId:'wait',turn:0,history:[],players:[{},{},{},{eliminated:true}],turnSeconds:60,turnDeadline:60000};
+ assert.equal(w.update(g,17000),null);assert.deepEqual(w.update(g,18000).seats,[1,2]);assert.equal(w.update(g,19000),null);assert.equal(w.update(g,42000).mood,'dance');assert.equal(w.update(g,66000,{blocked:true}),null);g.turn=1;g.history.push({});g.turnDeadline=130000;assert.equal(w.update(g,71000),null);assert.deepEqual(w.update(g,88000).seats,[0,2]);g.over=true;assert.equal(w.update(g,112000),null);
+});

@@ -1,7 +1,7 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
+export const CHARACTER_DURATIONS=Object.freeze({pace:4.6,dance:4.6,five:4.6,wiggle:4.6,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -124,6 +124,14 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
   const t=elapsed,turn=key(t,[[0,0],[.65,0],[1.30,Math.PI],[2.35,Math.PI],[3.1,0],[4.8,0]]),contact=envelope(t,1.42,1.78,1.93,2.30),cheer=envelope(t,2.45,2.95,3.95,4.50),anticip=envelope(t,.8,1.10,1.30,1.58);
   brow(rig,'happy',.75);blink(rig,Math.max(blinkAt(t,.4),blinkAt(t,3.25,.12)));rotate(rig.head,-cheer*.10,contact*.38,cheer*Math.sin(t*5)*.035);arm(rig,0,cheer*1.85+anticip*.25,-cheer*.20);arm(rig,1,cheer*2.05+anticip*.25,-cheer*.20);
   if(rig.pose!=='seated'){rotate(root,-contact*.35,turn,0);move(root,0,-anticip*.045+contact*.025+jump(t,2.65,.65,.09)+jump(t,3.5,.55,.06),contact*.32);stretch(rig.body,1+contact*.06,1-contact*.05,1+contact*.10);stretch(rig.hips,1+contact*.15,1-contact*.08,1+contact*.32);move(rig.hips,0,0,-contact*.06);(rig.legs||[]).forEach((n,i)=>rotate(n,contact*.12,0,(i?1:-1)*contact*.055))}
+ }
+ else if(['pace','dance','five','wiggle'].includes(mood)){
+  const t=elapsed,a=envelope(t,.05,.45,3.95,4.6),beat=Math.sin(t*7),step=Math.sin(t*9);
+  brow(rig,'happy',a*.6);blink(rig,blinkAt(t,1.15));
+  if(mood==='pace'){rotate(rig.head,0,Math.sin(t*2)*a*.2,0);arm(rig,0,step*a*.25);arm(rig,1,-step*a*.25);(rig.legs||[]).forEach((n,i)=>rotate(n,step*a*(i?-1:1)*.3,0,0));move(root,0,Math.abs(step)*a*.012,0)}
+  if(mood==='dance'){rotate(root,0,Math.sin(t*3)*a*.18,beat*a*.06);arm(rig,0,a*(1.3+beat*.25));arm(rig,1,a*(1.3-beat*.25));move(root,0,Math.abs(beat)*a*.025,0)}
+  if(mood==='five'){arm(rig,1,a*(1.8+envelope(t,1.4,1.8,2.1,2.5)*.3),-a*.15);rotate(rig.head,0,a*.12,0);arm(rig,0,a*.15)}
+  if(mood==='wiggle'){rotate(root,0,key(t,[[0,0],[1,Math.PI],[3.4,Math.PI],[4.6,0]]),0);rotate(rig.hips,0,0,beat*a*.12);rotate(rig.head,0,a*.3,0);arm(rig,0,a*.5);arm(rig,1,a*.5)}
  }
  else if(mood==='knock'){
   const t=elapsed,reach=envelope(t,.02,.30,1.34,1.78);

@@ -214,3 +214,15 @@ body[data-motion="reduced"] .glass-knock{animation:glass-contact-still .38s line
 /* Inset edges keep the turn light off the board and all touch targets. */
 #game.has-turn-light>.board-area,#game.has-turn-light>.hand-panel{outline:1px solid #5af1a68a;outline-offset:-2px;box-shadow:inset 0 0 10px #37e38c18,0 0 9px #35d98328;transition:box-shadow .3s,outline-color .3s}
 #game.has-turn-light>.board-area{border-color:#5af1a67a}
+
+/* Android WebView's tap paint must never frame a character. Keyboard focus stays visible. */
+.illustrated-avatar,.illustrated-avatar *,.player-card button{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+.illustrated-avatar:focus:not(:focus-visible),.player-card button:focus:not(:focus-visible){outline:none!important;box-shadow:none!important}
+@media(pointer:coarse){.illustrated-avatar:focus,.player-card button:focus{outline:none!important}}
+#game.has-turn-light>.board-area,#game.has-turn-light>.hand-panel{outline:2px solid #66ffb5;outline-offset:-3px;border-color:#52eda2;box-shadow:inset 0 0 15px #40ff9b25,0 0 5px #74ffc8a6,0 0 16px #32ed934d}
+
+.waiting-character{position:fixed;width:62px;height:76px;z-index:32;pointer-events:none;contain:layout style;will-change:transform,opacity}
+.waiting-character .character-art{width:100%;height:100%;display:block}
+@media(prefers-reduced-motion:reduce){.waiting-character{display:none}}
+
+.illustrated-avatar,.illustrated-avatar *{-webkit-user-select:none;user-select:none}
