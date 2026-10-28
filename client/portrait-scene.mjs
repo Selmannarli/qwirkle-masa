@@ -2,7 +2,7 @@ import * as T from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createCharacter,disposePerson,characterContactPoint,CHARACTER_MODEL_VERSION} from './characters.mjs';
 import {animateCharacter,resetCharacter,captureCharacterPose,blendCharacterPose,CHARACTER_DURATIONS} from './character-motion.mjs';
-import {acceptsCharacterGesture} from '../public/character-style.mjs';
+import {acceptsCharacterGesture,accessoryColourKey} from '../public/character-style.mjs';
 
 // One GPU context paints all DOM portraits. Their small 2D canvases follow normal
 // stacking, clipping and dialog rules, and never create another WebGL context.
@@ -18,12 +18,12 @@ export class CharacterPortraits{
   this.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;this.pause()});this.renderer.domElement.addEventListener('webglcontextrestored',()=>{this.lost=false;this.invalidate()});
  }
  add(art){
-  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.mood='idle';record.until=0;record.transition=null;clearTimeout(record.timer);delete art.dataset.emotion;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
-  const r={art,canvas,ctx,face:Number(art.dataset.character)||0,colour:Number(art.dataset.colour)||0,accessory:art.dataset.accessory||'none',visible:false,dirty:true,mood:'idle',start:0,until:0,phase:Math.random()*15,last:0};this.records.set(art,r);this.observer.observe(art);this.resizeObserver.observe(art);this.request();
+  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')||record.colours!==(art.dataset.accessoryColours||'')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.colours=art.dataset.accessoryColours||'';record.mood='idle';record.until=0;record.transition=null;clearTimeout(record.timer);delete art.dataset.emotion;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
+  const r={art,canvas,ctx,face:Number(art.dataset.character)||0,colour:Number(art.dataset.colour)||0,accessory:art.dataset.accessory||'none',colours:art.dataset.accessoryColours||'',visible:false,dirty:true,mood:'idle',start:0,until:0,phase:Math.random()*15,last:0};this.records.set(art,r);this.observer.observe(art);this.resizeObserver.observe(art);this.request();
  }
- model(face,colour,accessory='none'){
-  const key=face+':'+colour+':'+accessory;let entry=this.models.get(key);if(entry){this.models.delete(key);this.models.set(key,entry);return entry}
-  const root=createCharacter(face,colour,'standing',accessory);root.updateMatrixWorld(true);const bounds=new T.Box3().setFromObject(root),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3());const headBounds=new T.Box3().setFromObject(root.userData.rig.head),headCenter=headBounds.getCenter(new T.Vector3()),headSize=headBounds.getSize(new T.Vector3());headCenter.y-=.04;entry={root,center,radius:Math.max(size.y,size.x)*.5,headCenter,headRadius:Math.max(headSize.y*1.08,headSize.x)*.5};this.models.set(key,entry);
+ model(face,colour,accessory='none',colours=''){
+  const key=face+':'+colour+':'+accessory+':'+accessoryColourKey(colours);let entry=this.models.get(key);if(entry){this.models.delete(key);this.models.set(key,entry);return entry}
+  const root=createCharacter(face,colour,'standing',accessory,colours);root.updateMatrixWorld(true);const bounds=new T.Box3().setFromObject(root),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3());const headBounds=new T.Box3().setFromObject(root.userData.rig.head),headCenter=headBounds.getCenter(new T.Vector3()),headSize=headBounds.getSize(new T.Vector3());headCenter.y-=.04;entry={root,center,radius:Math.max(size.y,size.x)*.5,headCenter,headRadius:Math.max(headSize.y*1.08,headSize.x)*.5};this.models.set(key,entry);
   while(this.models.size>12){const oldest=this.models.keys().next().value,old=this.models.get(oldest);this.models.delete(oldest);disposePerson(old.root)}return entry;
  }
  play(art,mood='hello',remaining=null){
@@ -43,7 +43,7 @@ export class CharacterPortraits{
    if(!r.dirty&&!this.dirty&&(!animate||now-r.last<(active?15:32)))continue;
    const pixels=Math.max(64,Math.min(384,Math.ceil(Math.max(rect.width,rect.height)*Math.min(devicePixelRatio||1,1.5))));
    if(r.canvas.width!==pixels||r.canvas.height!==pixels){r.canvas.width=r.canvas.height=pixels}
-   const entry=this.model(r.face,r.colour,r.accessory),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;
+   const entry=this.model(r.face,r.colour,r.accessory,r.colours),root=entry.root,bust=!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=bust?entry.headCenter:entry.center,radius=bust?entry.headRadius:entry.radius;
    let previous=null;if(r.transition&&!reduced&&now-r.transition.at<180){animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.transition.mood,elapsed:Math.max(0,(now-r.transition.start)/1000)});previous=captureCharacterPose(root)}else r.transition=null;
    resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
    const camera=this.camera;

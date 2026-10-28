@@ -15,6 +15,13 @@ export function characterBodyColour(face,colour){return CHARACTER_TINTS[colour]?
 
 export const ACCESSORIES=Object.freeze([{id:'none',name:'Aksesuarsız',price:0},{id:'glasses',name:'Gözlük',price:0,slot:'face'},{id:'bow',name:'Papyon',price:0,slot:'neck'},{id:'cap',name:'Şapka',price:20,slot:'head'},{id:'crown',name:'Taç',price:30,slot:'head'}]);
 export const accessoryById=id=>ACCESSORIES.find(a=>a.id===id);
+export const ACCESSORY_COLOURS=Object.freeze([{name:'Özgün renkler',hex:null},{name:'Mor',hex:'#9868dc'},{name:'Mavi',hex:'#459fdb'},{name:'Mercan',hex:'#ef7786'},{name:'Yeşil',hex:'#53b998'},{name:'Altın',hex:'#e6b65f'},{name:'Siyah',hex:'#302c43'},{name:'Beyaz',hex:'#eee5db'}]);
+export function normalizeAccessoryColours(value){
+ const input=typeof value==='string'?Object.fromEntries(value.split(',').filter(Boolean).map(p=>p.split(':').map((v,i)=>i?Number(v):v))):value;
+ const result={};for(const slot of ['face','neck','head']){const n=input?.[slot];if(Number.isInteger(n)&&n>0&&n<ACCESSORY_COLOURS.length)result[slot]=n}return result;
+}
+export const accessoryColourKey=value=>Object.entries(normalizeAccessoryColours(value)).map(([slot,n])=>slot+':'+n).join(',');
+export const accessoryColour=(value,slot,fallback)=>ACCESSORY_COLOURS[normalizeAccessoryColours(value)[slot]||0].hex||fallback;
 
 export function accessoryList(value){const source=Array.isArray(value)?value:typeof value==='string'?value.split(','):[];const slots=new Map();for(const id of source){const item=accessoryById(id);if(item?.slot)slots.set(item.slot,id)}return [...slots.values()].sort()}
 export function toggleAccessory(current,id){const items=accessoryList(current),item=accessoryById(id);if(!item?.slot)return [];return items.includes(id)?items.filter(n=>n!==id):accessoryList([...items.filter(n=>accessoryById(n).slot!==item.slot),id])}

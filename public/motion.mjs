@@ -22,7 +22,7 @@ export function installCharacterMotion(root=document){
  root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host)playCharacter(host)},{capture:true});
  root.addEventListener('keydown',event=>{const host=event.target.closest?.('[data-motion-only="true"]');if(host&&['Enter',' '].includes(event.key)){event.preventDefault();host.click()}});
  const containsArt=n=>n.nodeType===1&&(n.matches('.character-art')||n.querySelector('.character-art'));
- new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||[...r.addedNodes,...r.removedNodes].some(containsArt)))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','data-character','data-colour','data-accessory']});
+ new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||[...r.addedNodes,...r.removedNodes].some(containsArt)))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','data-character','data-colour','data-accessory','data-accessory-colours']});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)portraits?.pause();else schedule()});window.addEventListener('scroll',()=>portraits?.request(),{passive:true});window.addEventListener('resize',()=>portraits?.invalidate(),{passive:true});window.addEventListener('pagehide',()=>portraits?.pause());window.addEventListener('pageshow',schedule);matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change',schedule);schedule();
 }
 

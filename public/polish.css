@@ -235,6 +235,8 @@ body[data-motion="reduced"] .glass-knock{animation:glass-contact-still .38s line
 .avatar-dialog[open]{display:flex!important;flex-direction:column;overflow:hidden!important}
 .avatar-dialog .drawer-heading,.avatar-dialog .avatar-save{flex:none}
 .avatar-editor-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:0 4px 8px;margin:0 -4px}
+.accessory-colours{display:flex;justify-content:center;gap:9px;padding:6px 4px 14px}.accessory-colours button{width:25px;height:25px;flex:0 0 25px;border:2px solid #e7d3f533;border-radius:50%;cursor:pointer}.accessory-colours button[aria-pressed=true]{outline:2px solid #ead1ff;outline-offset:3px}
+.accessory-colours[hidden]{display:none}
 .avatar-dialog .avatar-save{position:static;z-index:3;margin-top:8px!important}
 .avatar-dialog .accessory-shelf{min-height:90px;padding-top:10px}
 .avatar-dialog .accessory-item{padding:8px 14px}

@@ -1,4 +1,5 @@
-import {characterBodyColour,accessoryList} from '../public/character-style.mjs';
+import {createFacialRig} from './facial-rig.mjs';
+import {characterBodyColour,accessoryList,accessoryColour} from '../public/character-style.mjs';
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -24,16 +25,6 @@ function tapered(parent,m,points,radii){
 function remember(n){n.userData.rest={position:n.position.toArray(),rotation:[n.rotation.x,n.rotation.y,n.rotation.z],scale:n.scale.toArray()};return n}
 function skin(face,colour){return mat(characterBodyColour(face,colour),face===1?.27:face===5?.2:.43,face===1?.14:0,{sheen:face===0||face===2?.35:0,sheenColor:new T.Color('#ffffff'),sheenRoughness:.65})}
 const INK=()=>mat('#21172f',.28),CREAM=()=>mat('#fff0dc',.57),PINK=()=>mat('#ed9bac',.5),BROW=()=>mat('#714270',.5);
-function brows(head,at,scale=1,colour=BROW()){
- return [-1,1].map(side=>{const n=group(head,'Brow'+side,[at[0]+side*.2*scale,at[1],at[2]]);tube(n,colour,[[-.1*scale,-.01,0],[0,.03*scale,.018],[.095*scale,-.005,0]],.026*scale);return remember(n)});
-}
-function mouths(head,at,width=.13,colour=INK(),robot=false){
- const mouth={neutral:group(head,'MouthNeutral',at),happy:group(head,'MouthHappy',at),sad:group(head,'MouthSad',at)};
- tube(mouth.neutral,colour,[[-width,0,0],[0,-.045,.019],[width,.005,0]],robot?.017:.012);
- if(robot){tube(mouth.happy,colour,[[-width*1.45,.012,.01],[0,-width*.58,.025],[width*1.45,.012,.01]],.019)}else{const w=width*1.45,smile=geometry('happy-smile:'+width,()=>{const shape=new T.Shape();shape.moveTo(-w,0);shape.quadraticCurveTo(0,-w*.12,w,0);shape.quadraticCurveTo(w*.75,-w*.86,0,-w*.82);shape.quadraticCurveTo(-w*.75,-w*.86,-w,0);return new T.ExtrudeGeometry(shape,{depth:.01,bevelEnabled:true,bevelSize:.003,bevelThickness:.003,bevelSegments:2,curveSegments:18})});mesh(mouth.happy,smile,colour);orb(mouth.happy,mat('#e87491',.5),[0,-w*.63,.021],[w*.50,.024,.012]);orb(mouth.happy,CREAM(),[0,-.025,.021],[w*.64,.014,.01])}
- tube(mouth.sad,colour,[[-width,-.035,0],[0,.018,.014],[width,-.035,0]],robot?.017:.013);
- mouth.happy.visible=false;mouth.sad.visible=false;for(const n of Object.values(mouth))remember(n);return mouth;
-}
 function cloudHull(){return geometry('smooth-cloud',()=>{
  const puffs=[[0,.68,0,.58,.49,.34],[-.38,.90,-.035,.31,.31,.31],[-.45,.57,-.015,.27,.27,.31],[0,1.12,-.035,.35,.35,.31],[.40,.82,-.025,.32,.32,.31]],k=.11;
  const field=(x,y,z)=>{let distance=10;for(const [cx,cy,cz,rx,ry,rz]of puffs){const d=(Math.hypot((x-cx)/rx,(y-cy)/ry,(z-cz)/rz)-1)*Math.min(rx,ry,rz),h=Math.max(0,Math.min(1,.5+.5*(d-distance)/k));distance=d*(1-h)+distance*h-k*h*(1-h)}return distance};
@@ -54,13 +45,13 @@ function cloudHull(){return geometry('smooth-cloud',()=>{
 function puffyStar(){return geometry('star',()=>{const points=Array.from({length:10},(_,i)=>{const a=Math.PI/2+i*Math.PI/5,r=i%2?.43:.61;return new T.Vector3(Math.cos(a)*r,Math.sin(a)*r,0)}),curve=new T.CatmullRomCurve3(points,true,'catmullrom',.5),outline=curve.getPoints(100).slice(0,-1),positions=[],indices=[],rings=16,count=outline.length;
  for(const side of [1,-1])for(let ring=0;ring<=rings;ring++){const a=ring/rings*Math.PI/2;for(const p of outline)positions.push(p.x*Math.sin(a),p.y*Math.sin(a),side*.28*Math.cos(a))}for(let side=0;side<2;side++)for(let ring=0;ring<rings;ring++)for(let j=0;j<count;j++){const start=side*(rings+1)*count,a=start+ring*count+j,b=start+(ring+1)*count+j,c=start+(ring+1)*count+(j+1)%count,d=start+ring*count+(j+1)%count;if(side)indices.push(a,c,b,a,d,c);else indices.push(a,b,c,a,c,d)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return g});}
 // Batched vertex colours preserve the small face/hand details with one draw per joint.
-function batchColours(parent,options={}){const parts=parent.children.filter(n=>n.isMesh);if(parts.length<2)return;const bits=parts.map(n=>{n.updateMatrix();const g=(n.geometry.index?n.geometry.toNonIndexed():n.geometry.clone()).applyMatrix4(n.matrix);g.deleteAttribute('uv');const c=n.material.color,values=[];for(let i=0;i<g.attributes.position.count;i++)values.push(c.r,c.g,c.b);g.setAttribute('color',new T.Float32BufferAttribute(values,3));return g}),merged=mergeGeometries(bits);bits.forEach(n=>n.dispose());merged.userData.owned=true;parts.forEach(n=>parent.remove(n));mesh(parent,merged,mat('#ffffff',.32,.02,{vertexColors:true,...options}));}
-function bakeRigid(parent){for(const child of [...parent.children])if(!child.isMesh)bakeRigid(child);const buckets=new Map();for(const child of [...parent.children])if(child.isMesh){child.updateMatrix();const list=buckets.get(child.material)||[];list.push(child);buckets.set(child.material,list)}for(const [m,parts]of buckets){if(parts.length<2)continue;const bits=parts.map(n=>{const g=(n.geometry.index?n.geometry.toNonIndexed():n.geometry.clone()).applyMatrix4(n.matrix);g.deleteAttribute('uv');return g}),merged=mergeGeometries(bits);bits.forEach(n=>n.dispose());merged.userData.owned=true;parts.forEach(n=>parent.remove(n));mesh(parent,merged,m)}}
+function batchColours(parent,options={}){if(parent.userData.surfaceFace)return;const parts=parent.children.filter(n=>n.isMesh);if(parts.length<2)return;const bits=parts.map(n=>{n.updateMatrix();const g=(n.geometry.index?n.geometry.toNonIndexed():n.geometry.clone()).applyMatrix4(n.matrix);g.deleteAttribute('uv');const c=n.material.color,values=[];for(let i=0;i<g.attributes.position.count;i++)values.push(c.r,c.g,c.b);g.setAttribute('color',new T.Float32BufferAttribute(values,3));return g}),merged=mergeGeometries(bits);bits.forEach(n=>n.dispose());merged.userData.owned=true;parts.forEach(n=>parent.remove(n));mesh(parent,merged,mat('#ffffff',.32,.02,{vertexColors:true,...options}));}
+function bakeRigid(parent){for(const child of [...parent.children])if(!child.isMesh)bakeRigid(child);const buckets=new Map();for(const child of [...parent.children])if(child.isMesh&&!child.userData.surfaceFace){child.updateMatrix();const list=buckets.get(child.material)||[];list.push(child);buckets.set(child.material,list)}for(const [m,parts]of buckets){if(parts.length<2)continue;const bits=parts.map(n=>{const g=(n.geometry.index?n.geometry.toNonIndexed():n.geometry.clone()).applyMatrix4(n.matrix);g.deleteAttribute('uv');return g}),merged=mergeGeometries(bits);bits.forEach(n=>n.dispose());merged.userData.owned=true;parts.forEach(n=>parent.remove(n));mesh(parent,merged,m)}}
 export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();root.traverse(n=>{if(n.isMesh&&n.geometry.userData.owned)buffers.add(n.geometry);if(n.isMesh&&n.material.userData.instanceOwned)ownedMats.add(n.material)});buffers.forEach(g=>g.dispose());ownedMats.forEach(m=>m.dispose())}
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='studio-toys-v2';
+export const CHARACTER_MODEL_VERSION='surface-faces-v3';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -110,7 +101,7 @@ function eyesV2(head,at,size,iris,robot=false){
 }
 function pivotHead(head,y){for(const n of head.children)n.position.y-=y;head.position.y=y}
 
-export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
+export function createCharacter(face=0,colour=0,pose='seated',accessory='none',accessoryColours={}){
  face=Number.isInteger(face)&&face>=0&&face<6?face:0;colour=Number.isInteger(colour)&&colour>=0&&colour<8?colour:0;
  const root=new T.Group();root.name=['Pof','Robot','Cat','Cyclops','Star','Jelly'][face];root.userData.face=face;root.userData.modelVersion=CHARACTER_MODEL_VERSION;
  const body=skin(face,colour),head=group(root,'Head'),torso=group(root,'Torso'),eyes=[],lids=[],arms=[],eyebrows=[];
@@ -123,8 +114,8 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
   // A continuous soft cloud, not intersecting cropped puff pictures.
   mesh(head,cloudHull(),body,[0,0,0],[.94,.91,1.06]);
   addEye([-.195,.75,.354],1.01,'#7c4eb5');addEye([.195,.75,.354],1.01,'#7c4eb5');
-  eyebrows.push(...brows(head,[0,1.005,.32],.95,mat('#754c9f',.6)));
-  mouth=mouths(head,[0,.515,.389],.117);cheek(-.34,.57,.325);cheek(.34,.57,.325);
+
+  cheek(-.34,.57,.325);cheek(.34,.57,.325);
   accent=group(head,'CloudCurl',[.19,1.15,-.01]);orb(accent,body,[0,0,0],[.24,.20,.24]);
   armPair(.45,.49,.025,{short:true});feet=legsV2(root,body,pose,{short:true,paw:true});
   headPivot=.70;top=1.34;neck=.38;width=.45;
@@ -140,7 +131,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
   for(const side of [-1,1]){box(head,trim,[side*.555,1.025,-.025],[.085,.32,.30],.04);box(head,body,[side*.60,1.025,-.025],[.045,.21,.23],.02)}
   addEye([-.185,1.06,.465],.89,'#a0ffee',true);addEye([.185,1.06,.465],.89,'#a0ffee',true);
   const light=mat('#9dffe6',.25,0,{emissive:'#45dfc3',emissiveIntensity:.4});
-  eyebrows.push(...brows(head,[0,1.25,.455],.77,light));mouth=mouths(head,[0,.894,.475],.071,light,true);
+
   accent=group(head,'Antenna',[0,1.42,-.05]);tube(accent,trim,[[0,0,0],[0,.07,0],[.035,.13,0]],.025);orb(accent,light,[.035,.14,0],[.055,.055,.055]);
   armPair(.34,.52,.015,{robot:true});feet=legsV2(root,body,pose,{robot:true});
   headPivot=1.0;top=1.43;neck=.64;width=.49;
@@ -156,8 +147,8 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
    for(let i=0;i<2;i++)tube(head,mat('#a36762',.65),[[side*.32,.85-i*.05,.30],[side*.54,.87-i*.07,.25]],.004);
   }
   addEye([-.19,1.055,.317],.94,'#4c8c87');addEye([.19,1.055,.317],.94,'#4c8c87');
-  eyebrows.push(...brows(head,[0,1.264,.29],.88,mat('#a15d44',.6)));
-  orb(head,mat('#b66c76',.5),[0,.89,.389],[.044,.032,.024]);mouth=mouths(head,[0,.782,.355],.075,mat('#65424b',.6));
+
+  orb(head,mat('#b66c76',.5),[0,.89,.389],[.044,.032,.024]);
   for(const x of [-.12,0,.12]){const s=orb(head,mat('#b9704b',.6),[x,1.34,.20],[.026,.075,.02]);s.rotation.z=x*-.8}
   tail=group(root,'Tail',[0,.08,-.18]);tapered(tail,body,[[0,0,0],[.36,-.07,-.10],[.50,.13,-.12],[.46,.37,-.09],[.32,.39,-.02]],[.085,.095,.09,.10,.055]);orb(tail,CREAM(),[.32,.39,-.02],[.10,.10,.085]);
   armPair(.33,.52,.015,{paw:true});feet=legsV2(root,body,pose,{paw:true});
@@ -169,16 +160,16 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
    tapered(head,CREAM(),[[side*.34,1.20,-.02],[side*.44,1.31,-.03],[side*.42,1.48,-.05],[side*.33,1.54,-.04]],[.10,.095,.06,.005]);
    for(let i=0;i<3;i++)orb(head,mat('#3caa92',.65),[side*(.36+i*.028),.73+i*.08,.25],[.022,.025,.014]);
   }
-  addEye([0,.98,.327],1.54,'#b58a38');eyebrows.push(...brows(head,[0,1.30,.265],1.04,mat('#308877',.6)));
-  mouth=mouths(head,[0,.622,.35],.15);for(const side of [-1,1])orb(head,CREAM(),[side*.13,.65,.374],[.029,.046,.021]);
+  addEye([0,.98,.327],1.54,'#b58a38');
+
   accent=group(head,'Sprout',[0,1.36,-.07]);for(const side of [-1,1]){const leaf=orb(accent,mat('#268b75',.55),[side*.045,.055,0],[.042,.10,.043]);leaf.rotation.z=-side*.4}
   armPair(.40,.56,0);feet=legsV2(root,body,pose);
   headPivot=.87;top=1.40;neck=.47;width=.45;
  }else if(face===4){
   mesh(head,puffyStar(),body,[0,.75,0],[.94,.94,1.13]);
   addEye([-.175,.835,.269],.87,'#a35b38');addEye([.175,.835,.269],.87,'#a35b38');
-  eyebrows.push(...brows(head,[0,1.043,.23],.82,mat('#a77530',.6)));
-  mouth=mouths(head,[0,.601,.318],.095,mat('#865333',.6));cheek(-.30,.66,.258,.057);cheek(.30,.66,.258,.057);
+
+  cheek(-.30,.66,.258,.057);cheek(.30,.66,.258,.057);
   armPair(.34,.58,.005,{short:true});feet=legsV2(root,body,pose,{short:true});
   headPivot=.74;top=1.20;neck=.38;width=.40;
  }else{
@@ -186,8 +177,8 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
   orb(head,jelly,[0,.89,-.015],[.55,.47,.365]);
   for(let i=0;i<7;i++){const a=i*Math.PI*2/7;orb(head,jelly,[Math.cos(a)*.43,.56,Math.sin(a)*.22],[.14,.115,.15])}
   addEye([-.185,.925,.314],.91,'#5266a9');addEye([.185,.925,.314],.91,'#5266a9');
-  eyebrows.push(...brows(head,[0,1.141,.27],.85,mat('#457f9c',.55)));
-  mouth=mouths(head,[0,.696,.351],.095,mat('#386881',.55));cheek(-.30,.74,.29,.055);cheek(.30,.74,.29,.055);
+
+  cheek(-.30,.74,.29,.055);cheek(.30,.74,.29,.055);
   const spread=[[-.33,.02],[-.22,.18],[-.08,.25],[.08,.25],[.22,.18],[.33,.02]];
   spread.forEach(([x,z],i)=>{const side=i<3?-1:1,n=group(root,'Tentacle'+i,[x,.53,z-.10]);
    tapered(n,jelly,[[0,0,0],[side*.02,-.17,.015],[side*.06,-.34,.035],[side*.17,-.40,.085]],[.062,.073,.074,.055]);
@@ -199,42 +190,43 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none'){
  }
  if(face===0||face===4){const rise=face===0?.12:.24;for(const leg of feet)leg.position.y+=rise;root.userData.seatOffset=-rise}
  const hips=group(root,'Hips',[0,face===0?.24:face===4?.36:.12,-.22]);for(const side of [-1,1])orb(hips,body,[side*.09,0,0],[.12,.11,.10]);
+ const facial=createFacialRig(head,face);mouth=facial.mouth;eyebrows.push(...facial.brows);
  pivotHead(head,headPivot);
  const forearms=arms.map(a=>a.userData.elbow).filter(Boolean),hands=arms.map(a=>a.userData.wrist).filter(Boolean),knees=feet.map(a=>a.getObjectByName('Knee')).filter(Boolean);
- root.userData.rig={face,pose,head,body:torso,eyes,pupils:eyes.flatMap(e=>e.children.filter(n=>n.name==='Pupil')),lids,arms,forearms,hands,legs:feet,knees,brows:eyebrows,mouth,tail,accent,ears,hips,mounts:{top:top-headPivot,neck:neck-headPivot,z:face===1?.45:face===4?.32:.37,width}};
+ root.userData.rig={face,pose,facial,head,body:torso,eyes,pupils:eyes.flatMap(e=>e.children.filter(n=>n.name==='Pupil')),lids,arms,forearms,hands,legs:feet,knees,brows:eyebrows,mouth,tail,accent,ears,hips,mounts:{top:top-headPivot,neck:neck-headPivot,z:face===1?.45:face===4?.32:.37,width}};
  root.userData.pose=pose;
- for(const id of accessoryList(accessory))addAccessory(root,id);
+ for(const id of accessoryList(accessory))addAccessory(root,id,accessoryColours);
  // Preserve articulation; merge colour details only within each rigid joint.
  for(const parent of [torso,hips,...arms,...forearms,...hands,...feet,...knees,...eyes,...eyebrows])batchColours(parent,{roughness:face===1?.34:.48,metalness:face===1?.08:0});
  bakeRigid(root);return root;
 }
-export const createSeatedCharacter=(face,colour,accessory='none')=>createCharacter(face,colour,'seated',accessory);
+export const createSeatedCharacter=(face,colour,accessory='none',colours={})=>createCharacter(face,colour,'seated',accessory,colours);
 
 export function characterContactPoint(root,camera){
  const rig=root.userData.rig,node=rig.hands?.[1]||rig.forearms?.[1]||rig.arms[1];
  return node.getWorldPosition(new T.Vector3()).project(camera);
 }
 
-function addAccessory(root,id){
+function addAccessory(root,id,colours={}){
  const rig=root.userData.rig,head=rig.head,a=rig.mounts;
- const mount=group(id==='bow'?rig.body:head,'Accessory-'+id),gold=mat('#eac168',.3,.42),violet=mat('#7651c2',.48);
+ const mount=group(id==='bow'?rig.body:head,'Accessory-'+id),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
  mount.userData.attachment=id;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
  if(id==='glasses'){
-  const ink=mat('#302b48',.34),points=rig.eyes.map(e=>e.position.clone());
+  const ink=mat(accessoryColour(colours,'face','#302b48'),.34),points=rig.eyes.map(e=>e.position.clone());
   for(let i=0;i<points.length;i++){
    const p=points[i],scale=rig.eyes[i].userData.eyeScale||1,r=.173*scale,z=p.z+.13*scale;
    const ring=torus(mount,ink,[p.x,p.y,z],r,.017);ring.scale.y=1.12;
    for(const side of points.length===1?[-1,1]:[i===0?-1:1])tube(mount,ink,[[p.x+side*r,p.y,z],[side*(a.width+.025),p.y+.01,.07],[side*a.width,p.y-.015,-.07]],.012);
   }
-  if(points.length===2){const [l,r]=points;tube(mount,gold,[[l.x+.16,l.y,l.z+.14],[0,l.y+.027,Math.max(l.z,r.z)+.155],[r.x-.16,r.y,r.z+.14]],.014)}
+  if(points.length===2){const [l,r]=points;tube(mount,ink,[[l.x+.16,l.y,l.z+.14],[0,l.y+.027,Math.max(l.z,r.z)+.155],[r.x-.16,r.y,r.z+.14]],.014)}
  }else if(id==='bow'){
   const neckY=a.neck+head.position.y;
-  for(const side of [-1,1]){const wing=orb(mount,violet,[side*.083,neckY,a.z],[.09,.059,.032]);wing.rotation.z=side*.18}
-  orb(mount,gold,[0,neckY,a.z+.026],[.031,.038,.028]);
+  for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.023,-.029);shape.lineTo(side*.145,-.078);shape.lineTo(side*.145,.078);shape.lineTo(side*.023,.029);shape.closePath();const g=geometry('angular-bow-'+side,()=>new T.ExtrudeGeometry(shape,{depth:.032,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:2}));mesh(mount,g,violet,[0,neckY,a.z]);tube(mount,mat(accessoryColour(colours,'neck','#a58ae1'),.65),[[side*.035,neckY,a.z+.038],[side*.105,neckY+.027,a.z+.038]],.003)}
+  box(mount,violet,[0,neckY,a.z+.025],[.060,.080,.057],.01);
  }else if(id==='cap'){
   if(rig.face===1)rig.accent.visible=false;
   const width=a.width*(rig.face===2?.46:.75);orb(mount,violet,[0,a.top-.028,-.015],[width,.15,width*.8]);
-  box(mount,mat('#a58ae1',.45),[0,a.top-.093,width*.63],[width*1.9,.042,width*.95],.035);
+  box(mount,mat(accessoryColour(colours,'head','#a58ae1'),.45),[0,a.top-.093,width*.63],[width*1.9,.042,width*.95],.035);
   orb(mount,gold,[0,a.top+.115,-.015],[.026,.019,.026]);
  }else if(id==='crown'){
   if(rig.face===1)rig.accent.visible=false;

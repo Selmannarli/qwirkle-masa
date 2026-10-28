@@ -9,7 +9,7 @@ const rise=(t,a,b)=>smooth((t-a)/(b-a));
 const envelope=(t,a,b,c,d)=>rise(t,a,b)*(1-rise(t,c,d));
 const vec=n=>[n?.x||0,n?.y||0,n?.z||0];
 const values=(a,v)=>{if(a?.set)a.set(...v);else if(a){a.x=v[0];a.y=v[1];a.z=v[2]}};
-const nodes=rig=>[rig.head,rig.body,...(rig.eyes||[]),...(rig.pupils||[]),...(rig.lids||[]),...(rig.arms||[]),...(rig.forearms||[]),...(rig.hands||[]),...(rig.ears||[]),...(rig.legs||[]),...(rig.knees||[]),...(rig.brows||[]),rig.tail,rig.accent,rig.hips,...Object.values(rig.mouth||{})].filter(Boolean);
+const nodes=rig=>[rig.facial?.mesh,...(rig.facial?.details||[]),...(rig.facial?.brows||[]).map(b=>b.children[0]),rig.head,rig.body,...(rig.eyes||[]),...(rig.pupils||[]),...(rig.lids||[]),...(rig.arms||[]),...(rig.forearms||[]),...(rig.hands||[]),...(rig.ears||[]),...(rig.legs||[]),...(rig.knees||[]),...(rig.brows||[]),rig.tail,rig.accent,rig.hips,...Object.values(rig.mouth||{})].filter(Boolean);
 function remember(n){return {position:vec(n.position),rotation:vec(n.rotation),scale:n.scale?vec(n.scale):[1,1,1],visible:n.visible!==false}}
 export function captureRest(root){
  const rig=root?.userData?.rig;if(!rig)return null;
@@ -17,25 +17,26 @@ export function captureRest(root){
 }
 function stateFor(root){const saved=rests.get(root);return saved?.rig===root?.userData?.rig?saved:captureRest(root)}
 export function captureCharacterPose(root){
- const state=stateFor(root);return state?[root,...state.nodes.keys()].map(n=>({node:n,position:n.position.clone(),quaternion:n.quaternion.clone(),scale:n.scale.clone()})):[];
+ const state=stateFor(root);return state?[root,...state.nodes.keys()].map(n=>({node:n,position:n.position.clone(),quaternion:n.quaternion.clone(),scale:n.scale.clone(),morph:n.morphTargetInfluences?.slice()})):[];
 }
 export function blendCharacterPose(previous,amount){
- const weight=smooth(amount);for(const {node,position,quaternion,scale}of previous){node.position.lerpVectors(position,node.position,weight);const target=node.quaternion.clone();node.quaternion.slerpQuaternions(quaternion,target,weight);node.scale.lerpVectors(scale,node.scale,weight)}
+ const weight=smooth(amount);for(const {node,position,quaternion,scale,morph}of previous){node.position.lerpVectors(position,node.position,weight);const target=node.quaternion.clone();node.quaternion.slerpQuaternions(quaternion,target,weight);node.scale.lerpVectors(scale,node.scale,weight);if(morph)for(let i=0;i<morph.length;i++)node.morphTargetInfluences[i]=morph[i]+(node.morphTargetInfluences[i]-morph[i])*weight}
 }
 export function resetCharacter(root){
  const state=stateFor(root);if(!state)return;
  const restore=(n,r)=>{values(n.position,r.position);values(n.rotation,r.rotation);values(n.scale,r.scale);n.visible=r.visible};
  restore(root,state.root);for(const [n,rest]of state.nodes)restore(n,rest);
- setMouth(state.rig,'neutral');for(const lid of state.rig.lids||[])lid.visible=false;
+ state.rig.facial?.reset();setMouth(state.rig,'neutral');for(const lid of state.rig.lids||[])lid.visible=false;
 }
 function setMouth(rig,expression){
- const mouth=rig.mouth||rig.mouths;if(!mouth)return;
+ rig.facial?.expression(expression);const mouth=rig.mouth||rig.mouths;if(!mouth)return;
  for(const key of ['neutral','happy','sad'])if(mouth[key])mouth[key].visible=key===expression;
 }
 function rotate(n,x=0,y=0,z=0){if(!n?.rotation)return;n.rotation.x+=x;n.rotation.y+=y;n.rotation.z+=z}
 function move(n,x=0,y=0,z=0){if(!n?.position)return;n.position.x+=x;n.position.y+=y;n.position.z+=z}
 function stretch(n,x=1,y=1,z=1){if(!n?.scale)return;n.scale.x*=x;n.scale.y*=y;n.scale.z*=z}
 function brow(rig,emotion,strength=1){
+ if(rig.facial){rig.facial.brow(emotion,strength);return}
  (rig.brows||[]).forEach((n,i)=>{
   const side=i%2===0?-1:1;
   if(emotion==='sad'){rotate(n,0,0,-side*.18*strength);move(n,0,.008*strength,0)}
@@ -159,10 +160,10 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
  setMouth(rig,emotion);
  if(reduced){brow(rig,emotion,.5);return false}
  if(elapsed>=duration){brow(rig,emotion,.45);return false}
- if(rig.mouth?.happy&&emotion==='happy')stretch(rig.mouth.happy,1,1+Math.sin(elapsed*15)*.10,1);
+
  if(mood==='angry'){const a=envelope(elapsed,0,.25,1.1,1.8);setMouth(rig,'sad');brow(rig,'angry',a);rotate(rig.head,.08*a,Math.sin(elapsed*15)*.035*a,0);arm(rig,0,.25*a);arm(rig,1,.25*a);bend(rig,0,a*.75);bend(rig,1,a*.75);if(rig.pose!=='seated')move(root,0,jump(elapsed,.3,.25,.025),0)}
  else if(mood==='draw'){const a=envelope(elapsed,.03,.35,1.15,1.78);brow(rig,'happy',a*.6);rotate(rig.head,-a*.035,a*.04,0);arm(rig,0,a*.25);arm(rig,1,a*.25);bend(rig,0,a*.25);bend(rig,1,a*.25)}
- else if(mood==='surprise'){const a=envelope(elapsed,0,.18,.8,1.5);brow(rig,'happy',a);rotate(rig.head,-.1*a,0,0);stretch(rig.mouth.happy,.65,1+.7*a,1);arm(rig,0,.65*a);arm(rig,1,.65*a);bend(rig,0,a*.35);bend(rig,1,a*.35)}
+ else if(mood==='surprise'){const a=envelope(elapsed,0,.18,.8,1.5);brow(rig,'happy',a);rotate(rig.head,-.1*a,0,0);rig.facial?.expression('surprise');arm(rig,0,.65*a);arm(rig,1,.65*a);bend(rig,0,a*.35);bend(rig,1,a*.35)}
  else if(mood==='impact'){
   const t=elapsed,turn=key(t,[[0,0],[.65,0],[1.30,Math.PI],[2.35,Math.PI],[3.1,0],[4.8,0]]),contact=envelope(t,1.42,1.78,1.93,2.30),cheer=envelope(t,2.45,2.95,3.95,4.50),anticip=envelope(t,.8,1.10,1.30,1.58);
   brow(rig,'happy',.75);blink(rig,Math.max(blinkAt(t,.4),blinkAt(t,3.25,.12)));rotate(rig.head,-cheer*.10,contact*.38,cheer*Math.sin(t*5)*.035);arm(rig,0,cheer*1.60+anticip*.25,-cheer*.20);arm(rig,1,cheer*1.72+anticip*.25,-cheer*.20);bend(rig,0,cheer*.55+anticip*.25,cheer*.08);bend(rig,1,cheer*.60+anticip*.25,-cheer*.08);
