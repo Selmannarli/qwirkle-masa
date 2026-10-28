@@ -204,3 +204,13 @@ dialog.table-quick-game{position:fixed;inset:auto;margin:0;width:224px;max-width
 body[data-motion="reduced"] .glass-knock{animation:glass-contact-still .38s linear both}
 @keyframes glass-contact-still{0%,100%{opacity:0}20%,65%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.glass-knock{animation-name:glass-contact-still}}
+
+.match-options{width:min(340px,calc(100vw - 32px));padding:25px;position:relative}
+.match-options h2{margin:0 0 20px;font-size:22px}
+.match-options .dialog-close{position:absolute;right:10px;top:10px;width:32px;height:32px}
+.match-timers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.match-timers button{min-height:64px;border:1px solid #9f7ce65c;border-radius:18px;background:linear-gradient(145deg,#593588,#342344);color:#fff;font-family:inherit;font-size:19px;font-weight:800;cursor:pointer;box-shadow:inset 0 1px #ffffff15}
+.match-timers button:hover,.match-timers button:focus-visible{background:#7046a6;outline:2px solid #c3a5ff;outline-offset:2px}
+/* Inset edges keep the turn light off the board and all touch targets. */
+#game.has-turn-light>.board-area,#game.has-turn-light>.hand-panel{outline:1px solid #5af1a68a;outline-offset:-2px;box-shadow:inset 0 0 10px #37e38c18,0 0 9px #35d98328;transition:box-shadow .3s,outline-color .3s}
+#game.has-turn-light>.board-area{border-color:#5af1a67a}

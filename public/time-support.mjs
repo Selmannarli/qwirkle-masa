@@ -2,6 +2,7 @@
 export function extendTurn(game,actor,now=Date.now()){
  if(!game||game.over||game.timeoutDecision||game.players[actor]?.eliminated||game.turn!==actor)throw Error('Şu an senin sıran değil.');
  if(!game.turnSeconds||!game.turnDeadline)throw Error('Bu masada süre sınırı yok.');
+ if(game.turnSeconds>=43200)throw Error('Bu maçta ek süre desteği yok.');
  if(now>=game.turnDeadline)throw Error('Tur süresi doldu.');
  game.timeSupportUsed??={};
  if(game.timeSupportUsed[actor])throw Error('Bu maçta +30 saniyeyi kullandın.');

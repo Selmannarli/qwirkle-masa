@@ -22,3 +22,7 @@ test('extension before the threshold delays the warning and a new match has its 
 test('glass tap is brief, restrained and silent when muted',()=>{
  const sound=new Sound(true),notes=[];sound.tone=(...v)=>notes.push(v);sound.glassKnock();assert.equal(notes.length,3);assert.ok(notes.every(([,delay,duration,,gain])=>delay+duration<.07&&gain<=.045));sound.enabled=false;sound.glassKnock();assert.equal(notes.length,3);
 });
+
+test('twelve-hour games reject time boosts at the rules boundary',async()=>{
+ const {extendTurn}=await import('../public/time-support.mjs');const g=game();g.turnSeconds=43200;assert.throws(()=>extendTurn(g,0,10000),/ek süre/);assert.equal(g.turnDeadline,30000);
+});
