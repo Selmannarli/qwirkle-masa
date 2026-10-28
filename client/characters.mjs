@@ -52,7 +52,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='anatomy-fits-v4';
+export const CHARACTER_MODEL_VERSION='anatomy-fits-v5';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -191,7 +191,9 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
  }
  if(face===0||face===4){const rise=face===0?.12:.24;for(const leg of feet)leg.position.y+=rise;root.userData.seatOffset=-rise}
  const rear=REAR_PROFILES[face],hips=group(rear.parent==='head'?head:torso,'Hips',rear.at);hips.userData.anatomy=rear.name;
- if(face===1)box(hips,body,[0,0,0],rear.size,.055);else orb(hips,body,[0,0,0],rear.size);
+ // Broad overlapping lobes stay embedded in the torso; no hanging spheres.
+ for(const side of [-1,1]){const [w,h,d]=rear.size;if(face===1)box(hips,body,[side*w*.245,0,0],[w*.48,h,d],.045);else orb(hips,body,[side*w*.28,0,0],[w*.72,h*.78,d])}
+ hips.userData.lobes=2;
  const facial=createFacialRig(head,face);mouth=facial.mouth;eyebrows.push(...facial.brows);
  pivotHead(head,headPivot);
  const forearms=arms.map(a=>a.userData.elbow).filter(Boolean),hands=arms.map(a=>a.userData.wrist).filter(Boolean),knees=feet.map(a=>a.getObjectByName('Knee')).filter(Boolean);

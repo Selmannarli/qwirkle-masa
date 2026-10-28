@@ -5,11 +5,11 @@ import {createCharacter,disposePerson} from '../client/characters.mjs';
 import {animateCharacter} from '../client/character-motion.mjs';
 import {accessoryFit,REAR_PROFILES} from '../client/character-fit.mjs';
 
-test('rear anatomy follows each body instead of sharing two hanging spheres',()=>{
+test('paired rear lobes stay integrated in each body instead of hanging below it',()=>{
  assert.equal(new Set(REAR_PROFILES.map(p=>p.name)).size,6);
  for(let face=0;face<6;face++){
   const root=createCharacter(face,0,'standing'),rig=root.userData.rig,hips=rig.hips;
-  assert.equal(hips.children.length,1);
+  assert.equal(hips.children.length,1);assert.equal(hips.userData.lobes,2);
   assert.equal(hips.parent.uuid,(rig.rear.parent==='head'?rig.head:rig.body).uuid);
   for(const mood of ['idle','hello','win','lose','impact'])for(const elapsed of [0,.4,1.78,3.4]){
    animateCharacter(root,{mood,time:3,elapsed});root.updateMatrixWorld(true);
