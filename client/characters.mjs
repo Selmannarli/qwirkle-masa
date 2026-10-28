@@ -1,9 +1,10 @@
+import {BAKED_ACCESSORY_FITS} from './accessory-surfaces.mjs';
 import {accessoryFit,REAR_PROFILES} from './character-fit.mjs';
 import {createFacialRig} from './facial-rig.mjs';
 import {characterBodyColour,accessoryList,accessoryColour} from '../public/character-style.mjs';
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
-import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {mergeGeometries,mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 // A single model library is used by the table, portraits and expression previews.
 const geometries=new Map(),materials=new Map(),contactPoints=new Map();
@@ -52,7 +53,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='anatomy-fits-v5';
+export const CHARACTER_MODEL_VERSION='surface-fits-v6';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -254,10 +255,34 @@ function addAccessory(root,id,colours={}){
    }
   }
  }
+ clearAccessorySurface(root,mount,id);
  batchColours(mount,{roughness:.36,metalness:id==='crown'?.28:.06});
+ const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children[0],source=piece.geometry;piece.geometry=geometry('fitted-piece:'+rig.face+':'+id,()=>{let g=piece.geometry.clone();const p=g.attributes.position;for(let i=0;i<baked.patch.length;i+=4)p.setXYZ(baked.patch[i],baked.patch[i+1],baked.patch[i+2],baked.patch[i+3]);if(baked.patch.length){g.deleteAttribute('normal');const smooth=mergeVertices(g,1e-5);g.dispose();g=smooth;g.computeVertexNormals()}g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
 }
 
 function hasAccessoryParent(node){for(let n=node;n;n=n.parent)if(n.userData.attachment)return true;return false}
 
 function frontContact(root,x,y){root.updateMatrixWorld(true);const rig=root.userData.rig,ray=new T.Raycaster(new T.Vector3(x,y,3),new T.Vector3(0,0,-1));const hit=ray.intersectObjects([rig.head,rig.body],true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));if(!hit)throw Error('Accessory contact missing for '+rig.face);return rig.head.worldToLocal(hit.point.clone())}
 function sideContact(root,side,y,z,fallback){const key=[root.userData.face,side,y,z].join(':');if(contactPoints.has(key))return [...contactPoints.get(key)];root.updateMatrixWorld(true);const head=root.userData.rig.head,ray=new T.Raycaster(new T.Vector3(side*3,y,z),new T.Vector3(-side,0,0)),hit=ray.intersectObject(head,true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));const p=hit?head.worldToLocal(hit.point.clone()):new T.Vector3(side*fallback,y-head.position.y,z);p.x+=side*.016;const result=p.toArray();contactPoints.set(key,result);return [...result]}
+
+// Fit the entire piece, not just its centre: curved skin can protrude through
+// a wing, bridge or hat rim even when the attachment anchor itself is clear.
+function clearAccessorySurface(root,mount,id){
+ const rig=root.userData.rig;if(BAKED_ACCESSORY_FITS[rig.face+':'+id])return;
+ root.updateMatrixWorld(true);const skin=[];
+ for(const parent of [rig.head,rig.body])parent.traverse(n=>{if(n.isMesh&&!n.userData.surfaceFace&&!hasAccessoryParent(n))skin.push(n)});
+ const up=id==='cap'||id==='crown',ray=new T.Raycaster(),point=new T.Vector3();let correction=0;
+ mount.traverse(n=>{if(!n.isMesh)return;const g=n.geometry.clone(),pos=g.attributes.position;
+  for(let i=0;i<pos.count;i++){
+   point.fromBufferAttribute(pos,i).applyMatrix4(n.matrixWorld);
+   if(id==='glasses'&&Math.abs(point.x)>.36&&point.z<.29)continue;
+   ray.set(up?new T.Vector3(point.x,3,point.z):new T.Vector3(point.x,point.y,3),new T.Vector3(0,up?-1:0,up?0:-1));
+   const hit=ray.intersectObjects(skin,false)[0];if(!hit)continue;
+   const delta=(up?hit.point.y-point.y:hit.point.z-point.z)+.006;
+   if(up&&delta>0){point.y+=delta;n.worldToLocal(point);pos.setXYZ(i,point.x,point.y,point.z)}
+   else if(!up)correction=Math.max(correction,delta);
+  }
+  if(up){g.computeVertexNormals();g.userData.owned=true;n.geometry=g}else g.dispose();
+ });
+ if(!up&&correction>0){const world=mount.getWorldPosition(new T.Vector3());world.z+=correction;mount.position.copy(mount.parent.worldToLocal(world));root.updateMatrixWorld(true)}
+}
