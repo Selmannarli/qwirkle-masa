@@ -423,3 +423,23 @@ body[data-theme=day] .avatar-dialog .avatar-save { color:#fff!important; backgro
 
 .avatar-dialog .accessory-model{display:block;width:64px;height:64px;flex:none;pointer-events:none}.avatar-dialog .accessory-model .character-art{width:100%;height:100%}
 
+/* Compact studio: the character stays visible while controls scroll. */
+.avatar-dialog{width:min(440px,calc(100vw - 20px))!important;max-height:min(760px,calc(100dvh - 20px))!important;padding:12px!important;gap:6px!important}
+.avatar-dialog .avatar-fixed-preview{flex:none;min-width:0;display:grid;grid-template-columns:1fr;justify-items:center;border-bottom:1px solid var(--studio-border);padding-bottom:6px}
+.avatar-dialog .character-stage{--portrait-size:clamp(100px,18dvh,148px);row-gap:0;grid-template-rows:var(--portrait-size) 18px}
+.avatar-dialog .avatar-character-name{font-size:16px!important;min-height:20px;margin:2px 0 0!important;line-height:20px}
+.avatar-dialog .character-rotate-hint{font-size:10px;min-height:18px;line-height:18px}
+.avatar-dialog .avatar-editor-tabs{margin:0 0 8px}
+.avatar-dialog :is(.avatar-editor-tabs,.animation-category-tabs)>button{min-height:36px;padding:6px}
+.avatar-dialog .avatar-choices{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:4px!important}
+.avatar-dialog .avatar-option{--choice-size:40px;min-height:64px;padding:2px!important}
+.avatar-dialog .avatar-choice-name{font-size:9px;line-height:12px;min-height:14px}
+.avatar-dialog .avatar-colors,.avatar-dialog .accessory-colours:not([hidden]){margin:6px auto!important;padding:4px}
+.avatar-dialog .accessory-heading{margin:5px 0}
+.avatar-dialog .accessory-categories>button{min-height:36px;padding:5px}
+.avatar-dialog .accessory-shelf{display:flex;overflow-x:auto;justify-content:flex-start;padding:7px 0;gap:6px;scroll-snap-type:x proximity}
+.avatar-dialog .accessory-item{flex:0 0 calc((100% - 12px)/3);min-height:102px;padding:6px!important;gap:3px;scroll-snap-align:start;font-size:10px}
+.avatar-dialog .accessory-model{width:52px;height:52px}
+.avatar-dialog .avatar-sync-status{flex:none;border:0;background:transparent;color:var(--studio-muted);font:700 11px Nunito,sans-serif;min-height:24px;padding:3px;text-align:center;cursor:default}
+.avatar-dialog .avatar-sync-status:empty{display:none}.avatar-dialog .avatar-sync-status[data-state=error]{color:#e8879a;cursor:pointer}.avatar-dialog .avatar-sync-status[data-state=saved]{color:#57b58c}
+@media(max-height:680px){.avatar-dialog .character-stage{--portrait-size:96px}.avatar-dialog .drawer-heading{min-height:36px}.avatar-dialog .drawer-heading>.icon-button{width:36px!important;height:36px!important;min-height:36px!important;flex-basis:36px}}

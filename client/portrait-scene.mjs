@@ -3,7 +3,7 @@ import {applyCharacterTouch,TOUCH_DURATIONS} from './character-touch.mjs';
 import * as T from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createCharacter,disposePerson,characterContactPoint,CHARACTER_MODEL_VERSION} from './characters.mjs';
-import {animateCharacter,resetCharacter,captureCharacterPose,blendCharacterPose,characterSocialContactPoint,CHARACTER_DURATIONS} from './character-motion.mjs';
+import {animateCharacter,resetCharacter,captureCharacterPose,blendCharacterPose,connectCharacterPose,characterSocialContactPoint,CHARACTER_DURATIONS} from './character-motion.mjs';
 import {acceptsCharacterGesture,accessoryColourKey} from '../public/character-style.mjs';
 
 // One GPU context paints all DOM portraits. Their small 2D canvases follow normal
@@ -70,6 +70,7 @@ export class CharacterPortraits{
     applyCharacterTouch(root,{x:touch.sx,y:touch.sy,strength:1,kind,elapsed,reduced});
     if(!kind)delete art.dataset.touchReaction;
    }
+   connectCharacterPose(root);
    if(r.touch){r.touch.syaw+=(r.touch.yaw-r.touch.syaw)*(1-Math.exp(-Math.min(64,Math.max(1,now-r.last))/110));root.rotation.y+=r.touch.syaw}
    art.dataset.fullFrameRatio=String(entry.radius/entry.headRadius);art.dataset.fullHeadX=String((entry.fullHead.x+1)/2);art.dataset.fullHeadY=String((1-entry.fullHead.y)/2);const camera=this.camera,hidden=[];
    if(preview)root.traverse(node=>{if(!node.isMesh||!node.visible)return;let part=false;for(let n=node;n;n=n.parent)if(n.userData.attachment===art.dataset.accessoryPreview){part=true;break}if(!part){node.visible=false;hidden.push(node)}});

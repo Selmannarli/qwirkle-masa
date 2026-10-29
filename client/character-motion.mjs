@@ -1,5 +1,5 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
-import {Vector3} from 'three';
+import {Vector3,Quaternion,Euler} from 'three';
 import {ANIMATION_DURATIONS,animationEmotion} from '../public/animation-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
@@ -297,7 +297,7 @@ export function characterSocialContactPoint(root,mood,camera=null){
 }
 
 /** Returns true while the supplied gesture needs another sample. Units are seconds. */
-export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false}={}){
+function sampleCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false}={}){
  const state=stateFor(root);if(!state)return false;resetCharacter(root);const rig=state.rig;
  face=Number.isInteger(face)&&face>=0&&face<6?face:0;time=Number.isFinite(time)?Math.max(0,time):0;elapsed=Number.isFinite(elapsed)?Math.max(0,elapsed):0;
  if(mood==='idle'||typeof mood!=='string'||!Object.hasOwn(CHARACTER_DURATIONS,mood)){if(!reduced)idle(rig,time,face);return !reduced}
@@ -354,3 +354,21 @@ const a=envelope(elapsed,0,.25,1.1,1.8);setMouth(rig,'sad');brow(rig,'angry',a);
  else disappointment(rig,elapsed,face,duration);
  return true;
 }
+
+// The torso is the common motion carrier. Head gestures rotate around the neck,
+// keeping its attachment point fixed instead of turning through the chest.
+const neckHeights=[.56,.65,.59,.57,.62,.77];
+export function animateCharacter(root,options={}){
+ const active=sampleCharacter(root,options);connectCharacterPose(root,options);return active;
+}
+export function connectCharacterPose(root,options={}){
+ const state=stateFor(root);if(!state)return;
+ const rig=state.rig,head=rig.head,body=rig.body,h=state.nodes.get(head),b=state.nodes.get(body);
+ const headDelta=new Euler(...head.rotation.toArray().slice(0,3).map((v,i)=>clamp(v-h.rotation[i],-.19,.19)));
+ const q=new Quaternion().setFromEuler(headDelta),offset=new Vector3(0,h.position[1]-neckHeights[rig.face??options.face??0],0),shift=offset.clone().applyQuaternion(q).sub(offset);
+ head.rotation.set(h.rotation[0]+headDelta.x,h.rotation[1]+headDelta.y,h.rotation[2]+headDelta.z);head.position.set(...h.position).add(shift);
+ const torso=new Quaternion().setFromEuler(new Euler(...body.rotation.toArray().slice(0,3).map((v,i)=>v-b.rotation[i])));
+ const carries=Math.abs(torso.x)+Math.abs(torso.y)+Math.abs(torso.z)>1e-10;body.rotation.set(...b.rotation);if(carries)root.quaternion.multiply(torso);
+
+}
+

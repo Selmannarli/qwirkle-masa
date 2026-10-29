@@ -1,6 +1,6 @@
 {
   "name": "renkio",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,4 +24,5 @@
     "three-mesh-bvh": "^0.9.17"
   }
 }
+
 
