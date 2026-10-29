@@ -8,7 +8,7 @@ const designs=[
  {name:'robot-display',at:[0,.904],width:.125,ink:'#9dffe6',brow:'#9dffe6',browY:1.221,browX:.182,browWidth:.067},
  {name:'cat-muzzle',at:[0,.815],width:.102,ink:'#6f4245',brow:'#995a3c',browY:1.265,browX:.192,browWidth:.064},
  {name:'cyclops-grin',at:[0,.630],width:.158,ink:'#285e50',brow:'#277f6c',browY:1.29,browX:0,browWidth:.25},
- {name:'star-smirk',at:[.012,.613],width:.103,ink:'#95602a',brow:'#aa7831',browY:1.052,browX:.168,browWidth:.061},
+ {name:'dragon-smile',at:[.012,.613],width:.103,ink:'#95602a',brow:'#aa7831',browY:1.052,browX:.168,browWidth:.061},
  {name:'jelly-pucker',at:[0,.710],width:.061,ink:'#377f9e',brow:'#4c98b4',browY:1.142,browX:.18,browWidth:.067}
 ];
 const clamp=x=>Math.max(0,Math.min(1,x));
@@ -22,10 +22,10 @@ function mouthShape(face,u,expression){
  if(face===4){const mid=(sad?.025:-.028)*arch+(!sad?.012*u:0);return {top:mid+.004,bottom:mid-.004-(smile?.014*arch:0)}}
  const mid=sad?.008:smile?-.009:0;return {top:mid+(smile?.023:.012)*Math.sqrt(arch),bottom:mid-(smile?.035:.020)*Math.sqrt(arch)};
 }
-function projector(surfaces){
+function projector(surfaces,offset=.003){
  const ray=new T.Raycaster(),memo=new Map();
  for(const mesh of surfaces)mesh.updateWorldMatrix(true,false);
- return (x,y)=>{const key=x.toFixed(6)+':'+y.toFixed(6);if(memo.has(key))return memo.get(key);ray.set(new T.Vector3(x,y,3),new T.Vector3(0,0,-1));const hit=ray.intersectObjects(surfaces,false)[0];if(!hit)throw Error('Facial surface missing at '+key);const z=hit.point.z+.003;memo.set(key,z);return z};
+ return (x,y)=>{const key=x.toFixed(6)+':'+y.toFixed(6);if(memo.has(key))return memo.get(key);ray.set(new T.Vector3(x,y,3),new T.Vector3(0,0,-1));const hit=ray.intersectObjects(surfaces,false)[0];if(!hit)throw Error('Facial surface missing at '+key);const z=hit.point.z+offset;memo.set(key,z);return z};
 }
 function strip(makePoint,z,segments=24){
  const positions=[];for(let i=0;i<=segments;i++){const u=i/segments*2-1;for(const edge of [0,1]){const [x,y]=makePoint(u,edge);positions.push(x,y,z(x,y))}}return new T.Float32BufferAttribute(positions,3);
@@ -40,7 +40,7 @@ function faceMesh(parent,name,geometry,colour,led=false){
  const m=material(colour,led);m.userData.instanceOwned=true;const mesh=new T.Mesh(geometry,m);mesh.name=name;mesh.userData.surfaceFace=true;mesh.castShadow=false;mesh.receiveShadow=!led;parent.add(mesh);return mesh;
 }
 export function createFacialRig(head,face){
- const d=designs[face],surfaces=head.children.filter(n=>n.isMesh),z=projector(surfaces),key=face;
+ const d=designs[face],surfaces=head.children.filter(n=>n.isMesh),z=projector(surfaces,face===4?.0028:.003),key=face;
  let geometry=cache.get(key);
  if(!geometry){
   const mouthPoint=expression=>(u,edge)=>{const shape=mouthShape(face,u,expression);return [d.at[0]+u*d.width,d.at[1]+(edge?shape.bottom:shape.top)]};

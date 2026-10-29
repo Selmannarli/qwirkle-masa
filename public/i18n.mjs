@@ -63,3 +63,9 @@ Object.assign(EN,{"Dönem":"Period","Haftalık":"Weekly","Aylık":"Monthly","Tü
 Object.assign(EN,{'Oyun sonu':'End of game'});
 Object.assign(EN,{'Ponponlu şapka':'Pom-pom cap'});
 Object.assign(EN,{'Ek süre için oyunu güncelle.':'Update the game to use extra time.'});
+
+Object.assign(EN,{'Günlük ödüller':'Daily rewards','Mesajlar':'Messages','Gönder':'Send','Geri':'Back','Daha eski mesajlar':'Older messages','Baştan başla':'Start again','Henüz mesaj yok.':'No messages yet.','elmas eklendi':'gems added','Mesajları ana menüden açabilirsin.':'Open messages from the main menu.','Bu konuşma hesabına ait değil.':'You cannot access this conversation.','Bu oyuncuyla mesajlaşmak için arkadaş olmalısınız.':'Add this player as a friend to send a message.'});
+
+Object.assign(EN,{'Ejder':'Dragon'});
+
+Object.assign(EN,{'Bu oyuncuya mesaj gönderilemiyor.':'Messages cannot be sent to this player.','Mesaj kimliği geçersiz.':'Invalid message ID.','Mesaj kimliği daha önce kullanıldı.':'This message ID has already been used.'});

@@ -105,6 +105,7 @@ export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={
  if(!game||game.over||document.hidden||document.querySelector('dialog[open]')||reduced()||game.timeoutDecision||celebrationLocked(game,now)){cancelCharacterVisit();return}
  const stamp=[game.matchId,game.turn,game.turnSerial||game.history?.length||0].join(':'),started=game.turnStartedAt||(game.turnDeadline?game.turnDeadline-game.turnSeconds*1000:now),wait=now-started;
  if(visitor&&visitor.stamp!==stamp)cancelCharacterVisit();
+ if(wait>12000&&game.players.length>2&&!waitingSeen.has(stamp+':greeting')){const waiting=[...document.querySelectorAll('#scores .player-card')].filter(card=>Number(card.dataset.seat)!==game.turn&&!game.players[Number(card.dataset.seat)].eliminated);if(waiting.length>=2){waitingSeen.add(stamp+':greeting');playCharacter(waiting[0],'waveRight');playCharacter(waiting[1],'waveLeft')}}
  if(game.turnDeadline&&game.turnDeadline-now<12000){cancelCharacterVisit();return}if(wait<18000)return;
  for(const host of document.querySelectorAll('#scores .illustrated-avatar')){
   const seat=Number(host.closest('[data-seat]').dataset.seat),key=stamp+':idle:'+seat;
@@ -114,10 +115,14 @@ export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={
  if(visitor)return;
  const source=document.querySelector('#scores [data-seat="'+me+'"] .character-art');if(!source)return;waitingSeen.add(stamp+':visit');while(waitingSeen.size>120)waitingSeen.delete(waitingSeen.values().next().value);
  source.dataset.lastVisit=stamp;const from=source.getBoundingClientRect(),to=button.getBoundingClientRect(),wrap=document.createElement('div'),art=source.cloneNode(false);wrap.className='character-visitor';wrap.setAttribute('aria-hidden','true');wrap.append(art);document.body.append(wrap);
- const x=from.left+from.width/2-48,y=from.top+from.height/2-48,tx=Math.max(0,to.left-72),ty=Math.max(0,to.top-66),old=source.style.visibility;source.style.visibility='hidden';
- const edge=Math.max(0,innerWidth-96),pose=(px,py,offset)=>({transform:'translate('+px+'px,'+py+'px)',...(offset==null?{}:{offset})});const animation=wrap.animate([pose(x,y,0),pose(edge,y,.12),pose(edge,ty,.34),pose(tx,ty,.40),pose(tx,ty,.68),pose(edge,ty,.73),pose(edge,y,.92),pose(x,y,1)],{duration:4800,easing:'ease-in-out'});
- playCharacter(art,'buttonPunch');let pulse=setTimeout(()=>{button.classList.add('character-bop');setTimeout(()=>button.classList.remove('character-bop'),450)},2050),done=false;
- const cleanup=()=>{if(done)return;done=true;clearTimeout(pulse);animation.cancel();wrap.remove();source.style.visibility=old;button.classList.remove('character-bop');if(visitor===cleanup)visitor=null};cleanup.stamp=stamp;visitor=cleanup;animation.finished.then(cleanup).catch(()=>{});
+ const size=Math.min(140,Math.max(64,from.width*Number(source.dataset.fullFrameRatio||1.7))),x=from.left+(from.width-size)/2,y=from.top+(from.height-size)/2,edge=Math.max(0,innerWidth-size),floor=Math.min(innerHeight-size,to.bottom-size*.82),target=Math.max(0,to.left-size*.67),old=source.style.visibility;
+ wrap.style.width=wrap.style.height=size+'px';source.style.visibility='hidden';
+ const pose=(px,py,offset)=>({transform:'translate3d('+px+'px,'+py+'px,0)',offset,easing:'linear'});
+ const animation=wrap.animate([pose(x,y,0),pose(edge,y-size*.08,.12),pose(edge,floor,.34),pose(target,floor,.44),pose(target,floor,.56),pose(edge,floor,.66),pose(edge,y-size*.08,.9),pose(x,y,1)],{duration:8000,fill:'both'});
+ const timers=[],gesture=(mood,at,ms)=>timers.push(setTimeout(()=>playCharacter(art,mood,ms),at));
+ gesture('ledge',0,960);gesture('climbDown',960,1760);gesture('walkLeft',2720,800);gesture('punch',3520,900);gesture('walkRight',4480,800);gesture('climbUp',5280,1920);gesture('ledge',7200,800);
+ timers.push(setTimeout(()=>{button.classList.add('character-bop');timers.push(setTimeout(()=>button.classList.remove('character-bop'),450))},3900));let done=false;
+ const cleanup=()=>{if(done)return;done=true;timers.forEach(clearTimeout);animation.cancel();wrap.remove();source.style.visibility=old;button.classList.remove('character-bop');if(visitor===cleanup)visitor=null};cleanup.stamp=stamp;visitor=cleanup;animation.finished.then(cleanup).catch(()=>{});
 }
 
 export function scoreStripKey(game,me,room,ownAvatar){return JSON.stringify([game.matchId,me,game.turn,game.over,game.timeoutCounts,ownAvatar,game.players.map((p,i)=>[p.name,p.score,p.eliminated,p.count??p.hand?.length,room?.seats[i]?.kicked,room?.seats[i]?.avatar,room?.seats[i]?.playerId])])}

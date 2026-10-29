@@ -1,6 +1,6 @@
 {
   "name": "renkio",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
-    "three": "0.186.1"
+    "three": "0.186.1",
+    "three-mesh-bvh": "^0.9.17"
   }
 }

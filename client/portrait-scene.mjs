@@ -67,7 +67,7 @@ export class CharacterPortraits{
     applyCharacterTouch(root,{x:touch.sx,y:touch.sy,strength:1,kind,elapsed,reduced});
     if(!kind)delete art.dataset.touchReaction;
    }
-   const camera=this.camera;
+   art.dataset.fullFrameRatio=String(entry.radius/entry.headRadius);const camera=this.camera;
    this.scene.add(root);const distance=radius/Math.sin(this.camera.fov*Math.PI/360)*1.14;this.camera.position.copy(center).add(new T.Vector3(.18,.12,1).normalize().multiplyScalar(distance));this.camera.lookAt(center);this.renderer.setScissorTest(true);this.renderer.setScissor(0,0,pixels,pixels);this.renderer.setViewport(0,0,pixels,pixels);this.renderer.render(this.scene,camera);r.ctx.globalCompositeOperation='copy';r.ctx.drawImage(this.renderer.domElement,0,384-pixels,pixels,pixels,0,0,pixels,pixels);this.scene.remove(root);
    if(r.mood==='knock'){const point=characterContactPoint(root,camera);art.dataset.knockX=((point.x+1)*50).toFixed(1)+'%';art.dataset.knockY=((1-point.y)*50).toFixed(1)+'%'}
    r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion=CHARACTER_MODEL_VERSION}

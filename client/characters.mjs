@@ -1,3 +1,5 @@
+import {acceleratedRaycast} from 'three-mesh-bvh';
+import {sculptHead} from './creature-sculpt.mjs';
 import {BAKED_ACCESSORY_FITS} from './accessory-surfaces.mjs';
 import {accessoryFit,REAR_PROFILES} from './character-fit.mjs';
 import {createFacialRig} from './facial-rig.mjs';
@@ -11,7 +13,7 @@ const geometries=new Map(),materials=new Map(),contactPoints=new Map();
 function geometry(key,make){if(!geometries.has(key))geometries.set(key,make());return geometries.get(key)}
 function mat(colour,roughness=.4,metalness=0,options={}){const key=JSON.stringify([colour,roughness,metalness,options]);if(!materials.has(key))materials.set(key,new T.MeshPhysicalMaterial({color:colour,roughness,metalness,clearcoat:.24,clearcoatRoughness:.24,...options}));return materials.get(key)}
 function group(parent,name,at=[0,0,0]){const n=new T.Group();n.name=name;n.position.set(...at);parent.add(n);return n}
-function mesh(parent,g,m,at=[0,0,0],scale=[1,1,1]){const n=new T.Mesh(g,m);n.position.set(...at);n.scale.set(...scale);n.castShadow=true;n.receiveShadow=true;parent.add(n);return n}
+function mesh(parent,g,m,at=[0,0,0],scale=[1,1,1]){const n=new T.Mesh(g,m);if(g.boundsTree)n.raycast=acceleratedRaycast;n.position.set(...at);n.scale.set(...scale);n.castShadow=true;n.receiveShadow=true;parent.add(n);return n}
 function orb(parent,m,at,scale){const size=Math.max(...scale),segments=size<.05?[12,8]:size<.18?[20,14]:[32,22];return mesh(parent,geometry('sphere:'+segments,()=>new T.SphereGeometry(1,...segments)),m,at,scale)}
 function box(parent,m,at,size,r=.07){return mesh(parent,geometry('rounded:'+size+':'+r,()=>new RoundedBoxGeometry(...size,5,r)),m,at)}
 function tube(parent,m,points,r=.022){return mesh(parent,geometry('tube:'+points.flat()+':'+r,()=>new T.TubeGeometry(new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p))),32,r,10,false)),m)}
@@ -53,7 +55,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='wardrobe-v7';
+export const CHARACTER_MODEL_VERSION='sculpt-v8';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -114,11 +116,11 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
  let headPivot=.84;
  if(face===0){
   // A continuous soft cloud, not intersecting cropped puff pictures.
-  mesh(head,cloudHull(),body,[0,0,0],[.94,.91,1.06]);
+  mesh(head,geometry('sculpt-pof-v8',()=>sculptHead(0)),body);orb(torso,body,[0,.33,-.03],[.34,.36,.25]);orb(torso,CREAM(),[0,.29,.20],[.21,.24,.055]);
   addEye([-.195,.75,.354],1.01,'#7c4eb5');addEye([.195,.75,.354],1.01,'#7c4eb5');
 
   cheek(-.34,.57,.325);cheek(.34,.57,.325);
-  accent=group(head,'CloudCurl',[.19,1.15,-.01]);orb(accent,body,[0,0,0],[.24,.20,.24]);
+  accent=group(head,'CloudCurl',[0,1.20,-.025]);for(const side of [-1,1])orb(accent,body,[side*.065,.025,.16],[.06,.10,.04]);
   armPair(.45,.49,.025,{short:true});feet=legsV2(root,body,pose,{short:true,paw:true});
   headPivot=.70;
  }else if(face===1){
@@ -127,10 +129,10 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   // Three quiet battery pips are body detail, not pre-equipped accessories.
   const heart=new T.Shape();heart.moveTo(0,-.06);heart.bezierCurveTo(-.12,.01,-.06,.12,0,.055);heart.bezierCurveTo(.06,.12,.12,.01,0,-.06);mesh(torso,geometry('robot-heart',()=>new T.ExtrudeGeometry(heart,{depth:.009,bevelEnabled:true,bevelSize:.006,bevelThickness:.004,bevelSegments:3,steps:1})),mat('#a585d4',.4,0,{emissive:'#8d67ba',emissiveIntensity:.10}),[0,.32,.28]);
   orb(torso,trim,[0,.65,0],[.13,.08,.13]);
-  box(head,body,[0,1.02,0],[1.08,.80,.67],.23);
+  orb(head,body,[0,1.04,-.07],[.58,.46,.38]);
   box(head,ceramic,[0,1.025,.25],[1.015,.70,.25],.20);
   box(head,dark,[0,1.025,.39],[.86,.48,.13],.16);
-  for(const side of [-1,1]){box(head,trim,[side*.555,1.025,-.025],[.085,.32,.30],.04);box(head,body,[side*.60,1.025,-.025],[.045,.21,.23],.02)}
+  for(const side of [-1,1]){const ear=orb(head,trim,[side*.555,1.025,-.025],[.10,.18,.18]);const disc=orb(head,ceramic,[side*.625,1.025,-.025],[.035,.12,.12]);}
   addEye([-.185,1.06,.465],.89,'#a0ffee',true);addEye([.185,1.06,.465],.89,'#a0ffee',true);
   const light=mat('#9dffe6',.25,0,{emissive:'#45dfc3',emissiveIntensity:.4});
 
@@ -139,7 +141,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   headPivot=1.0;
  }else if(face===2){
   orb(torso,body,[0,.32,0],[.35,.43,.275]);orb(torso,CREAM(),[0,.275,.24],[.20,.27,.055]);
-  orb(head,body,[0,1.01,0],[.535,.43,.355]);
+  mesh(head,geometry('sculpt-cat-v8',()=>sculptHead(2)),body);
   for(const side of [-1,1]){
    const ear=group(head,side<0?'EarL':'EarR',[side*.33,1.29,-.02]);
    const shape=new T.Shape();shape.moveTo(-.17,0);shape.quadraticCurveTo(-.18,.20,-.035,.36);shape.quadraticCurveTo(.05,.4,.18,0);shape.closePath();
@@ -157,7 +159,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   headPivot=.96;
  }else if(face===3){
   orb(torso,body,[0,.35,0],[.43,.47,.32]);orb(torso,mat('#b9e8cd',.6),[0,.265,.285],[.26,.30,.055]);
-  orb(head,body,[0,.89,0],[.49,.51,.36]);
+  mesh(head,geometry('sculpt-cyclops-v8',()=>sculptHead(3)),body);
   for(const side of [-1,1]){
    tapered(head,CREAM(),[[side*.34,1.20,-.02],[side*.44,1.31,-.03],[side*.42,1.48,-.05],[side*.33,1.54,-.04]],[.10,.095,.06,.005]);
    for(let i=0;i<3;i++)orb(head,mat('#3caa92',.65),[side*(.36+i*.028),.73+i*.08,.25],[.022,.025,.014]);
@@ -168,15 +170,15 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   armPair(.40,.56,0);feet=legsV2(root,body,pose);
   headPivot=.87;
  }else if(face===4){
-  mesh(head,puffyStar(),body,[0,.75,0],[.94,.94,1.13]);
+  mesh(head,geometry('sculpt-dragon-v8',()=>sculptHead(4)),body);orb(torso,body,[0,.32,-.025],[.32,.37,.24]);orb(torso,CREAM(),[0,.29,.20],[.19,.25,.045]);for(const side of [-1,1]){tapered(head,CREAM(),[[side*.30,1.12,-.04],[side*.37,1.27,-.07],[side*.31,1.43,-.08]],[.085,.065,.004]);const fin=group(head,'DragonEar',[side*.45,.91,-.075]);const shape=new T.Shape();shape.moveTo(0,-.08);shape.quadraticCurveTo(side*.32,.03,side*.23,.24);shape.quadraticCurveTo(side*.08,.19,0,.08);mesh(fin,geometry('dragon-fin-'+side,()=>new T.ExtrudeGeometry(shape,{depth:.025,bevelEnabled:true,bevelSize:.02,bevelThickness:.015,bevelSegments:3})),body);ears.push(fin)}tail=group(root,'Tail',[0,.12,-.14]);tapered(tail,body,[[0,0,0],[.27,-.03,-.20],[.43,.10,-.25],[.45,.23,-.23]],[.10,.085,.06,.004]);
   addEye([-.175,.835,.269],.87,'#a35b38');addEye([.175,.835,.269],.87,'#a35b38');
 
-  cheek(-.30,.66,.258,.057);cheek(.30,.66,.258,.057);
+  orb(head,CREAM(),[0,.64,.29],[.26,.20,.055]);for(const side of [-1,1])orb(head,mat('#ac855a',.75),[side*.07,.69,.348],[.014,.010,.006]);cheek(-.30,.66,.258,.057);cheek(.30,.66,.258,.057);
   armPair(.34,.58,.005,{short:true});feet=legsV2(root,body,pose,{short:true});
   headPivot=.74;
  }else{
   const jelly=body.clone();jelly.userData.instanceOwned=true;jelly.roughness=.27;jelly.clearcoat=.7;jelly.clearcoatRoughness=.27;
-  orb(head,jelly,[0,.89,-.015],[.55,.47,.365]);
+  mesh(head,geometry('sculpt-jelly-v8',()=>sculptHead(5)),jelly);
   for(let i=0;i<7;i++){const a=i*Math.PI*2/7;orb(head,jelly,[Math.cos(a)*.43,.56,Math.sin(a)*.22],[.14,.115,.15])}
   addEye([-.185,.925,.314],.91,'#5266a9');addEye([.185,.925,.314],.91,'#5266a9');
 

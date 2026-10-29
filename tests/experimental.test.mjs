@@ -23,13 +23,13 @@ test('new multiplier squares multiply the whole crossing line; flat bonuses are 
  const g=createGame(['a','b'],{experimental:true});g.board=board;g.turn=0;g.players[0].hand=hand;g.bonusCells={'1,0':{type:'2x'}};assert.equal(play(g,0,p).score,4);assert.equal(g.bonusCells['1,0'].used,true);
  const crossed={'0,1':{id:'a',c:0,s:1},'1,0':{id:'b',c:1,s:0}},h=[tile(0)];assert.equal(validate(crossed,h,[{id:'t0',x:0,y:0}],{experimental:true,bonusCells:{'0,0':{type:'3x'}}}).score,12);
 });
-test('random squares stay from 6 through 36 cells from center, include every kind and survive JSON restoration',()=>{
+test('random squares stay from 4 through 36 cells from center, include every kind and survive JSON restoration',()=>{
  const a=makeBonusBoard(),b=makeBonusBoard();assert.notDeepEqual(a,b);assert.ok(Object.keys(a).length>80);assert.equal(new Set(Object.values(a).map(v=>v.type)).size,5);
- for(const pos of Object.keys(a)){const d=Math.max(...pos.split(',').map(v=>Math.abs(Number(v))));assert.ok(d>=6&&d<=36)}
+ for(const pos of Object.keys(a)){const d=Math.max(...pos.split(',').map(v=>Math.abs(Number(v))));assert.ok(d>=4&&d<=36)}
  assert.deepEqual(JSON.parse(JSON.stringify(a)),a);
 });
 test('daily rewards use server Berlin calendar, accrue and prevent repeat claim across reload and DST',()=>{
- const p={};const before=Date.parse('2026-10-24T21:59:59Z'),after=Date.parse('2026-10-24T22:00:00Z');assert.equal(claimReward(p,before).diamonds,10);const copy=JSON.parse(JSON.stringify(p));assert.throws(()=>claimReward(copy,before),/zaten/);assert.equal(rewardView(copy,after).available,true);assert.equal(claimReward(copy,after).diamonds,20);
+ const p={};const before=Date.parse('2026-10-24T21:59:59Z'),after=Date.parse('2026-10-24T22:00:00Z');assert.equal(claimReward(p,before).diamonds,10);const copy=JSON.parse(JSON.stringify(p));assert.throws(()=>claimReward(copy,before),/zaten/);assert.equal(rewardView(copy,after).available,true);assert.equal(claimReward(copy,after).diamonds,30);
 });
 test('each player has at most one joker per match; preparation is idempotent and an invalid move never uses it',()=>{
  const g=createGame(['a','b'],{experimental:true});g.turn=0;const j=prepareJoker(g,0,'j');assert.equal(prepareJoker(g,0,'different').id,j.id);assert.throws(()=>play(g,0,[{id:'j',x:1,y:1,c:0,s:0}]),/ortadaki/);assert.equal(g.players[0].jokerUsed,undefined);play(g,0,[{id:'j',x:0,y:0,c:0,s:0}]);assert.equal(g.players[0].jokerUsed,true);assert.throws(()=>prepareJoker(g,0,'next'),/kullandın/);assert.equal(prepareJoker(g,1,'other').id,'other');assert.equal(g.players[0].hand.filter(t=>!t.joker).length,6);

@@ -3,7 +3,7 @@ import {t,locale} from './i18n.mjs';
 import {playCharacter,previewCelebration,CHARACTER_CLIPS} from './motion.mjs';
 export function defaultAvatar(seed=''){if(seed==='miko')return {...MIKO_AVATAR};let n=2166136261;for(const ch of String(seed))n=Math.imul(n^ch.charCodeAt(0),16777619)>>>0;return {face:n%6,color:(n>>>4)%7}}
 export function normalizeAvatar(v,seed=''){if(seed==='miko')return {...MIKO_AVATAR};const d=defaultAvatar(seed);const result={face:Number.isInteger(v?.face)&&v.face>=0&&v.face<6?v.face:d.face,color:Number.isInteger(v?.color)&&v.color>=0&&v.color<8?v.color:d.color};const items=accessoryList(v?.accessories??v?.accessory);if(items.length)result.accessories=items;const colours=normalizeAccessoryColours(v?.accessoryColors);if(Object.keys(colours).length)result.accessoryColors=colours;return result}
-export const AVATAR_NAMES=['Pof','Robot','Kedi','Tepegöz','Yıldız','Denizanası'];
+export const AVATAR_NAMES=['Pof','Robot','Kedi','Tepegöz','Ejder','Denizanası'];
 export function avatarArt(v,seed=''){
  const {face,color,accessories=[],accessoryColors={}}=normalizeAvatar(v,seed);
  return `<span class="character-art character-${face}" data-character="${face}" data-colour="${color}" data-accessory="${accessories.join(',')||'none'}" data-accessory-colours="${accessoryColourKey(accessoryColors)}" aria-hidden="true"></span>`;

@@ -1,7 +1,7 @@
 export const BONUS_TYPES=['2x','3x','+2','+5','+8'];
 export function makeBonusBoard(random=Math.random){
  const cells={},used=[];
- for(const [lo,hi]of [[6,11],[12,19],[20,27],[28,36]])for(let i=0;i<24;i++){
+ for(const [lo,hi]of [[4,11],[12,19],[20,27],[28,36]])for(let i=0;i<24;i++){
   for(let attempt=0;attempt<300;attempt++){
    const x=Math.floor(random()*(hi*2+1))-hi,y=Math.floor(random()*(hi*2+1))-hi,d=Math.max(Math.abs(x),Math.abs(y));
    if(d<lo||d>hi||used.some(p=>Math.abs(p.x-x)+Math.abs(p.y-y)<3))continue;
