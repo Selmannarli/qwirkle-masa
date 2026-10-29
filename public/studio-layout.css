@@ -443,3 +443,5 @@ body[data-theme=day] .avatar-dialog .avatar-save { color:#fff!important; backgro
 .avatar-dialog .avatar-sync-status{flex:none;border:0;background:transparent;color:var(--studio-muted);font:700 11px Nunito,sans-serif;min-height:24px;padding:3px;text-align:center;cursor:default}
 .avatar-dialog .avatar-sync-status:empty{display:none}.avatar-dialog .avatar-sync-status[data-state=error]{color:#e8879a;cursor:pointer}.avatar-dialog .avatar-sync-status[data-state=saved]{color:#57b58c}
 @media(max-height:680px){.avatar-dialog .character-stage{--portrait-size:96px}.avatar-dialog .drawer-heading{min-height:36px}.avatar-dialog .drawer-heading>.icon-button{width:36px!important;height:36px!important;min-height:36px!important;flex-basis:36px}}
+
+.profile-presence{display:block;text-align:center;color:var(--muted,#bba8cc);font-size:12px;margin:6px 0 10px}

@@ -1,5 +1,6 @@
 export function localizedPush(event,language){
  if(language!=='en')return {title:event.title,body:event.body};
+ if(event.title==='Hediye')return {title:'Gift',body:event.body.replace(' sana bir hediye gönderdi.',' sent you a gift.')};
  return {title:({turn:'Your turn',message:'New message',invite:'Game invitation'})[event.kind]||event.title,body:event.kind==='turn'?'Your Renkio table is waiting.':event.kind==='message'?event.body.replace(' sana mesaj gönderdi.',' sent you a message.'):event.kind==='invite'?event.body.replace(' seni Renkio oynamaya davet ediyor.',' invited you to play Renkio.'):event.body};
 }
 export function registerPush(state,owner,{deviceId,deviceToken,enabled=true,blocked={},language='tr'},now=Date.now()){

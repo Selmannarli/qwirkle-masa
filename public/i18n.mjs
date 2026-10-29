@@ -75,3 +75,5 @@ Object.assign(EN,{'Görünüm':'Appearance','Hareketler':'Animations','Selamlama
 Object.assign(EN,{'Kaydediliyor…':'Saving…','Kaydedildi':'Saved','Kaydedilemedi · Tekrar dene':'Could not save · Retry'});
 
 Object.assign(EN,{'Beyaz':'White'});
+
+Object.assign(EN,{'Pas geçilsin mi?':'Pass this turn?','Bu tur taş oynamadan sıranı geçireceksin.':'Your turn will end without playing any tiles.','Son görülme':'Last seen','Son görülme bilgisi yok':'Last seen unavailable','Az önce':'Just now','Hediye aldın':'Gift received'});

@@ -35,6 +35,7 @@ export function gift(state,from,to,item,amount,receipt){
  if(prior){if(prior.signature!==signature)throw Error('İşlem kimliği daha önce kullanıldı.');return rewardView(sender)}
  if(item==='diamonds')receiver.economy.diamonds+=amount;
  else {if(sender.economy.inventory[item]<amount)throw Error('Bu desteğin kalmamış. Mağazadan alabilirsin.');sender.economy.inventory[item]-=amount;receiver.economy.inventory[item]+=amount}
+ receiver.giftInbox??=[];receiver.giftInbox.push({id:from+':'+receipt,from,name:sender.name||'Player',item,amount,at:Date.now()});receiver.giftInbox=receiver.giftInbox.slice(-200);
  sender.economy.gifts.push({receipt,signature,at:Date.now()});sender.economy.gifts=sender.economy.gifts.slice(-200);
  return rewardView(sender);
 }
