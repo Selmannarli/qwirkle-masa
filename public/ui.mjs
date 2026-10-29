@@ -35,9 +35,21 @@ export class Sound {
  tone(f,time,duration=.09,type='sine',gain=.1){if(!this.enabled)return;try{this.ctx??=new (window.AudioContext||window.webkitAudioContext)();this.ctx.resume().catch(()=>{});const o=this.ctx.createOscillator(),g=this.ctx.createGain(),at=this.ctx.currentTime+time;o.type=type;o.frequency.setValueAtTime(f,at);g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(gain,at+.008);g.gain.exponentialRampToValueAtTime(.0001,at+duration);o.connect(g);g.connect(this.ctx.destination);o.start(at);o.stop(at+duration+.01)}catch{}}
  glassKnock(){if(!this.enabled)return;this.tone(920,0,.055,'sine',.045);this.tone(1840,.002,.033,'sine',.018);this.tone(260,0,.045,'triangle',.018)}
  character(face,mood='hello'){
+  if(['idle','bored','waveLeft','waveRight','curious','pat','tickle'].includes(mood))return;
   if(!this.enabled||!Number.isInteger(face)||face<0||face>5)return;const now=performance.now();if(now-(this.lastCharacterVoice??-999)<650)return;this.lastCharacterVoice=now;
   const motifs=[[[330,0,.10,'sine'],[440,.075,.12,'sine']],[[720,0,.045,'triangle'],[960,.06,.045,'sine'],[720,.12,.05,'sine']],[[510,0,.13,'sine'],[465,.08,.12,'sine']],[[150,0,.12,'triangle'],[200,.08,.13,'sine']],[[880,0,.10,'sine'],[1320,.065,.13,'sine']],[[420,0,.075,'sine'],[640,.055,.09,'sine'],[520,.105,.10,'sine']]],factor=['sad','lose'].includes(mood)?.78:['win','celebrate','impact'].includes(mood)?1.12:mood==='angry'?.7:mood==='surprise'?1.24:1;
   for(const [frequency,delay,duration,wave]of motifs[face])this.tone(frequency*factor,delay,duration,wave,face===3?.017:.022);
+ }
+ // Short, original cartoon Foley; no device vibration and no idle soundtrack.
+ cartoon(kind){if(!this.enabled)return;const now=performance.now();this.cartoonTimes??={};if(now-(this.cartoonTimes[kind]??-999)<130)return;this.cartoonTimes[kind]=now;this.unlock();const ctx=this.ctx;if(!ctx||ctx.state!=='running')return;
+  const out=this.studio.bus||ctx.destination,at=ctx.currentTime;
+  const slide=(from,to,start,duration,volume,type='sine',warble=0)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(from,at+start);o.frequency.exponentialRampToValueAtTime(to,at+start+duration);g.gain.setValueAtTime(.0001,at+start);g.gain.exponentialRampToValueAtTime(volume,at+start+.012);g.gain.exponentialRampToValueAtTime(.0001,at+start+duration);o.connect(g);g.connect(out);let lfo;if(warble){lfo=ctx.createOscillator();const depth=ctx.createGain();lfo.frequency.value=16;depth.gain.value=warble;lfo.connect(depth);depth.connect(o.frequency);lfo.start(at+start);lfo.stop(at+start+duration);lfo.onended=()=>{lfo.disconnect();depth.disconnect()}}o.start(at+start);o.stop(at+start+duration+.01);o.onended=()=>{o.disconnect();g.disconnect()}};
+  const air=(duration,cutoff,volume)=>{const b=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),data=b.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/data.length)**2;const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();source.buffer=b;filter.type='lowpass';filter.frequency.value=cutoff;gain.gain.value=volume;source.connect(filter);filter.connect(gain);gain.connect(out);source.start();source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect()}};
+  if(kind==='teleport'){air(.17,2400,.075);slide(510,150,.01,.19,.035,'sine',25)}
+  else if(kind==='buttonHit'){slide(190,85,0,.18,.065,'triangle',35);slide(420,260,.02,.14,.025);air(.06,1400,.045)}
+  else if(kind==='appleThrow'){air(.14,3500,.055);slide(360,680,0,.12,.032,'sine',40);slide(680,230,.10,.17,.023)}
+  else if(kind==='appleHit'){air(.085,1600,.065);slide(180,68,0,.15,.065,'triangle');slide(820,420,.04,.28,.025,'sine',65);[1250,1520,1880].forEach((f,i)=>slide(f,f*.92,.12+i*.065,.12,.013))}
+  else if(kind==='appleMiss'){slide(180,65,0,.15,.035,'sine',20)}
  }
  launch(){if(!this.enabled)return;this.studio.play('launch',.44)}
  placement(count=1,score=0,valid=true){

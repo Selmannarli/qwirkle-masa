@@ -42,4 +42,4 @@ export const ANIMATION_DURATIONS=Object.freeze(Object.assign(
 ));
 export const ANIMATION_PRIORITIES=Object.freeze(Object.fromEntries(Object.keys(ANIMATION_DURATIONS).map(clip=>[clip,clip.startsWith('greet')?10:clip.startsWith('win')||clip.startsWith('loss')?80:clip.startsWith('visitor')?15:5])));
 export const ANIMATION_CONTACT_CLIPS=Object.freeze(['visitorStrike','highFiveLeft','highFiveRight']);
-export function animationEmotion(mood){if(typeof mood!=='string')return 'neutral';return mood==='sad'||mood==='lose'||mood.startsWith('loss')?'sad':['hello','knock'].includes(mood)?'neutral':'happy'}
+export function animationEmotion(mood){if(typeof mood!=='string')return 'neutral';return mood==='appleHit'||mood==='sad'||mood==='lose'||mood.startsWith('loss')?'sad':['hello','knock'].includes(mood)?'neutral':'happy'}

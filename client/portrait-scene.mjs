@@ -62,7 +62,7 @@ export class CharacterPortraits{
    if(r.canvas.width!==pixels||r.canvas.height!==pixels){r.canvas.width=r.canvas.height=pixels}
    const entry=this.model(r.face,r.colour,r.accessory,r.colours),root=entry.root,preview=entry.accessories.get(art.dataset.accessoryPreview),bust=!preview&&!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=preview?.center||(bust?entry.headCenter:entry.center),radius=preview?.radius||(bust?entry.headRadius:entry.radius);
    let previous=null;if(r.transition&&!reduced&&now-r.transition.at<180){animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.transition.mood,elapsed:Math.max(0,(now-r.transition.start)/1000)});previous=captureCharacterPose(root)}else r.transition=null;
-   resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
+   resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced,aimPower:Number(art.dataset.applePower)||0,aimDirection:Number(art.dataset.appleDirection)||1});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
    if(r.touch&&['idle','hello'].includes(r.mood)){
     const touch=r.touch,tracking=now<touch.until,step=1-Math.exp(-Math.min(64,Math.max(1,now-r.last))/110);
     touch.sx+=((tracking?touch.x:0)-touch.sx)*step;touch.sy+=((tracking?touch.y:0)-touch.sy)*step;
@@ -76,6 +76,7 @@ export class CharacterPortraits{
    if(preview)root.traverse(node=>{if(!node.isMesh||!node.visible)return;let part=false;for(let n=node;n;n=n.parent)if(n.userData.attachment===art.dataset.accessoryPreview){part=true;break}if(!part){node.visible=false;hidden.push(node)}});
    this.scene.add(root);const distance=radius/Math.sin(this.camera.fov*Math.PI/360)*1.14;this.camera.position.copy(center).add(new T.Vector3(.18,.12,1).normalize().multiplyScalar(distance));this.camera.lookAt(center);this.renderer.setScissorTest(true);this.renderer.setScissor(0,0,pixels,pixels);this.renderer.setViewport(0,0,pixels,pixels);this.renderer.render(this.scene,camera);r.ctx.globalCompositeOperation='copy';r.ctx.drawImage(this.renderer.domElement,0,384-pixels,pixels,pixels,0,0,pixels,pixels);this.scene.remove(root);for(const node of hidden)node.visible=true;
    if(r.mood==='knock'){const point=characterContactPoint(root,camera);art.dataset.knockX=((point.x+1)*50).toFixed(1)+'%';art.dataset.knockY=((1-point.y)*50).toFixed(1)+'%'}
+   if(r.mood==='appleAim'||r.mood==='appleThrow'){const point=characterSocialContactPoint(root,r.mood,camera,-(Number(art.dataset.appleDirection)||1));if(point){art.dataset.appleHandX=String((point.x+1)/2);art.dataset.appleHandY=String((1-point.y)/2)}}
    if(r.mood==='visitorStrike'||r.mood.startsWith('highFive')||r.mood.startsWith('playful')){const point=characterSocialContactPoint(root,r.mood,camera);if(point){art.dataset.contactX=String((point.x+1)/2);art.dataset.contactY=String((1-point.y)/2)}}
    r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion=CHARACTER_MODEL_VERSION}
   }

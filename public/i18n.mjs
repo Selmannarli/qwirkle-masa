@@ -77,3 +77,5 @@ Object.assign(EN,{'Kaydediliyor…':'Saving…','Kaydedildi':'Saved','Kaydedilem
 Object.assign(EN,{'Beyaz':'White'});
 
 Object.assign(EN,{'Pas geçilsin mi?':'Pass this turn?','Bu tur taş oynamadan sıranı geçireceksin.':'Your turn will end without playing any tiles.','Son görülme':'Last seen','Son görülme bilgisi yok':'Last seen unavailable','Az önce':'Just now','Hediye aldın':'Gift received'});
+
+Object.assign(EN,{'Elma fırlatmak için çek ve bırak':'Pull and release to throw an apple'});

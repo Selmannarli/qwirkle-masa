@@ -1,0 +1,10 @@
+#scores .illustrated-avatar.apple-ready{touch-action:none;cursor:grab;position:relative;user-select:none;-webkit-user-select:none}
+.apple-badge{position:absolute;right:-2px;bottom:-1px;display:block;width:17px;height:19px;pointer-events:none;filter:drop-shadow(0 1px 2px #170b3166);z-index:3}.apple-badge svg{width:100%;height:100%}
+.apple-aim{position:fixed;inset:0;width:100vw;height:100dvh;pointer-events:none;z-index:1403;fill:#f8d97b;filter:drop-shadow(0 1px 1px #38195380)}
+.apple-held,.apple-flight{position:fixed;width:24px;height:26px;pointer-events:none;z-index:1404;will-change:transform;filter:drop-shadow(0 3px 3px #28132f4d)}.apple-held{transform:translate(-50%,-50%)}.apple-held svg,.apple-flight svg{display:block;width:100%;height:100%}
+.apple-bonk{position:fixed;pointer-events:none;z-index:1405;width:64px;height:48px;transform:translate(-50%,-70%)}.apple-bonk i{position:absolute;left:20px;top:8px;color:#ffe38b;font-size:22px;font-style:normal;text-shadow:0 1px 2px #956c35;animation:apple-stars 1.1s linear 2}.apple-bonk i:nth-child(2){animation-delay:-.36s}.apple-bonk i:nth-child(3){animation-delay:-.72s}.apple-bonk b{position:absolute;left:24px;top:22px;width:15px;height:15px;border:3px dotted #f36e7e;border-radius:50%;animation:apple-splat .35s ease-out both}
+@keyframes apple-stars{0%{transform:translate(0,-14px) scale(.8)}25%{transform:translate(22px,0) scale(1)}50%{transform:translate(0,12px) scale(.7)}75%{transform:translate(-22px,0) scale(1)}100%{transform:translate(0,-14px) scale(.8)}}@keyframes apple-splat{to{transform:scale(3);opacity:0}}
+body[data-motion=reduced] .apple-bonk i{animation:none}body[data-motion=reduced] .apple-bonk b{display:none}@media(prefers-reduced-motion:reduce){.apple-bonk i{animation:none}.apple-bonk b{display:none}}
+
+.apple-bonk i svg{display:block;width:22px;height:22px;filter:drop-shadow(0 1px 1px #79592888)}
+#scores .illustrated-avatar:has(.character-art[data-emotion=appleAim]) .apple-badge,#scores .illustrated-avatar:has(.character-art[data-emotion=appleThrow]) .apple-badge{visibility:hidden}

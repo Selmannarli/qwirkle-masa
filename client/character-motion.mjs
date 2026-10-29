@@ -3,7 +3,7 @@ import {Vector3,Quaternion,Euler} from 'three';
 import {ANIMATION_DURATIONS,animationEmotion} from '../public/animation-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,kick:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000,...ANIMATION_DURATIONS});
+export const CHARACTER_DURATIONS=Object.freeze({appleAim:60,appleThrow:.65,appleHit:2.6,walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,kick:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000,...ANIMATION_DURATIONS});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -286,8 +286,8 @@ function socialGesture(root,rig,mood,t,face,duration){
  }
  if(face===5)rig.arms.forEach((n,i)=>{if(i!==handIndex(rig,side))rotate(n,-a*.04,0,Math.sin(i)*a*.025)});
 }
-export function characterSocialContactPoint(root,mood,camera=null){
- const rig=root?.userData?.rig;if(!rig)return null;const side=mood==='highFiveRight'||mood==='playfulReply'?-1:1,i=handIndex(rig,side);
+export function characterSocialContactPoint(root,mood,camera=null,handSide=null){
+ const rig=root?.userData?.rig;if(!rig)return null;const side=handSide??(mood==='highFiveRight'||mood==='playfulReply'?-1:1),i=handIndex(rig,side);
  const hand=rig.hands?.[i],tip=rig.forearms?.[i],armNode=rig.arms?.[i];if(!armNode)return null;
  root.updateMatrixWorld(true);let point;
  if(hand)point=hand.localToWorld(new Vector3(0,-.024,.02));
@@ -297,17 +297,19 @@ export function characterSocialContactPoint(root,mood,camera=null){
 }
 
 /** Returns true while the supplied gesture needs another sample. Units are seconds. */
-function sampleCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false}={}){
+function sampleCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false,aimPower=0,aimDirection=1}={}){
  const state=stateFor(root);if(!state)return false;resetCharacter(root);const rig=state.rig;
  face=Number.isInteger(face)&&face>=0&&face<6?face:0;time=Number.isFinite(time)?Math.max(0,time):0;elapsed=Number.isFinite(elapsed)?Math.max(0,elapsed):0;
  if(mood==='idle'||typeof mood!=='string'||!Object.hasOwn(CHARACTER_DURATIONS,mood)){if(!reduced)idle(rig,time,face);return !reduced}
  const emotion=animationEmotion(mood),duration=CHARACTER_DURATIONS[mood];
  setMouth(rig,emotion);
- const browEmotion=mood==='lossAngry'||mood==='lossStomp'?'angry':emotion;
+ const browEmotion=mood==='appleHit'||mood==='lossAngry'||mood==='lossStomp'?'angry':emotion;
  if(reduced){brow(rig,browEmotion,.5);return false}
  if(elapsed>=duration){brow(rig,browEmotion,.45);return false}
 
- if(mood.startsWith('greet'))selectedGreeting(root,rig,mood,elapsed,face,duration);
+ if(mood==='appleAim'||mood==='appleThrow'){const a=mood==='appleAim'?clamp(aimPower):1-rise(elapsed,.12,.54),side=aimDirection<0?-1:1,lift=mood==='appleAim'?2.5+a*.3:key(elapsed,[[0,2.8],[.12,2.8],[.25,1.9],[.44,.45],[.65,0]]);handPose(rig,-side,lift*(face===5?1.4:1),-a*.5,a*.65);handPose(rig,side,a*.4,-a*.15,a*.25);rotate(rig.head,-a*.08,side*a*.18,0);rotate(root,0,0,-side*a*.075);brow(rig,'happy',a*.7)}
+ else if(mood==='appleHit'){const recoil=envelope(elapsed,0,.09,.19,.38),dizzy=envelope(elapsed,.1,.35,1.45,1.85),anger=envelope(elapsed,1.35,1.75,2.12,2.6);rotate(rig.head,-recoil*.16,Math.sin(elapsed*12)*dizzy*.13,Math.sin(elapsed*10)*dizzy*.12);for(const side of [-1,1])handPose(rig,side,recoil*.85+anger*.4,-anger*.15,anger*.95);blink(rig,Math.max(recoil*.95,blinkAt(elapsed,1.15,.08)));setMouth(rig,anger>.2?'sad':'neutral');brow(rig,anger>.2?'angry':'happy',Math.max(dizzy*.5,anger))}
+ else if(mood.startsWith('greet'))selectedGreeting(root,rig,mood,elapsed,face,duration);
  else if(mood.startsWith('win')&&mood!=='win')selectedWin(root,rig,mood,elapsed,face,duration);
  else if(mood.startsWith('loss'))selectedLoss(root,rig,mood,elapsed,face,duration);
  else if(mood.startsWith('visitor'))visitorGesture(root,rig,mood,elapsed,face,duration);

@@ -9,9 +9,10 @@ async function portraitRuntime(){
  if(portraits)return portraits;
  if(!loading)loading=import('./table-engine.mjs').then(({CharacterPortraits})=>portraits=new CharacterPortraits({reduced})).catch(error=>{for(const art of document.querySelectorAll('.character-art'))art.dataset.modelState='unavailable';console.warn('Character renderer unavailable',error.message);return null});return loading;
 }
+export function characterHasVoice(mood){return ['hello','win','lose','draw','celebrate','impact','angry','surprise'].includes(mood)||typeof mood==='string'&&mood.startsWith('greet')}
 export function playCharacter(host,mood='hello',remaining=null,options={}){
  const art=host?.matches?.('.character-art')?host:host?.querySelector?.('.character-art');if(!art)return null;const request={};requests.set(art,request);
- return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){const played=studio.play(art,mood,remaining,options);if(played&&remaining===null)document.dispatchEvent(new CustomEvent('character-voice',{detail:{face:Number(art.dataset.character),mood}}));return studio}});
+ return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){const played=studio.play(art,mood,remaining,options);if(played&&remaining===null&&characterHasVoice(mood))document.dispatchEvent(new CustomEvent('character-voice',{detail:{face:Number(art.dataset.character),mood}}));return studio}});
 }
 export function installCharacterMotion(root=document){
  if(installed)return;installed=true;let frame;
@@ -106,15 +107,16 @@ const waitingSeen=new Set();let visitor=null;
 export function characterVisitActive(){return !!visitor}
 export function cancelCharacterVisit(){visitor?.();visitor=null}
 function smokeAt(x,y,size,parent,nodes){
+ document.dispatchEvent(new CustomEvent('character-sound',{detail:{kind:'teleport'}}));
  const cloud=document.createElement('div');cloud.className='teleport-smoke';cloud.setAttribute('aria-hidden','true');cloud.style.left=x+'px';cloud.style.top=y+'px';cloud.style.setProperty('--smoke-size',size+'px');
  for(let i=0;i<9;i++){const puff=document.createElement('i'),angle=i/9*Math.PI*2;puff.style.setProperty('--smoke-x',Math.cos(angle)*(size*.46)+'px');puff.style.setProperty('--smoke-y',Math.sin(angle)*(size*.34)-size*.10+'px');puff.style.setProperty('--smoke-delay',i%3*25+'ms');cloud.append(puff)}parent.append(cloud);nodes.push(cloud);
 }
 export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={}){
- if(!game||game.over||document.hidden||document.querySelector('dialog[open]')||reduced()||game.timeoutDecision||celebrationLocked(game,now)||!button){cancelCharacterVisit();return}
+ if(!game||game.over||document.hidden||document.querySelector('dialog[open]')||reduced()||game.timeoutDecision||celebrationLocked(game,now)||!button||document.querySelector('.apple-flight')){cancelCharacterVisit();return}
  const stamp=[game.matchId,game.turn,game.turnSerial||game.history?.length||0].join(':');
  if(visitor){if(visitor.stamp!==stamp||game.turn!==me||game.turnDeadline-now>teleportWindow(game.turnSeconds)*1000)cancelCharacterVisit();return}
  if(!teleportEligible(game,me,now)||waitingSeen.has(stamp))return;
- const source=document.querySelector('#scores [data-seat="'+me+'"] .character-art');if(!source||!source.getClientRects().length)return;
+ const source=document.querySelector('#scores [data-seat="'+me+'"] .character-art');if(!source||!source.getClientRects().length||source.dataset.emotion==='appleHit'||source.dataset.emotion==='knock'||/^(win|loss|impact)/.test(source.dataset.emotion||''))return;
  waitingSeen.add(stamp);while(waitingSeen.size>120)waitingSeen.delete(waitingSeen.values().next().value);
  const from=source.getBoundingClientRect(),to=button.getBoundingClientRect(),size=Math.min(148,Math.max(76,from.width*Number(source.dataset.fullFrameRatio||1.7))),wrap=document.createElement('div'),art=source.cloneNode(false),nodes=[],parent=document.body;
  delete art.dataset.emotion;delete art.dataset.baseEmotion;delete art.dataset.modelReady;wrap.className='character-visitor teleport-visitor';wrap.setAttribute('aria-hidden','true');wrap.append(art);wrap.style.width=wrap.style.height=size+'px';
@@ -127,9 +129,9 @@ export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={
   if(elapsed>=350&&!appeared){appeared=true;smokeAt(away.x,away.y,size,parent,nodes);wrap.style.opacity='1'}
   const next=elapsed<650?0:elapsed<1550?1:elapsed<2500?2:3;
   if(next!==phase){phase=next;wrap.dataset.teleportPhase=['arrival','punch','kick','return'][phase];const start=[350,650,1550,2500][phase],mood=phase===1?'visitorStrike':phase===2?(Number(source.dataset.character)===5?'visitorStrike':'kick'):'idle';playCharacter(art,mood,phase===1||Number(source.dataset.character)===5&&phase===2?Math.max(1,650-(elapsed-start)):phase===2?Math.max(1,900-(elapsed-start)):1,{force:true})}
-  if(elapsed>=930&&!hit1){hit1=true;button.classList.add('character-bop')}
+  if(elapsed>=930&&!hit1){hit1=true;document.dispatchEvent(new CustomEvent('character-sound',{detail:{kind:'buttonHit'}}));button.classList.add('character-bop')}
   if(elapsed>=1380&&elapsed<(Number(source.dataset.character)===5?1830:1940))button.classList.remove('character-bop');
-  if(elapsed>=(Number(source.dataset.character)===5?1830:1940)&&!hit2){hit2=true;button.classList.add('character-bop')}
+  if(elapsed>=(Number(source.dataset.character)===5?1830:1940)&&!hit2){hit2=true;document.dispatchEvent(new CustomEvent('character-sound',{detail:{kind:'buttonHit'}}));button.classList.add('character-bop')}
   if(elapsed>=2390)button.classList.remove('character-bop');
   if(elapsed>=2800&&!left){left=true;wrap.style.opacity='0';smokeAt(away.x,away.y,size,parent,nodes)}
   if(elapsed>=3100&&!returned){returned=true;source.style.visibility=originalVisibility;smokeAt(home.x,home.y,Math.max(72,from.width*1.5),parent,nodes)}
@@ -138,5 +140,6 @@ export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={
 }
 
 export function scoreStripKey(game,me,room,ownAvatar){return JSON.stringify([game.matchId,me,game.turn,game.over,game.timeoutCounts,ownAvatar,game.players.map((p,i)=>[p.name,p.score,p.eliminated,p.count??p.hand?.length,room?.seats[i]?.kicked,room?.seats[i]?.avatar,room?.seats[i]?.playerId])])}
+
 
 
