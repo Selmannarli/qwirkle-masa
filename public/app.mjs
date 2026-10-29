@@ -2,7 +2,7 @@ import {MIKO_AVATAR} from './character-style.mjs';
 import {extendTurn} from './time-support.mjs';
 import {t,installLanguage,locale} from './i18n.mjs';
 import {renderTable,updateTableRound} from './table.mjs';
-import {installCharacterMotion,playCharacter,reactToGame,gameOutcomes,scoreStripKey,updateWaitingCharacters,cancelCharacterVisit} from './motion.mjs';
+import {installCharacterMotion,playCharacter,reactToGame,gameOutcomes,scoreStripKey,updateWaitingCharacters,cancelCharacterVisit,characterVisitActive} from './motion.mjs';
 import {syncPush,removePush,nativePushState} from './push-client.mjs';
 import {botThinkDelay,practiceAvailable,practiceSnapshot,restorePractice} from './practice.mjs';
 import {GameFeel,moveEnergy,movePower} from './game-feel.mjs';
@@ -208,7 +208,7 @@ const turnWarning=new TurnWarning();
 let warningArt=null,warningKey=null;
 function updateTurnWarning(){
  const host=document.querySelector('#scores [data-seat="'+game?.turn+'"] .illustrated-avatar');
- const state=turnWarning.update(game,game?.turn,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!document.hidden&&!!host&&!document.querySelector('dialog[open]'),blocked:visualLocked()||!!practicePausedAt});
+ const state=turnWarning.update(game,game?.turn,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!document.hidden&&!characterVisitActive()&&!!host&&!document.querySelector('dialog[open]'),blocked:visualLocked()||!!practicePausedAt});
  if(!state){if(warningArt?.isConnected&&warningArt.dataset.emotion==='knock')playCharacter(warningArt,'idle',1);warningArt=null;warningKey=null;return}
  const art=host.querySelector('.character-art');
  if(art&&(art!==warningArt||state.key!==warningKey)){warningArt=art;warningKey=state.key;playCharacter(art,'knock',state.remaining)}
