@@ -6,7 +6,7 @@ export function applePoint(shot,t){return {x:shot.start+shot.vx*t,y:shot.vy*t-AP
 export function appleFlight(game,seat,vx,vy){
  if(!Number.isFinite(vx)||!Number.isFinite(vy)||Math.abs(vx)>4.5||Math.abs(vy)>3.6||Math.hypot(vx,vy)<.35)throw Error('Geçersiz atış.');
  const order=appleOrder(game),start=order.indexOf(seat);if(start<0)throw Error('Oyuncu bulunamadı.');const shot={order,start,vx,vy,hit:null,duration:1.8};
- for(let step=1;step<=432;step++){const t=step/240,p=applePoint(shot,t);for(let i=0;i<order.length;i++){if(order[i]===seat)continue;if(((p.x-i)/.17)**2+(p.y/.30)**2<=1){shot.hit=order[i];shot.duration=t;return shot}}if(p.y< -2.5||p.x< -1||p.x>order.length){shot.duration=t;break}}
+ for(let step=1;step<=432;step++){const t=step/240,p=applePoint(shot,t);for(let i=0;i<order.length;i++){if(order[i]===seat)continue;if(((p.x-i)/.17)**2+(p.y/.45)**2<=1){shot.hit=order[i];shot.duration=t;return shot}}if(p.y< -2.5||p.x< -1||p.x>order.length){shot.duration=t;break}}
  return shot;
 }
 export function recordApple(room,seat,input,now=Date.now()){
