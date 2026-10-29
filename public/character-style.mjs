@@ -1,3 +1,4 @@
+import {ANIMATION_PRIORITIES} from './animation-style.mjs';
 // The picker and both 3D views share absolute body colours, never hue offsets.
 export const CHARACTER_TINTS=Object.freeze([
  {name:'Özgün renkler',hex:null},
@@ -31,7 +32,7 @@ Object.assign(ACCESSORY_PATHS,{shades:ACCESSORY_PATHS.glasses,stargaze:ACCESSORY
 export const HERO_TIMING=Object.freeze({duration:4800,impact:1780});
 
 // A tap cannot interrupt an outcome or the last-ten-seconds warning.
-export const CHARACTER_PRIORITY=Object.freeze({idle:0,walkLeft:15,walkRight:15,climbDown:15,climbUp:15,ledge:15,punch:15,kick:15,waveLeft:5,waveRight:5,bored:5,buttonPunch:15,hello:10,draw:30,celebrate:40,sad:40,angry:40,surprise:40,knock:60,win:80,lose:80,impact:100});
+export const CHARACTER_PRIORITY=Object.freeze({...ANIMATION_PRIORITIES,idle:0,walkLeft:15,walkRight:15,climbDown:15,climbUp:15,ledge:15,punch:15,kick:15,waveLeft:5,waveRight:5,bored:5,buttonPunch:15,hello:10,draw:30,celebrate:40,sad:40,angry:40,surprise:40,knock:60,win:80,lose:80,impact:100});
 export function acceptsCharacterGesture(current,next,remaining=0){
  if(next==='idle')return true;
  if(remaining<=0||!current||current==='idle')return true;

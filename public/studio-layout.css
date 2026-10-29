@@ -1,0 +1,425 @@
+/* Character editor layout. Keep labels in normal flow: the preview and its
+   rotation hint are two real rows, never an overflowing fixed-height stage. */
+.avatar-dialog {
+ --studio-panel:#382847;
+ --studio-panel-active:#68458d;
+ --studio-border:#a37ac24d;
+ --studio-label:#eadcf5;
+ --studio-muted:#c1aad2;
+ width:min(480px,calc(100vw - 24px))!important;
+ max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+ padding:18px!important;
+ box-sizing:border-box;
+}
+.avatar-dialog[open] {
+ display:flex!important;
+ flex-direction:column;
+ gap:10px;
+ overflow:hidden!important;
+}
+.avatar-dialog [hidden] { display:none!important; }
+.avatar-dialog .drawer-heading {
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ min-width:0;
+ min-height:44px;
+ margin:0!important;
+ flex:0 0 auto;
+}
+.avatar-dialog .drawer-heading h2 {
+ min-width:0;
+ margin:0!important;
+ font-size:22px!important;
+ line-height:1.2;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .drawer-heading>.icon-button {
+ position:static!important;
+ flex:0 0 44px;
+ width:44px!important;
+ height:44px!important;
+ min-height:44px!important;
+}
+.avatar-dialog .avatar-editor-body {
+ display:flex;
+ flex:1 1 auto;
+ flex-direction:column;
+ min-height:0;
+ min-width:0;
+ padding:0 5px 10px;
+ margin:0 -5px;
+ overflow-y:auto;
+ overflow-x:hidden;
+ overscroll-behavior:contain;
+ scrollbar-gutter:stable;
+ scroll-padding-block:12px;
+}
+.avatar-dialog .avatar-editor-body>* { min-width:0; flex-shrink:0; }
+.avatar-dialog .character-stage {
+ --portrait-size:clamp(128px,22dvh,190px);
+ display:grid;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:var(--portrait-size) minmax(20px,auto);
+ place-items:center;
+ row-gap:6px;
+ position:relative;
+ height:auto!important;
+ min-height:0;
+ margin:0!important;
+ padding:0;
+}
+.avatar-dialog .character-stage::before { display:none; }
+.avatar-dialog .avatar-preview {
+ position:relative;
+ width:var(--portrait-size)!important;
+ height:var(--portrait-size)!important;
+ max-width:100%;
+ min-height:0;
+ min-width:0;
+ padding:0!important;
+ margin:0!important;
+ flex:none;
+ grid-column:1;
+ grid-row:1;
+}
+.avatar-dialog .character-rotate-hint {
+ position:static!important;
+ display:flex;
+ grid-column:1;
+ grid-row:2;
+ align-items:center;
+ justify-content:center;
+ min-height:20px;
+ margin:0!important;
+ padding:0;
+ font-size:11px;
+ font-weight:700;
+ line-height:20px;
+ color:var(--studio-muted);
+ text-align:center;
+ white-space:normal;
+}
+.avatar-dialog .avatar-character-name {
+ display:block;
+ position:static!important;
+ min-height:25px;
+ margin:5px 0 12px!important;
+ padding:0 4px;
+ font-size:20px!important;
+ line-height:1.25;
+ text-align:center;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .expression-preview {
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:center;
+ gap:6px;
+ margin:0 0 12px!important;
+}
+.avatar-dialog .expression-preview button { min-height:38px; line-height:1.2; }
+.avatar-dialog .avatar-editor-tabs,
+.avatar-dialog .animation-category-tabs {
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;
+ margin:0 0 14px;
+ padding:4px;
+ border:1px solid var(--studio-border);
+ border-radius:15px;
+ background:var(--studio-panel);
+}
+.avatar-dialog .animation-category-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); margin:0 0 12px; }
+.avatar-dialog :is(.avatar-editor-tabs,.animation-category-tabs)>button {
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ min-width:0;
+ min-height:44px;
+ padding:8px 6px;
+ border:1px solid transparent;
+ border-radius:11px;
+ background:transparent;
+ color:var(--studio-muted);
+ font:800 12px/1.2 Nunito,system-ui,sans-serif;
+ text-align:center;
+ white-space:normal;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog :is(.avatar-editor-tabs,.animation-category-tabs)>button[aria-selected=true] {
+ background:var(--studio-panel-active);
+ border-color:#cba6ee55;
+ color:var(--studio-label);
+}
+.avatar-dialog :is(.avatar-editor-tabs,.animation-category-tabs)>button>svg { width:20px; height:20px; flex:none; }
+.avatar-dialog .avatar-look-panel,
+.avatar-dialog .avatar-animation-settings {
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ min-width:0;
+ gap:0;
+}
+.avatar-dialog .avatar-choices {
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ align-items:stretch;
+ gap:8px!important;
+ margin:0!important;
+}
+.avatar-dialog .avatar-option {
+ --choice-size:clamp(44px,7dvh,66px);
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:flex-end;
+ position:relative;
+ height:auto!important;
+ min-height:calc(var(--choice-size) + 30px);
+ min-width:0;
+ padding:4px 4px 7px!important;
+ aspect-ratio:auto;
+}
+.avatar-dialog .avatar-choice-art { width:var(--choice-size); height:var(--choice-size); flex:none; }
+.avatar-dialog .avatar-choice-name {
+ display:block;
+ max-width:100%;
+ min-height:18px;
+ padding:2px 0 0;
+ font-size:11px;
+ line-height:16px;
+ white-space:normal;
+ overflow-wrap:anywhere;
+ text-align:center;
+}
+.avatar-dialog .avatar-colors,
+.avatar-dialog .accessory-colours:not([hidden]) {
+ display:grid!important;
+ grid-template-columns:repeat(8,minmax(0,1fr));
+ align-items:center;
+ justify-items:center;
+ column-gap:5px!important;
+ row-gap:8px!important;
+ width:100%;
+ max-width:340px;
+ padding:7px 4px;
+ margin:11px auto 15px!important;
+}
+.avatar-dialog .avatar-colors .avatar-color,
+.avatar-dialog .accessory-colours>button {
+ width:28px!important;
+ height:28px!important;
+ min-width:0!important;
+ min-height:28px!important;
+ max-width:100%;
+ flex:none!important;
+ box-sizing:border-box;
+}
+.avatar-dialog .accessory-heading { min-width:0; align-items:center; gap:8px; margin:10px 0 8px; }
+.avatar-dialog .accessory-heading>b { min-width:0; overflow-wrap:anywhere; }
+.avatar-dialog .avatar-wallet { flex:none; white-space:nowrap; }
+.avatar-dialog .accessory-categories { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.avatar-dialog .accessory-categories>button {
+ display:flex;
+ flex-wrap:wrap;
+ min-width:0;
+ min-height:46px;
+ align-items:center;
+ justify-content:center;
+ padding:8px 5px;
+ gap:5px;
+ font-size:11px;
+ line-height:1.25;
+ white-space:normal;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .accessory-shelf {
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ align-items:stretch;
+ min-height:0;
+ padding:10px 0;
+ gap:9px;
+}
+.avatar-dialog .accessory-item {
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:flex-start;
+ min-width:0!important;
+ min-height:134px;
+ padding:14px 9px 10px!important;
+ gap:7px;
+ font-size:12px;
+ line-height:1.2;
+ text-align:center;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .accessory-item>svg { width:58px!important; height:58px!important; flex:none; }
+.avatar-dialog .accessory-item>span { display:block; min-height:2.4em; max-width:100%; line-height:1.2; }
+.avatar-dialog .accessory-item>small { margin-top:auto; min-height:14px; font-size:11px; line-height:1.2; white-space:nowrap; }
+.avatar-dialog .equipped-accessories { flex-wrap:wrap; min-height:0; gap:8px; margin:5px 0 10px; }
+.avatar-dialog .equipped-accessories>button { min-height:36px; }
+.avatar-dialog .avatar-animation-settings { gap:10px; }
+.avatar-dialog .avatar-animation-settings :is(h3,h4) { margin:0; font-size:14px; line-height:1.3; color:var(--studio-label); }
+.avatar-dialog .animation-choice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.avatar-dialog .animation-choice {
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+ min-height:58px;
+ padding:10px 9px;
+ border:1px solid var(--studio-border);
+ border-radius:14px;
+ background:var(--studio-panel);
+ color:var(--studio-label);
+ font:800 12px/1.25 Nunito,system-ui,sans-serif;
+ text-align:left;
+ white-space:normal;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .animation-choice>svg { width:27px; height:27px; flex:none; }
+.avatar-dialog .animation-choice>span { min-width:0; flex:1; }
+.avatar-dialog .animation-choice[aria-pressed=true] { border-color:#c99df2; background:var(--studio-panel-active); box-shadow:inset 0 0 0 1px #cea5f52b; }
+.avatar-dialog .animation-help { margin:0; color:var(--studio-muted); font-size:12px; line-height:1.45; overflow-wrap:anywhere; }
+.avatar-dialog .animation-preview { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; }
+.avatar-dialog .animation-preview>button {
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:7px;
+ flex:1 1 120px;
+ min-width:0;
+ min-height:44px;
+ padding:10px;
+ border:1px solid var(--studio-border);
+ border-radius:13px;
+ background:var(--studio-panel-active);
+ color:var(--studio-label);
+ font:800 12px/1.25 Nunito,system-ui,sans-serif;
+ white-space:normal;
+ overflow-wrap:anywhere;
+}
+.avatar-dialog .animation-preview>button svg { width:20px; height:20px; flex:none; }
+.avatar-dialog .avatar-status { margin:8px 0 0; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+.avatar-dialog .avatar-save { position:static!important; flex:0 0 auto; min-height:46px!important; margin:0!important; }
+.avatar-dialog button:focus-visible { outline:2px solid #d7b1fa; outline-offset:2px; }
+
+/* Long translated names retain their own space beside actions in other menus. */
+.profile-dialog .drawer-heading,
+.table-player-dialog .drawer-heading,
+.friends-dialog .drawer-heading { display:flex; align-items:center; gap:10px; min-width:0; }
+:is(.profile-dialog,.table-player-dialog,.friends-dialog) .drawer-heading h2 { min-width:0; flex:1; overflow-wrap:anywhere; }
+:is(.profile-dialog,.table-player-dialog,.friends-dialog) .drawer-heading>.icon-button { flex:none; }
+.friend-entry .friend-name { min-width:0; flex:1 1 0; }
+.friend-entry .friend-name :is(b,small) { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.friend-entry>.icon-button { position:static; flex-shrink:0; }
+.profile-dialog .profile-gifts summary { min-width:0; overflow-wrap:anywhere; }
+.profile-dialog .gift-form>input,
+.profile-dialog .gift-form>select { min-width:0; }
+
+/* Message balloons and the last-seconds time purchase share the same card
+   anchor. Reserve one row only while present; two rows only on the same card. */
+#game>#scores.player-strip:has(.player-speech,.urgent-extension) {
+ padding-bottom:36px!important;
+}
+#game>#scores.player-strip:has(.player-card:has(.player-speech):has(.urgent-extension)) {
+ padding-bottom:70px!important;
+}
+#scores .player-card>.player-speech {
+ top:calc(100% + 5px)!important;
+ bottom:auto!important;
+ left:4px;
+ right:4px;
+ min-width:0;
+ max-width:none;
+ height:30px;
+ min-height:30px;
+ box-sizing:border-box;
+ padding:5px 6px;
+ line-height:1.2;
+}
+#scores .player-card>.player-speech>span { min-width:0; }
+#scores .player-card>.urgent-extension {
+ top:calc(100% + 5px)!important;
+ bottom:auto!important;
+ left:4px;
+ right:4px;
+ min-width:0;
+ min-height:30px;
+ padding:5px 3px;
+ font-size:10px;
+ line-height:1.2;
+ text-align:center;
+ box-sizing:border-box;
+ white-space:nowrap;
+}
+#scores .player-card:has(.player-speech)>.urgent-extension { top:calc(100% + 39px)!important; }
+
+body[data-theme=day] .avatar-dialog {
+ --studio-panel:#f3ecfa;
+ --studio-panel-active:#e4d2f6;
+ --studio-border:#b99bce66;
+ --studio-label:#4e3266;
+ --studio-muted:#795d8d;
+}
+body[data-theme=day] .avatar-dialog .animation-choice[aria-pressed=true] { border-color:#8d54bd; }
+body[data-theme=day] .avatar-dialog button:focus-visible { outline-color:#8a4bbb; }
+body[data-theme=day] .avatar-dialog .avatar-choice-name,
+body[data-theme=day] .avatar-dialog .avatar-option[aria-pressed=true] .avatar-choice-name { color:#4e3266!important; }
+body[data-theme=day] .avatar-dialog .avatar-wallet,
+body[data-theme=day] .avatar-dialog .accessory-item>small { color:#79528f!important; }
+body[data-theme=day] .avatar-dialog .drawer-heading>.icon-button {
+ background:#f0e4fa!important;
+ border-color:#d7bee9!important;
+ color:#6b3c8b!important;
+}
+body[data-theme=day] .avatar-dialog .avatar-save { color:#fff!important; background:#7540b2!important; }
+
+@media(max-height:650px) {
+ .avatar-dialog { padding:13px!important; gap:7px; }
+ .avatar-dialog .character-stage { --portrait-size:112px; }
+ .avatar-dialog .avatar-character-name { margin-bottom:9px!important; font-size:18px!important; }
+ .avatar-dialog .avatar-option { --choice-size:40px; }
+ .avatar-dialog .avatar-editor-tabs { margin-bottom:10px; }
+}
+@media(max-width:350px) {
+ .avatar-dialog { padding:13px!important; }
+ .avatar-dialog .avatar-colors,.avatar-dialog .accessory-colours:not([hidden]) { column-gap:4px!important; padding-inline:1px; }
+ .avatar-dialog .avatar-colors .avatar-color,.avatar-dialog .accessory-colours>button { width:25px!important; height:25px!important; min-height:25px!important; }
+ .avatar-dialog .animation-choice { padding:9px 7px; gap:6px; font-size:11px; }
+ .avatar-dialog .animation-choice>svg { width:23px; height:23px; }
+}
+@media(max-width:420px) {
+ body[data-view=home] .home-actions :is(#findMatch,#create) {
+  min-width:0;
+  padding-inline:11px!important;
+  gap:7px!important;
+  font-size:clamp(13px,3.8vw,16px)!important;
+ }
+ body[data-view=home] .home-actions :is(#findMatch,#create)>span {
+  min-width:0;
+  white-space:normal!important;
+  line-height:1.2;
+  overflow-wrap:normal;
+ }
+ body[data-view=home] .home-actions :is(#findMatch,#create)>.icon {
+  width:21px!important;
+  height:21px!important;
+  flex:none;
+ }
+ .profile-dialog .gift-form { grid-template-columns:minmax(0,1fr) 72px; gap:8px; }
+ .profile-dialog .gift-form>.button { grid-column:1/-1; min-height:42px; }
+}
+@media(min-width:700px) and (max-height:500px) {
+ .avatar-dialog { width:min(520px,calc(100vw - 32px))!important; }
+ .avatar-dialog .character-stage { --portrait-size:108px; }
+ .avatar-dialog .avatar-editor-body { max-height:none; }
+}
+
+.avatar-dialog .accessory-model{display:block;width:64px;height:64px;flex:none;pointer-events:none}.avatar-dialog .accessory-model .character-art{width:100%;height:100%}
+

@@ -55,7 +55,7 @@ export function disposePerson(root){const buffers=new Set(),ownedMats=new Set();
 
 // Studio toys v2: real shoulder/elbow/wrist and hip/knee joints. Silhouettes,
 // expressions and attachment mounts belong to this shared model, never to the UI.
-export const CHARACTER_MODEL_VERSION='sculpt-v8';
+export const CHARACTER_MODEL_VERSION='wardrobe-v9';
 function limb(parent,body,side,at,{robot=false,paw=false,short=false}={}){
  const shoulder=group(parent,side<0?'ArmL':'ArmR',at),length=short?.125:.175;
  const joint=robot?mat('#655478',.32,.35):body;
@@ -143,9 +143,9 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
   orb(torso,body,[0,.32,0],[.35,.43,.275]);orb(torso,CREAM(),[0,.275,.24],[.20,.27,.055]);
   mesh(head,geometry('sculpt-cat-v8',()=>sculptHead(2)),body);
   for(const side of [-1,1]){
-   const ear=group(head,side<0?'EarL':'EarR',[side*.33,1.29,-.02]);
-   const shape=new T.Shape();shape.moveTo(-.17,0);shape.quadraticCurveTo(-.18,.20,-.035,.36);shape.quadraticCurveTo(.05,.4,.18,0);shape.closePath();
-   const g=geometry('studio-cat-ear',()=>new T.ExtrudeGeometry(shape,{depth:.10,bevelEnabled:true,bevelSize:.035,bevelThickness:.03,bevelSegments:4,curveSegments:16}));
+   const ear=group(head,side<0?'EarL':'EarR',[side*.29,1.19,-.035]);
+   const shape=new T.Shape();shape.moveTo(-.17,-.13);shape.quadraticCurveTo(-.18,.17,-.035,.36);shape.quadraticCurveTo(.05,.4,.18,-.13);shape.closePath();
+   const g=geometry('connected-cat-ear-v9',()=>new T.ExtrudeGeometry(shape,{depth:.10,bevelEnabled:true,bevelSize:.035,bevelThickness:.03,bevelSegments:4,curveSegments:16}));
    mesh(ear,g,body,[0,0,-.06]);mesh(ear,g,mat('#f1b4b1',.63),[0,.045,.071],[.60,.72,.12]);ear.rotation.z=-side*.13;ears.push(ear);
    orb(head,CREAM(),[side*.135,.837,.30],[.17,.11,.07]);
    for(let i=0;i<2;i++)tube(head,mat('#a36762',.65),[[side*.32,.85-i*.05,.30],[side*.54,.87-i*.07,.25]],.004);
@@ -195,7 +195,7 @@ export function createCharacter(face=0,colour=0,pose='seated',accessory='none',a
  if(face===0||face===4){const rise=face===0?.12:.24;for(const leg of feet)leg.position.y+=rise;root.userData.seatOffset=-rise}
  const rear=REAR_PROFILES[face],hips=group(rear.parent==='head'?head:torso,'Hips',rear.at);hips.userData.anatomy=rear.name;
  // Broad overlapping lobes stay embedded in the torso; no hanging spheres.
- for(const side of [-1,1]){const [w,h,d]=rear.size;if(face===1)box(hips,body,[side*w*.245,0,0],[w*.48,h,d],.045);else orb(hips,body,[side*w*.28,0,0],[w*.72,h*.78,d])}
+ if(face===5)mesh(hips,jellyRearSurface(head,rear.at),body);else for(const side of [-1,1]){const [w,h,d]=rear.size;if(face===1)box(hips,body,[side*w*.245,0,0],[w*.48,h,d],.045);else orb(hips,body,[side*w*.28,0,0],[w*.72,h*.78,d])}
  hips.userData.lobes=2;
  const facial=createFacialRig(head,face);mouth=facial.mouth;eyebrows.push(...facial.brows);
  pivotHead(head,headPivot);
@@ -215,67 +215,106 @@ export function characterContactPoint(root,camera){
  return node.getWorldPosition(new T.Vector3()).project(camera);
 }
 
-function addAccessory(root,requested,colours={}){
- const id=({shades:'glasses',stargaze:'glasses',silkBow:'bow',royalBow:'bow',beanie:'cap',astralCrown:'crown'})[requested]||requested;
- const rig=root.userData.rig,head=rig.head,fit=accessoryFit(rig.face,id);
- const parent=fit.parent==='body'?rig.body:head;
- const mount=group(parent,'Accessory-'+requested),gold=mat(accessoryColour(colours,'head','#eac168'),.3,.42),violet=mat(accessoryColour(colours,id==='bow'?'neck':'head','#7651c2'),.48);
- mount.userData.attachment=requested;mount.userData.fit=fit;mount.userData.slot=id==='bow'?'neck':id==='glasses'?'face':'head';
- if(id==='glasses'){
-  const ink=mat(accessoryColour(colours,'face','#302b48'),.34),points=rig.eyes.map(e=>e.position.clone());
+function addAccessory(root,id,colours={}){
+ const rig=root.userData.rig,head=rig.head,fit=accessoryFit(rig.face,id),slot=['bow','silkBow','royalBow'].includes(id)?'neck':['glasses','shades','stargaze'].includes(id)?'face':'head';
+ const parent=fit.parent==='body'?rig.body:head,mount=group(parent,'Accessory-'+id);
+ mount.userData.attachment=id;mount.userData.fit=fit;mount.userData.slot=slot;
+ const colour=accessoryColour(colours,slot,id==='royalBow'?'#6c37ad':id==='silkBow'?'#c393df':id==='stargaze'?'#e4bc66':'#7953bd'),fabric=mat(colour,id==='silkBow'?.27:.66,0,{sheen:id==='silkBow'?.85:.35,sheenRoughness:.45}),metal=mat(accessoryColour(colours,slot,id==='stargaze'?'#e4bc66':'#e7bd69'),.24,.64),gold=mat('#f0cc76',.22,.68),jewel=mat('#74e4dd',.18,.18,{emissive:'#459990',emissiveIntensity:.15});
+ const extrude=(name,shape,material,at=[0,0,0],depth=.025)=>mesh(mount,geometry(name,()=>new T.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:.006,bevelThickness:.004,bevelSegments:3,curveSegments:16})),material,at);
+ if(slot==='face'){
+  const ink=mat(accessoryColour(colours,'face',id==='stargaze'?'#e4bc66':id==='shades'?'#342b50':'#59456e'),id==='stargaze'?.21:.38,id==='stargaze'?.6:.12),points=rig.eyes.map(e=>e.position.clone()),lenses=group(mount,'OpticalLenses');
   for(let i=0;i<points.length;i++){
-   const p=points[i],scale=rig.eyes[i].userData.eyeScale||1,r=.173*scale,z=p.z+fit.depth*scale;
-   const ring=torus(mount,ink,[p.x,p.y,z],r,.017);ring.scale.y=1.12;
-   for(const side of points.length===1?[-1,1]:[i===0?-1:1]){
-    const wrap=[[.22,0],[.055,-.006],[fit.back,-.025]].map(([depth,dy])=>sideContact(root,side,p.y+head.position.y+dy,depth,fit.side));
-    tube(mount,ink,[[p.x+side*r,p.y,z],...wrap],.012);
+   const p=points[i],size=rig.eyes[i].userData.eyeScale||1,side=points.length===1?1:i===0?-1:1,z=p.z+fit.depth*size;
+   if(id==='glasses'){const ring=torus(mount,ink,[p.x,p.y,z],.174*size,.014);ring.scale.y=1.10;}
+   else{
+    const shape=new T.Shape(),w=.176*size,h=(id==='shades'?.118:.160)*size;
+    shape.moveTo(-w,-h*.66);shape.quadraticCurveTo(-w*1.12,-h,w*-.65,-h);shape.lineTo(w*.65,-h);shape.quadraticCurveTo(w*1.12,-h,w,-h*.3);
+    if(id==='stargaze'){shape.lineTo(w*(side>0?1.40:1.02),h*1.1);shape.quadraticCurveTo(0,h*.77,-w*(side<0?1.40:1.02),h*1.1);}else{shape.lineTo(w,h*.6);shape.quadraticCurveTo(w,h,w*.65,h);shape.lineTo(-w*.65,h);shape.quadraticCurveTo(-w,h,-w,h*.5)}shape.closePath();
+    const outline=shape.getPoints(36).map(q=>[q.x+p.x,q.y+p.y,z]);outline.push(outline[0]);tube(mount,ink,outline,id==='stargaze'?.019:.021);
+    const lens=mesh(lenses,geometry('optical-lens-'+id+':'+size+':'+side,()=>new T.ShapeGeometry(shape,24)),mat(id==='shades'?'#30284b':'#8de1e4',.12,.08,{transparent:true,opacity:id==='shades'?.78:.16,side:T.DoubleSide}),[p.x,p.y,z-.006]);lens.renderOrder=2;
+    if(id==='stargaze'){
+     const outer=p.x+side*w*1.28;mesh(mount,geometry('jewel-cut',()=>new T.OctahedronGeometry(.036)),jewel,[outer,p.y+h*.95,z+.012]);
+     tube(mount,gold,[[outer,p.y+h*.90,z],[outer+side*.045,p.y+h*.45,z+.006],[outer+side*.052,p.y+h*.10,z+.010]],.007);
+     const drop=mesh(mount,geometry('glasses-pearl',()=>new T.SphereGeometry(.023,14,10)),mat('#f8ebd5',.27),[outer+side*.05,p.y-h*.3,z+.01]);
+    }
+   }
+   const r=.174*size;for(const sign of points.length===1?[-1,1]:[i===0?-1:1]){
+    const wrap=[[.22,0],[.055,-.006],[fit.back,-.025]].map(([depth,dy])=>sideContact(root,sign,p.y+head.position.y+dy,depth,fit.side));
+    tube(mount,ink,[[p.x+sign*r,p.y,z],...wrap],id==='shades'?.017:.012);
    }
   }
-  if(points.length===2){const [l,r]=points,contact=frontContact(root,0,l.y+head.position.y+fit.bridge);const z=contact.z+.014;
-   tube(mount,ink,[[l.x+.16,l.y,l.z+fit.depth],[0,l.y+fit.bridge,z],[r.x-.16,r.y,r.z+fit.depth]],.014);
-   orb(mount,ink,[0,l.y+fit.bridge,z-.006],[.022,.012,.018]);
-  }
- }else if(id==='bow'){
-  root.updateMatrixWorld(true);const skin=[rig.head,rig.body],ray=new T.Raycaster(new T.Vector3(fit.at[0],fit.at[1],3),new T.Vector3(0,0,-1));
-  const hit=ray.intersectObjects(skin,true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));if(!hit)throw Error('Neck contact missing for '+rig.face);
-  const at=parent.worldToLocal(new T.Vector3(fit.at[0],fit.at[1],hit.point.z+.005));mount.position.copy(at);mount.scale.set(...fit.size);mount.rotation.set(...fit.rotation);const neckY=0;const bowZ=0;
-  for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.023,-.029);shape.lineTo(side*.145,-.078);shape.lineTo(side*.145,.078);shape.lineTo(side*.023,.029);shape.closePath();const g=geometry('angular-bow-'+side,()=>new T.ExtrudeGeometry(shape,{depth:.032,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:2}));mesh(mount,g,violet,[0,neckY,bowZ]);tube(mount,mat(accessoryColour(colours,'neck','#a58ae1'),.65),[[side*.035,neckY,bowZ+.038],[side*.105,neckY+.027,bowZ+.038]],.003)}
-  box(mount,violet,[0,neckY,bowZ+.025],[.060,.080,.057],.01);
- }else if(id==='cap'||id==='crown'){
-  if(rig.face===1)rig.accent.visible=false;
-  mount.position.set(fit.at[0],fit.at[1]-head.position.y,fit.at[2]);mount.rotation.set(...fit.rotation);
-  const [rx,height,rz]=fit.size;
-  if(id==='cap'){
-   mesh(mount,geometry('cap-open-dome',()=>new T.SphereGeometry(1,32,18,0,Math.PI*2,0,Math.PI/2)),violet,[0,0,0],[rx,height,rz]);
-   const rim=torus(mount,violet,[0,0,0],1,.018);rim.rotation.x=Math.PI/2;rim.scale.set(rx,rz,1);
-   const brim=orb(mount,mat(accessoryColour(colours,'head','#a58ae1'),.45),[0,-.008,rz*.97],[rx*1.06,.022,rz*.70]);brim.rotation.x=.06;
-   orb(mount,gold,[0,height,0],[.022,.013,.022]);
+  if(points.length===2){const [l,r]=points,contact=frontContact(root,0,l.y+head.position.y+fit.bridge);tube(mount,ink,[[l.x+.16,l.y,l.z+fit.depth],[0,l.y+fit.bridge,contact.z+.019],[r.x-.16,r.y,r.z+fit.depth]],id==='shades'?.021:.014)}
+  if(id==='stargaze'){const mid=points.reduce((p,e)=>p.add(e),new T.Vector3()).multiplyScalar(1/points.length);const crest=mesh(mount,geometry('optical-crest',()=>new T.OctahedronGeometry(.047)),jewel,[mid.x,mid.y+.22*(points.length===1?1.45:1),mid.z+fit.depth+.01]);crest.scale.y=1.35}
+ }else if(slot==='neck'){
+  root.updateMatrixWorld(true);const ray=new T.Raycaster(new T.Vector3(fit.at[0],fit.at[1],3),new T.Vector3(0,0,-1)),hit=ray.intersectObjects([rig.head,rig.body],true).find(h=>!h.object.userData.surfaceFace&&!hasAccessoryParent(h.object));if(!hit)throw Error('Neck contact missing for '+rig.face);
+  mount.position.copy(parent.worldToLocal(new T.Vector3(fit.at[0],fit.at[1],hit.point.z+.009)));mount.scale.set(...fit.size);mount.rotation.set(...fit.rotation);
+  if(id==='bow'){
+   for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.023,-.028);shape.lineTo(side*.15,-.080);shape.lineTo(side*.15,.080);shape.lineTo(side*.023,.028);shape.closePath();extrude('classic-bow-wing-'+side,shape,fabric);tube(mount,mat(accessoryColour(colours,'neck','#b798df'),.75),[[side*.033,0,.035],[side*.12,.031,.035]],.003)}
+   box(mount,fabric,[0,0,.025],[.058,.078,.055],.008);
+  }else if(id==='silkBow'){
+   for(const side of [-1,1]){const shape=new T.Shape();shape.moveTo(side*.016,-.017);shape.bezierCurveTo(side*.07,-.11,side*.225,-.09,side*.195,.045);shape.bezierCurveTo(side*.165,.15,side*.047,.080,side*.016,.017);shape.closePath();extrude('silk-loops-'+side,shape,fabric,[0,0,.006],.035);
+    const tail=new T.Shape();tail.moveTo(side*.025,-.018);tail.bezierCurveTo(side*.055,-.075,side*.14,-.09,side*.12,-.205);tail.lineTo(side*.071,-.177);tail.lineTo(side*.04,-.218);tail.bezierCurveTo(side*.065,-.105,side*-.008,-.10,side*.006,-.025);tail.closePath();extrude('silk-tail-'+side,tail,fabric,[0,0,-.01],.018);tube(mount,mat('#e9d6f3',.3),[[side*.028,.012,.054],[side*.095,.070,.054],[side*.163,.052,.054]],.004)}
+   orb(mount,fabric,[0,0,.047],[.036,.060,.034]);
   }else{
-   const band=mesh(mount,geometry('crown-open-band',()=>new T.CylinderGeometry(1,1,.065,40,1,true)),gold,[0,.025,0],[rx,1,rz]);
-   for(const y of [0,.06]){const rim=torus(mount,gold,[0,y,0],1,.015);rim.rotation.x=Math.PI/2;rim.scale.set(rx,rz,1)}
-   for(let i=0;i<5;i++){const angle=i*Math.PI*2/5,x=Math.sin(angle)*rx,z=Math.cos(angle)*rz;
-    mesh(mount,geometry('fitted-crown-spike',()=>new T.ConeGeometry(.042,.15,4)),gold,[x,.10,z],[1,height/.20,1]);
-    orb(mount,mat('#d96eab',.27),[x,.10+.075*height/.20,z],[.021,.023,.021]);
-   }
+   // A pleated ceremonial rosette/cravat, not another triangular bow.
+   for(let i=0;i<8;i++){const a=i*Math.PI/4,shape=new T.Shape();shape.moveTo(0,0);shape.quadraticCurveTo(-.070,.095,0,.145);shape.quadraticCurveTo(.070,.095,0,0);const petal=extrude('royal-pleat',shape,i%2?fabric:mat(accessoryColour(colours,'neck','#9463c9'),.45),[Math.sin(a)*.015,Math.cos(a)*.015,.012],.026);petal.rotation.z=-a;}
+   for(const side of [-1,1]){const tail=new T.Shape();tail.moveTo(side*.025,-.065);tail.lineTo(side*.113,-.265);tail.lineTo(side*.04,-.227);tail.lineTo(side*.006,-.275);tail.lineTo(side*-.026,-.080);tail.closePath();extrude('royal-cravat-tail-'+side,tail,fabric,[0,0,-.015],.020);tube(mount,gold,[[side*.04,-.11,.016],[side*.078,-.238,.016]],.006)}
+   const seal=torus(mount,gold,[0,0,.063],.058,.012);mesh(mount,geometry('royal-seal',()=>new T.OctahedronGeometry(.055)),jewel,[0,0,.083]);
+   for(const side of [-1,1]){tube(mount,gold,[[side*.085,-.008,.05],[side*.14,-.095,.045],[side*.045,-.15,.05]],.008);orb(mount,mat('#fff0d8',.28),[side*.14,-.095,.045],[.021,.021,.016])}
+  }
+ }else{
+  if(rig.accent)rig.accent.visible=false;
+  const contact=BAKED_ACCESSORY_FITS[rig.face+':'+id]?.contact||headwearContact(root,id,fit);mount.userData.contact=contact;
+  mount.position.set(fit.at[0],contact.base-head.position.y,fit.at[2]);mount.rotation.set(...fit.rotation);
+  const [rx,height,rz]=fit.size,cuffMaterial=id==='crown'||id==='astralCrown'?mat(accessoryColour(colours,'head',id==='astralCrown'?'#29254b':'#7350a5'),.72):fabric;
+  mesh(mount,geometry('anatomic-cuff:'+rig.face+':'+id,()=>headwearCuff(contact,rx,rz)),cuffMaterial);
+  if(id==='cap'){
+   mesh(mount,geometry('cap-open-dome-v9',()=>new T.SphereGeometry(1,36,20,0,Math.PI*2,0,Math.PI/2)),fabric,[0,.018,0],[rx,height,rz]);
+   const brim=orb(mount,fabric,[0,.015,rz+.075],[rx*1.16,.025,rz*.72]);brim.rotation.x=.06;orb(mount,fabric,[0,height+.018,0],[.025,.015,.025]);
+   for(const side of [-1,1])tube(mount,mat('#ddc9ee',.75),[[side*rx*.08,height+.018,0],[side*rx*.58,height*.78,rz*.50],[side*rx*.88,.026,rz*.43]],.003);
+  }else if(id==='beanie'){
+   mesh(mount,geometry('beanie-dome-v9',()=>new T.SphereGeometry(1,36,24,0,Math.PI*2,0,Math.PI/2)),fabric,[0,.025,0],[rx,height,rz]);
+   for(let i=0;i<32;i++){const a=i/32*Math.PI*2,b=contact.ring[Math.floor(i*contact.ring.length/32)];const lower=(b?.[1]||-.08);tube(mount,mat(accessoryColour(colours,'head','#aa82ce'),.8),[[Math.cos(a)*rx*1.012,lower+.02,Math.sin(a)*rz*1.012],[Math.cos(a)*rx*1.018,.034,Math.sin(a)*rz*1.018]],.004)}
+   orb(mount,fabric,[0,height+.085,0],[.09,.09,.09]);for(let i=0;i<7;i++){const a=i*Math.PI*2/7;orb(mount,fabric,[Math.cos(a)*.067,height+.085+Math.sin(a)*.045,Math.sin(a)*.035],[.036,.041,.035])}
+  }else if(id==='crown'){
+   mesh(mount,geometry('crown-band-v9',()=>new T.CylinderGeometry(1,1,.085,48,1,true)),metal,[0,.067,0],[rx*1.01,1,rz*1.01]);
+   for(const y of [.026,.109]){const rim=torus(mount,gold,[0,y,0],1,.012);rim.rotation.x=Math.PI/2;rim.scale.set(rx,rz,1)}
+   for(let i=0;i<5;i++){const a=i*Math.PI*2/5,x=Math.sin(a)*rx,z=Math.cos(a)*rz,spike=mesh(mount,geometry('crown-point-v9',()=>new T.ConeGeometry(.058,.19,4)),metal,[x,.195,z]);spike.rotation.y=a;orb(mount,jewel,[x,.297,z],[.027,.032,.027])}
+   for(const side of [-1,1])mesh(mount,geometry('crown-front-gem',()=>new T.OctahedronGeometry(.033)),jewel,[side*rx*.55,.068,rz*.87+.014]);
+  }else{
+   // Celestial diadem: a high crescent arch and three crystal blades.
+   tube(mount,gold,[[-rx*.95,.105,-.025],[-rx*.8,.26,-.04],[0,.40,-.055],[rx*.8,.26,-.04],[rx*.95,.105,-.025]],.019);
+   const band=torus(mount,metal,[0,.046,0],1,.022);band.rotation.x=Math.PI/2;band.scale.set(rx,rz,1);
+   for(const [x,y,size]of [[0,.23,.105],[-rx*.65,.15,.07],[rx*.65,.15,.07]]){const crystal=mesh(mount,geometry('astral-crystal',()=>new T.OctahedronGeometry(1)),jewel,[x,y,rz*.80+.018],[size*.65,size*1.55,size*.48]);crystal.rotation.z=-x*.9;tube(mount,gold,[[x,.055,rz*.8],[x,y-size*.8,rz*.80+.018]],.010)}
+   for(const side of [-1,1])orb(mount,mat('#f9edd9',.23),[side*rx*.70,.285,-.04],[.025,.025,.025]);
   }
  }
  clearAccessorySurface(root,mount,id);
- batchColours(mount,{roughness:.36,metalness:id==='crown'?.28:.06});
- const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children[0],source=piece.geometry;piece.geometry=geometry('fitted-piece:'+rig.face+':'+id+':'+accessoryColour(colours,mount.userData.slot,'original'),()=>{let g=piece.geometry.clone();const p=g.attributes.position;for(let i=0;i<baked.patch.length;i+=4)p.setXYZ(baked.patch[i],baked.patch[i+1],baked.patch[i+2],baked.patch[i+3]);if(baked.patch.length){g.deleteAttribute('normal');const smooth=mergeVertices(g,1e-5);g.dispose();g=smooth;g.computeVertexNormals()}g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
- if(requested==='shades'||requested==='stargaze'){
-  for(const eye of rig.eyes){const p=eye.position,size=eye.userData.eyeScale||1,z=p.z+fit.depth*size;
-   if(requested==='shades')orb(mount,mat('#292f52',.14,.22,{transparent:true,opacity:.65}),[p.x,p.y,z],[.153*size,.174*size,.006]);
-   else for(const sign of [-1,1]){const gem=mesh(mount,geometry('wardrobe-diamond',()=>new T.OctahedronGeometry(.027)),gold,[p.x+sign*.13*size,p.y+.17*size,z]);gem.rotation.z=Math.PI/4;}
-  }
- }
- if(requested==='silkBow'||requested==='royalBow'){
-  const jewel=mat(requested==='royalBow'?'#75e6e2':'#f4d9ed',.17,.35);mesh(mount,geometry('bow-jewel',()=>new T.OctahedronGeometry(.036)),jewel,[0,0,.065]);
-  if(requested==='royalBow')for(const side of [-1,1])tube(mount,gold,[[side*.035,0,.049],[side*.132,.060,.049],[side*.132,-.060,.049],[side*.035,0,.049]],.004);
- }
- if(requested==='beanie'){const h=fit.size[1];orb(mount,violet,[0,h+.04,0],[.065,.065,.065])}
- if(requested==='astralCrown'){const gem=mat('#7ceade',.16,.35),z=fit.size[2];tube(mount,gold,[[0,.17,z],[0,.23,z]],.006);mesh(mount,puffyStar(),gem,[0,.24,z],[.10,.10,.10])}
+ const finish=id==='silkBow'?{roughness:.28,metalness:.02}:['crown','astralCrown','stargaze'].includes(id)?{roughness:.24,metalness:.58}:id==='beanie'?{roughness:.82,metalness:0}:{roughness:slot==='neck'?.66:.42,metalness:slot==='head'?.01:.08};
+ batchColours(mount,finish);
+ const baked=BAKED_ACCESSORY_FITS[rig.face+':'+id];if(baked){mount.position.fromArray(baked.at);const piece=mount.children.find(n=>n.isMesh),source=piece.geometry;piece.geometry=geometry('wardrobe-v9:'+rig.face+':'+id+':'+accessoryColour(colours,slot,'original'),()=>{const g=piece.geometry.clone();g.userData.owned=false;return g});if(source.userData.owned)source.dispose()}
 }
-
+const headContacts=new Map();
+function anatomySurfaces(root){const rig=root.userData.rig,skin=[];for(const parent of [rig.head,rig.body])parent.traverse(n=>{if(!n.isMesh||n.userData.surfaceFace||hasAccessoryParent(n))return;for(let p=n;p;p=p.parent)if(p===rig.accent||!p.visible)return;skin.push(n)});return skin}
+function headwearContact(root,id,fit){
+ const key=root.userData.face+':'+id;if(headContacts.has(key))return headContacts.get(key);root.updateMatrixWorld(true);const skin=anatomySurfaces(root),ray=new T.Raycaster(),[rx,,rz]=fit.size,[cx,,cz]=fit.at;
+ const top=(x,z)=>{ray.set(new T.Vector3(x,3,z),new T.Vector3(0,-1,0));return ray.intersectObjects(skin,false)[0]?.point.y};
+ let base=top(cx,cz)||fit.at[1];for(let x=-4;x<=4;x++)for(let z=-4;z<=4;z++){if(x*x+z*z>16)continue;const y=top(cx+x/4*rx,cz+z/4*rz);if(y)base=Math.max(base,y)}base+=.013;
+ const ring=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2,x=Math.cos(a)*rx,z=Math.sin(a)*rz,y=top(cx+x,cz+z);ring.push([x,(y??base-.04)-base+.016,z])}
+ const result={base,ring};headContacts.set(key,result);return result;
+}
+function headwearCuff(contact,rx,rz){
+ const positions=[],indices=[],rings=5,count=contact.ring.length;
+ for(let row=0;row<=rings;row++)for(const [x,bottom,z]of contact.ring){const t=row/rings,bulge=1+.025*Math.sin(Math.PI*t);positions.push(x*bulge,bottom*(1-t)+.026*t,z*bulge)}
+ for(let row=0;row<rings;row++)for(let i=0;i<count-1;i++){const a=row*count+i,b=a+count;indices.push(a,b,a+1,b,b+1,a+1)}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return g;
+}
+function jellyRearSurface(head,at){
+ return geometry('jelly-bell-folds-v9',()=>{head.updateWorldMatrix(true,true);const surfaces=head.children.filter(n=>n.isMesh&&!n.userData.surfaceFace),ray=new T.Raycaster(),positions=[],indices=[],radial=48,rings=10;
+  for(let j=0;j<=rings;j++)for(let i=0;i<=radial;i++){const r=j/rings,a=i/radial*Math.PI*2,x=Math.cos(a)*.235*r,y=at[1]+Math.sin(a)*.092*r;ray.set(new T.Vector3(x,y,-3),new T.Vector3(0,0,1));const hit=ray.intersectObjects(surfaces,false)[0],edge=(1-r*r)**2,left=Math.exp(-(((x+.105)/.105)**2+((y-at[1])/.07)**2)),right=Math.exp(-(((x-.105)/.105)**2+((y-at[1])/.07)**2)),z=(hit?.point.z??-.29)-.003-edge*(.018*(left+right));positions.push(x-at[0],y-at[1],z-at[2])}
+  for(let j=0;j<rings;j++)for(let i=0;i<radial;i++){const a=j*(radial+1)+i,b=a+radial+1;indices.push(a,a+1,b,b,a+1,b+1)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return g;
+ });
+}
 
 function hasAccessoryParent(node){for(let n=node;n;n=n.parent)if(n.userData.attachment)return true;return false}
 
@@ -286,20 +325,17 @@ function sideContact(root,side,y,z,fallback){const key=[root.userData.face,side,
 // a wing, bridge or hat rim even when the attachment anchor itself is clear.
 function clearAccessorySurface(root,mount,id){
  const rig=root.userData.rig;if(BAKED_ACCESSORY_FITS[rig.face+':'+id])return;
- root.updateMatrixWorld(true);const skin=[];
- for(const parent of [rig.head,rig.body])parent.traverse(n=>{if(n.isMesh&&!n.userData.surfaceFace&&!hasAccessoryParent(n))skin.push(n)});
- const up=id==='cap'||id==='crown',ray=new T.Raycaster(),point=new T.Vector3();let correction=0;
- mount.traverse(n=>{if(!n.isMesh)return;const g=n.geometry.clone(),pos=g.attributes.position;
-  for(let i=0;i<pos.count;i++){
-   point.fromBufferAttribute(pos,i).applyMatrix4(n.matrixWorld);
-   if(id==='glasses'&&Math.abs(point.x)>.36&&point.z<.29)continue;
-   ray.set(up?new T.Vector3(point.x,3,point.z):new T.Vector3(point.x,point.y,3),new T.Vector3(0,up?-1:0,up?0:-1));
-   const hit=ray.intersectObjects(skin,false)[0];if(!hit)continue;
-   const delta=(up?hit.point.y-point.y:hit.point.z-point.z)+.006;
-   if(up&&delta>0){point.y+=delta;n.worldToLocal(point);pos.setXYZ(i,point.x,point.y,point.z)}
-   else if(!up)correction=Math.max(correction,delta);
-  }
-  if(up){g.computeVertexNormals();g.userData.owned=true;n.geometry=g}else g.dispose();
+ root.updateMatrixWorld(true);const skin=anatomySurfaces(root),up=mount.userData.slot==='head',ray=new T.Raycaster(),point=new T.Vector3();let correction=0;
+ const sample=p=>{
+  if(!up&&mount.userData.slot==='face'&&Math.abs(p.x)>.36&&p.z<.35)return;
+  ray.set(up?new T.Vector3(p.x,3,p.z):new T.Vector3(p.x,p.y,3),new T.Vector3(0,up?-1:0,up?0:-1));
+  const hit=ray.intersectObjects(skin,false)[0];if(hit)correction=Math.max(correction,(up?hit.point.y-p.y:hit.point.z-p.z)+.009);
+ };
+ mount.traverse(n=>{if(!n.isMesh)return;const pos=n.geometry.attributes.position,index=n.geometry.index;
+  for(let i=0;i<pos.count;i++){point.fromBufferAttribute(pos,i).applyMatrix4(n.matrixWorld);sample(point)}
+  const count=index?.count??pos.count,a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3();
+  for(let i=0;i<count;i+=3){a.fromBufferAttribute(pos,index?index.getX(i):i);b.fromBufferAttribute(pos,index?index.getX(i+1):i+1);c.fromBufferAttribute(pos,index?index.getX(i+2):i+2);point.copy(a).add(b).add(c).multiplyScalar(1/3).applyMatrix4(n.matrixWorld);sample(point)}
  });
- if(!up&&correction>0){const world=mount.getWorldPosition(new T.Vector3());world.z+=correction;mount.position.copy(mount.parent.worldToLocal(world));root.updateMatrixWorld(true)}
+ if(correction>0){const world=mount.getWorldPosition(new T.Vector3());world[up?'y':'z']+=correction;mount.position.copy(mount.parent.worldToLocal(world));root.updateMatrixWorld(true)}
+ mount.userData.clearanceShift=correction;
 }

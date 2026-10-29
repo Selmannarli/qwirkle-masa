@@ -1,3 +1,4 @@
+import {VISITOR_TIMING,SOCIAL_TIMING} from './animation-style.mjs';
 import {celebrationLocked} from './engine.mjs';
 import {HERO_TIMING} from './character-style.mjs';
 import {t} from './i18n.mjs';
@@ -9,9 +10,9 @@ async function portraitRuntime(){
  if(portraits)return portraits;
  if(!loading)loading=import('./table-engine.mjs').then(({CharacterPortraits})=>portraits=new CharacterPortraits({reduced})).catch(error=>{for(const art of document.querySelectorAll('.character-art'))art.dataset.modelState='unavailable';console.warn('Character renderer unavailable',error.message);return null});return loading;
 }
-export function playCharacter(host,mood='hello',remaining=null){
+export function playCharacter(host,mood='hello',remaining=null,options={}){
  const art=host?.matches?.('.character-art')?host:host?.querySelector?.('.character-art');if(!art)return null;const request={};requests.set(art,request);
- return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){const played=studio.play(art,mood,remaining);if(played&&remaining===null)document.dispatchEvent(new CustomEvent('character-voice',{detail:{face:Number(art.dataset.character),mood}}));return studio}});
+ return portraitRuntime().then(studio=>{if(studio&&art.isConnected&&requests.get(art)===request){const played=studio.play(art,mood,remaining,options);if(played&&remaining===null)document.dispatchEvent(new CustomEvent('character-voice',{detail:{face:Number(art.dataset.character),mood}}));return studio}});
 }
 export function installCharacterMotion(root=document){
  if(installed)return;installed=true;let frame;
@@ -23,7 +24,7 @@ export function installCharacterMotion(root=document){
  root.addEventListener('click',event=>{const host=event.target.closest?.('.illustrated-avatar,.home-portrait,.avatar-preview');if(host&&!host.matches(".avatar-preview"))playCharacter(host)},{capture:true});
  root.addEventListener('keydown',event=>{const host=event.target.closest?.('[data-motion-only="true"]');if(host&&['Enter',' '].includes(event.key)){event.preventDefault();host.click()}});
  const containsArt=n=>n.nodeType===1&&(n.matches('.character-art')||n.querySelector('.character-art'));
- new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||[...r.addedNodes,...r.removedNodes].some(containsArt)))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','data-character','data-colour','data-accessory','data-accessory-colours']});
+ new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||[...r.addedNodes,...r.removedNodes].some(containsArt)))schedule()}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-motion','open','data-character','data-colour','data-accessory','data-accessory-colours','data-animation-greeting','data-animation-win','data-animation-loss']});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)portraits?.pause();else schedule()});window.addEventListener('scroll',()=>portraits?.request(),{passive:true});window.addEventListener('resize',()=>portraits?.invalidate(),{passive:true});window.addEventListener('pagehide',()=>portraits?.pause());window.addEventListener('pageshow',schedule);matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change',schedule);schedule();
 }
 
@@ -81,7 +82,7 @@ export function reactToGame(game,options={}){
  for(const event of reactions.update(game)){
   if(game.celebration&&!game.celebration.released&&Date.now()<game.celebration.until)continue;
   const host=document.querySelector('#scores [data-seat="'+event.seat+'"] .illustrated-avatar'),art=host?.querySelector('.character-art');
-  const mood=event.mood==='sad'&&!game.over?(game.history?.[0]?.score>=24?'surprise':(game.timeoutCounts?.[event.seat]||0)>=2?'angry':'sad'):event.mood;if(art&&art.dataset.emotion!==mood)playCharacter(host,mood,Math.min(event.remaining,mood==='surprise'?1500:mood==='angry'?1800:event.remaining));
+  const mood=event.mood==='sad'&&!game.over?(game.history?.[0]?.score>=24?'surprise':(game.timeoutCounts?.[event.seat]||0)>=2?'angry':'sad'):event.mood;const reactionId=game.matchId+':'+event.seat+':'+event.until;if(art&&art.dataset.reactionId!==reactionId){art.dataset.reactionId=reactionId;playCharacter(host,mood,Math.min(event.remaining,mood==='surprise'?1500:mood==='angry'?1800:event.remaining));}
  }
 }
 

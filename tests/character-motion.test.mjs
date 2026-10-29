@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Group} from 'three';
 import {createCharacter,disposePerson} from '../client/characters.mjs';
 import {captureRest,resetCharacter,animateCharacter,CHARACTER_DURATIONS} from '../client/character-motion.mjs';
+import {animationEmotion} from '../public/animation-style.mjs';
 
 function actor(face=0,pose='seated'){
  const root=new Group();root.position.set(1,2,3);root.rotation.y=.4;root.scale.setScalar(.9);
@@ -39,7 +40,7 @@ test('gestures have bounded lifetimes, settle to rest and preserve the correct f
  for(const [mood,duration]of Object.entries(CHARACTER_DURATIONS)){
   const root=actor();assert.equal(animateCharacter(root,{mood,elapsed:duration-.01}),true);assert.equal(animateCharacter(root,{mood,elapsed:duration}),false);
   assert.deepEqual(root.userData.rig.arms.map(a=>a.rotation.toArray().slice(0,3)),[[0,0,0],[0,0,0]]);assert.deepEqual(root.userData.rig.head.rotation.toArray().slice(0,3),[0,0,.015]);
-  const expression=(['hello','knock'].includes(mood)||mood.startsWith('frame'))?'neutral':mood==='lose'||mood==='sad'?'sad':'happy';assert.equal(root.userData.rig.mouth[expression].visible,true);
+  const expression=animationEmotion(mood);assert.equal(root.userData.rig.mouth[expression].visible,true);
  }
 });
 

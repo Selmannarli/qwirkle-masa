@@ -1,7 +1,9 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
+import {Vector3} from 'three';
+import {ANIMATION_DURATIONS,animationEmotion} from '../public/animation-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,kick:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
+export const CHARACTER_DURATIONS=Object.freeze({walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,kick:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000,...ANIMATION_DURATIONS});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -151,17 +153,166 @@ function disappointment(rig,t,face,duration){
  if(face===5)(rig.arms||[]).forEach((n,i)=>rotate(n,settle*.02,0,(i<3?1:-1)*settle*.045));
 }
 
+function handIndex(rig,side){return rig.face===5?(side<0?0:rig.arms.length-1):(side<0?0:1)}
+function handPose(rig,side,lift=0,forward=0,elbow=0,wrist=0){
+ const i=handIndex(rig,side),jelly=rig.face===5;
+ // The six tentacles are ordered left-to-right, not alternating like arms.
+ rotate(rig.arms?.[i],forward,0,side*lift*(jelly?.58:1));
+ rotate(rig.forearms?.[i],-elbow*(jelly?.42:1),0,side*wrist);
+ rotate(rig.hands?.[i],0,side*wrist*.22,side*wrist);
+}
+function balanceLegs(rig,a){
+ (rig.legs||[]).forEach((n,i)=>rotate(n,-a*.14,0,(i?1:-1)*a*.045));
+ (rig.knees||[]).forEach(n=>rotate(n,a*.22,0,0));
+}
+function happyFace(rig,t,a){brow(rig,'happy',a*.75);blink(rig,blinkAt(t,.16));}
+function selectedGreeting(root,rig,mood,t,face,duration){
+ const a=envelope(t,.02,.35,duration-.48,duration),w=key(t,[[0,0],[.50,0],[.72,-.31],[.94,.30],[1.16,-.28],[1.38,.24],[1.64,0],[duration,0]]);
+ happyFace(rig,t,a);
+ if(mood==='greetWave'){
+  const lift=key(t,[[0,0],[.15,-.06],[.55,1.82],[1.58,1.82],[2.05,.35],[duration,0]]);
+  handPose(rig,1,lift,-a*.20,a*.63,w);handPose(rig,-1,a*.12,0,a*.16);
+  rotate(rig.head,-a*.06,a*.05,-a*.075);rotate(rig.accent,0,0,w*.11);
+ }else if(mood==='greetBoth'){
+  const lift=key(t,[[0,0],[.16,-.045],[.57,1.9],[1.65,1.9],[2.10,.30],[duration,0]]);
+  for(const side of [-1,1])handPose(rig,side,lift,-a*.18,a*.53,w*(side<0?-.85:1));
+  rotate(rig.head,-a*.08,Math.sin(t*3)*a*.035,0);
+  if(face===5)rig.arms.forEach((n,i)=>{if(i===0||i===rig.arms.length-1)return;rotate(n,-a*.13,0,(i<3?-1:1)*a*.28)});
+ }else if(mood==='greetNod'){
+  const nod=envelope(t,.18,.45,.60,.82)+envelope(t,.83,1.10,1.23,1.55)*.70;
+  rotate(rig.head,nod*.24,-a*.035,0);blink(rig,Math.max(blinkAt(t,.40,.06),blinkAt(t,1.05,.04)));
+  handPose(rig,-1,a*.16,0,a*.25);handPose(rig,1,a*.16,0,a*.25);rotate(rig.accent,nod*.08,0,0);
+ }else if(mood==='greetBow'){
+  const bow=envelope(t,.18,.68,1.25,2.12);
+  rotate(rig.head,bow*.21,0,0);rotate(rig.body,bow*.18,0,0);balanceLegs(rig,bow*.45);
+  for(const side of [-1,1])handPose(rig,side,bow*.34,-bow*.20,bow*.18);
+  blink(rig,blinkAt(t,.68,.16,.10,.20));rotate(rig.tail,-bow*.12,0,0);
+ }else{
+  const salute=envelope(t,.22,.59,1.75,2.36),pump=envelope(t,.72,.90,1.0,1.18)+envelope(t,1.22,1.40,1.5,1.68);
+  for(const side of [-1,1])handPose(rig,side,salute*(1.15+pump*.50),-salute*.22,salute*.55-pump*.12);
+  rotate(rig.head,-salute*.09,0,Math.sin(t*4)*salute*.09);rotate(rig.body,0,0,Math.sin(t*4)*salute*.035);
+  (rig.ears||[]).forEach((n,i)=>rotate(n,0,0,(i?1:-1)*salute*.07));
+ }
+}
+function selectedWin(root,rig,mood,t,face,duration){
+ const a=envelope(t,.12,.48,duration-.53,duration),anticip=envelope(t,.02,.18,.24,.43);
+ happyFace(rig,t,a);rotate(rig.head,anticip*.045-a*.10,0,0);
+ if(mood==='winVictory'){
+  const hold=envelope(t,.27,.72,2.12,2.80),fist=envelope(t,.94,1.13,1.29,1.55);
+  handPose(rig,-1,hold*1.72,-hold*.16,hold*.50);
+  handPose(rig,1,hold*(1.85+fist*.30),-hold*.19,hold*.58-fist*.12);
+  rotate(rig.body,0,-hold*.08,0);rotate(rig.head,0,hold*.06,-hold*.035);
+  balanceLegs(rig,anticip*.45);blink(rig,Math.max(blinkAt(t,.16),blinkAt(t,1.13,.10)));
+ }else if(mood==='winDance'){
+  const beat=Math.sin((t-.3)*Math.PI*3),sway=beat*a;
+  rotate(rig.body,0,sway*.13,sway*.09);rotate(rig.head,0,-sway*.06,-sway*.085);
+  for(const side of [-1,1])handPose(rig,side,a*(.86+side*beat*.25),-a*.15,a*(.60-side*beat*.12),sway*.12);
+  if(rig.pose!=='seated')for(let i=0;i<(rig.legs||[]).length;i++){const lift=Math.max(0,beat*(i?1:-1))*a;rotate(rig.legs[i],-lift*.27,0,(i?1:-1)*a*.035);rotate(rig.knees?.[i],lift*.48,0,0)}
+  rotate(rig.tail,0,-sway*.30,0);rotate(rig.accent,0,0,-sway*.07);
+  if(face===5)rig.arms.forEach((n,i)=>rotate(n,-a*.13,0,Math.sin(t*5-i*.65)*a*.15));
+ }else{
+  const first=jump(t,.43,.58,.06),second=jump(t,1.27,.51,.045),lift=first+second;
+  if(rig.pose!=='seated')move(root,0,lift,0);
+  balanceLegs(rig,anticip*.7+envelope(t,1.05,1.19,1.26,1.44)*.45);
+  for(const side of [-1,1])handPose(rig,side,a*(1.62+lift*2),-a*.20,a*.45);
+  rotate(rig.head,0,0,Math.sin(t*5)*a*.04);blink(rig,Math.max(blinkAt(t,.17),blinkAt(t,.77,.08),blinkAt(t,1.55,.06)));
+ }
+}
+function selectedLoss(root,rig,mood,t,face,duration){
+ const a=envelope(t,.05,.52,duration-.62,duration),angry=mood==='lossAngry'||mood==='lossStomp';
+ brow(rig,angry?'angry':'sad',a);setMouth(rig,'sad');
+ if(mood==='lossSad'){
+  rotate(rig.head,a*.19,-a*.05,-a*.06);rotate(rig.body,a*.035,0,0);
+  for(const side of [-1,1])handPose(rig,side,a*.10,a*.06,a*.16,Math.sin(t*3)*a*.045);
+  blink(rig,Math.max(blinkAt(t,.71,.12,.12,.22),blinkAt(t,1.75,.06,.1,.2)));
+ }else if(mood==='lossSlump'){
+  rotate(rig.head,a*.28,a*.13,a*.09);rotate(rig.body,a*.095,-a*.04,0);
+  for(const side of [-1,1]){handPose(rig,side,a*.08,a*.03,a*.22);move(rig.arms?.[handIndex(rig,side)],0,-a*.018,0)}
+  blink(rig,envelope(t,.64,.78,1.68,1.94));rotate(rig.accent,a*.10,0,a*.08);
+  (rig.ears||[]).forEach((n,i)=>rotate(n,0,0,(i?-1:1)*a*.13));
+ }else if(mood==='lossAngry'){
+  const shake=envelope(t,.65,.82,1.48,1.75)*Math.sin((t-.65)*Math.PI*5);
+  rotate(rig.head,a*.045,shake*.09,0);rotate(rig.body,-a*.025,0,0);
+  for(const side of [-1,1])handPose(rig,side,a*.42,-a*.13,a*.95,side*a*.10);
+  blink(rig,blinkAt(t,1.92,.02,.07,.12));
+ }else{
+  const wind=envelope(t,.30,.54,.70,.86),impact=envelope(t,.77,.84,.90,1.10),settle=envelope(t,1.20,1.38,1.58,1.87);
+  rotate(rig.head,a*.055,-impact*.09,impact*.035);for(const side of [-1,1])handPose(rig,side,a*(.46+impact*.20),-a*.11,a*.80);
+  if(rig.pose!=='seated'&&face!==5){rotate(rig.legs?.[1],-wind*.48+settle*.08,0,0);rotate(rig.knees?.[1],wind*.85,0,0)}
+  if(face===5)rig.arms.forEach((n,i)=>rotate(n,-wind*.22+impact*.10,0,(i<3?-1:1)*impact*.12));
+  rotate(rig.body,impact*.04,0,0);blink(rig,blinkAt(t,.84,.04,.05,.12));
+ }
+ if(face===5&&mood!=='lossStomp')rig.arms.forEach((n,i)=>rotate(n,a*.025,0,(i<3?1:-1)*a*.06));
+}
+function visitorGesture(root,rig,mood,t,face,duration){
+ const a=envelope(t,0,.10,duration-.10,duration);brow(rig,'happy',a*.6);
+ if(mood==='visitorTakeoff'){
+  const crouch=envelope(t,.01,.15,.23,.40),release=rise(t,.27,.50);
+  balanceLegs(rig,crouch*1.4);rotate(rig.body,crouch*.10,0,0);rotate(rig.head,crouch*.07-release*.09,0,0);
+  for(const side of [-1,1])handPose(rig,side,crouch*.12+release*.70,-release*.55,crouch*.8+release*.25);
+ }else if(mood==='visitorFly'){
+  // A held flight silhouette, never a walk cycle on a translated canvas.
+  root.rotation.y=1.0;rotate(root,0,0,-.16);rotate(rig.head,-.08,-.13,0);
+  handPose(rig,1,.78,-1.05,.12);handPose(rig,-1,.20,.42,.72);
+  (rig.legs||[]).forEach((leg,i)=>{rotate(leg,-.34-i*.10,0,0);rotate(rig.knees?.[i],.78+i*.12,0,0)});
+  if(face===5)rig.arms.forEach((n,i)=>rotate(n,-.25,0,(i<3?-1:1)*.16));
+ }else if(mood==='visitorStrike'){
+  const wind=envelope(t,0,.13,.17,.27),hit=envelope(t,.17,.28,.33,.54);
+  root.rotation.y=.95;rotate(rig.body,0,-wind*.15+hit*.19,0);rotate(rig.head,-.035,-.12,0);
+  handPose(rig,1,.70+hit*.65,-wind*.64+hit*.25,1.12-hit*1.05);handPose(rig,-1,.24,.25,.60);
+  if(face!==5){rotate(rig.legs?.[0],-.23,0,0);rotate(rig.knees?.[0],.42,0,0)}
+ }else{
+  const fold=envelope(t,0,.11,.24,.43);for(const side of [-1,1])handPose(rig,side,fold*.65,-fold*.24,fold*.95);
+  blink(rig,envelope(t,.04,.12,.27,.43));rotate(rig.head,fold*.08,0,0);
+ }
+}
+function socialGesture(root,rig,mood,t,face,duration){
+ const side=mood==='highFiveRight'||mood==='playfulReply'?-1:1,a=envelope(t,.02,.34,duration-.45,duration);
+ brow(rig,'happy',a*.75);rotate(rig.head,-a*.025,side*a*.28,side*a*.045);
+ if(mood.startsWith('highFive')){
+  const reach=key(t,[[0,0],[.23,.14],[.72,.92],[.96,1],[1.18,1],[1.42,.70],[1.84,.16],[duration,0]]);
+  // Palm remains planted through the contact window. Root aligns this exact
+  // articulated point with the other actor, not the centre of the portraits.
+  handPose(rig,side,reach*1.52,-reach*.10,reach*.17);
+  handPose(rig,-side,a*.20,0,a*.32);
+  rotate(rig.body,0,side*a*.07,0);blink(rig,blinkAt(t,1.36,.05));
+ }else{
+  const poke=envelope(t,.55,.90,1.10,1.42),reply=envelope(t,1.45,1.80,2.12,2.67),isReply=mood==='playfulReply';
+  const act=isReply?reply:poke;
+  handPose(rig,side,a*.30+act*.85,-act*.40,a*.40+act*.22,Math.sin(t*7)*act*.12);
+  handPose(rig,-side,a*.15,0,a*.25);rotate(rig.head,-reply*.10,side*a*.24,-side*reply*.13);
+  blink(rig,Math.max(blinkAt(t,.35),blinkAt(t,isReply?2.0:1.12,.08)));
+  if(isReply){rig.facial?.expression(reply>.25?'happy':'surprise');rotate(rig.body,0,0,-side*reply*.04)}
+ }
+ if(face===5)rig.arms.forEach((n,i)=>{if(i!==handIndex(rig,side))rotate(n,-a*.04,0,Math.sin(i)*a*.025)});
+}
+export function characterSocialContactPoint(root,mood,camera=null){
+ const rig=root?.userData?.rig;if(!rig)return null;const side=mood==='highFiveRight'||mood==='playfulReply'?-1:1,i=handIndex(rig,side);
+ const hand=rig.hands?.[i],tip=rig.forearms?.[i],armNode=rig.arms?.[i];if(!armNode)return null;
+ root.updateMatrixWorld(true);let point;
+ if(hand)point=hand.localToWorld(new Vector3(0,-.024,.02));
+ else if(tip)point=tip.localToWorld(new Vector3(side*.035,.012,.01));
+ else point=armNode.localToWorld(new Vector3(...(armNode.userData.grip||[0,-.25,.03])));
+ return camera?point.project(camera):point;
+}
+
 /** Returns true while the supplied gesture needs another sample. Units are seconds. */
 export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.userData?.face??0,mood='idle',elapsed=0,reduced=false}={}){
  const state=stateFor(root);if(!state)return false;resetCharacter(root);const rig=state.rig;
  face=Number.isInteger(face)&&face>=0&&face<6?face:0;time=Number.isFinite(time)?Math.max(0,time):0;elapsed=Number.isFinite(elapsed)?Math.max(0,elapsed):0;
- if(mood==='idle'||!CHARACTER_DURATIONS[mood]){if(!reduced)idle(rig,time,face);return !reduced}
- const emotion=mood==='sad'||mood==='lose'?'sad':(['hello','knock'].includes(mood))?'neutral':'happy',duration=CHARACTER_DURATIONS[mood];
+ if(mood==='idle'||typeof mood!=='string'||!Object.hasOwn(CHARACTER_DURATIONS,mood)){if(!reduced)idle(rig,time,face);return !reduced}
+ const emotion=animationEmotion(mood),duration=CHARACTER_DURATIONS[mood];
  setMouth(rig,emotion);
- if(reduced){brow(rig,emotion,.5);return false}
- if(elapsed>=duration){brow(rig,emotion,.45);return false}
+ const browEmotion=mood==='lossAngry'||mood==='lossStomp'?'angry':emotion;
+ if(reduced){brow(rig,browEmotion,.5);return false}
+ if(elapsed>=duration){brow(rig,browEmotion,.45);return false}
 
- if(['walkLeft','walkRight','climbDown','climbUp','ledge','punch','kick','waveLeft','waveRight'].includes(mood)){
+ if(mood.startsWith('greet'))selectedGreeting(root,rig,mood,elapsed,face,duration);
+ else if(mood.startsWith('win')&&mood!=='win')selectedWin(root,rig,mood,elapsed,face,duration);
+ else if(mood.startsWith('loss'))selectedLoss(root,rig,mood,elapsed,face,duration);
+ else if(mood.startsWith('visitor'))visitorGesture(root,rig,mood,elapsed,face,duration);
+ else if(mood.startsWith('highFive')||mood.startsWith('playful'))socialGesture(root,rig,mood,elapsed,face,duration);
+ else if(['walkLeft','walkRight','climbDown','climbUp','ledge','punch','kick','waveLeft','waveRight'].includes(mood)){
   const walking=mood.startsWith('walk'),climbing=mood.startsWith('climb'),wave=mood.startsWith('wave'),side=mood.endsWith('Left')?-1:1;
   const ease=envelope(elapsed,0,.18,duration-.22,duration),step=Math.sin(elapsed*(walking?13:8));
   if(walking){root.rotation.y=side*1.12;root.position.y+=Math.abs(step)*.014;for(const [i,leg]of (rig.legs||[]).entries()){rotate(leg,step*(i?-1:1)*.52,0,0);rotate(rig.knees?.[i],Math.max(0,step*(i?1:-1))*.60,0,0)}arm(rig,0,.08,-step*.34);arm(rig,1,.08,step*.34);bend(rig,0,.35);bend(rig,1,.35);rotate(rig.head,-.04,-side*.12,0)}
