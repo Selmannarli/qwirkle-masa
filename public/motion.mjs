@@ -120,7 +120,7 @@ export function updateWaitingCharacters(game,{now=Date.now(),me=0,button=null}={
  const pose=(px,py,offset)=>({transform:'translate3d('+px+'px,'+py+'px,0)',offset,easing:'linear'});
  const animation=wrap.animate([pose(x,y,0),pose(edge,y-size*.08,.12),pose(edge,floor,.34),pose(target,floor,.44),pose(target,floor,.56),pose(edge,floor,.66),pose(edge,y-size*.08,.9),pose(x,y,1)],{duration:8000,fill:'both'});
  const timers=[],gesture=(mood,at,ms)=>timers.push(setTimeout(()=>playCharacter(art,mood,ms),at));
- gesture('ledge',0,960);gesture('climbDown',960,1760);gesture('walkLeft',2720,800);gesture('punch',3520,900);gesture('walkRight',4480,800);gesture('climbUp',5280,1920);gesture('ledge',7200,800);
+ gesture('ledge',0,960);gesture('climbDown',960,1760);gesture('walkLeft',2720,800);gesture(Number(source.dataset.character)%2&&Number(source.dataset.character)!==5?'kick':'punch',3520,900);gesture('walkRight',4480,800);gesture('climbUp',5280,1920);gesture('ledge',7200,800);
  timers.push(setTimeout(()=>{button.classList.add('character-bop');timers.push(setTimeout(()=>button.classList.remove('character-bop'),450))},3900));let done=false;
  const cleanup=()=>{if(done)return;done=true;timers.forEach(clearTimeout);animation.cancel();wrap.remove();source.style.visibility=old;button.classList.remove('character-bop');if(visitor===cleanup)visitor=null};cleanup.stamp=stamp;visitor=cleanup;animation.finished.then(cleanup).catch(()=>{});
 }

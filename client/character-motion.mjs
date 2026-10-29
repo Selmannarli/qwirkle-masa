@@ -1,7 +1,7 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
 // so a portrait, a seated player and a paused/seeked preview have identical motion.
-export const CHARACTER_DURATIONS=Object.freeze({walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
+export const CHARACTER_DURATIONS=Object.freeze({walkLeft:1.4,walkRight:1.4,climbDown:2.2,climbUp:2.2,ledge:1,punch:.9,kick:.9,waveLeft:2.6,waveRight:2.6,bored:5.6,buttonPunch:4.8,knock:1.8,hello:1.85,celebrate:2.65,sad:2.15,win:2.8,lose:2.4,draw:1.8,angry:1.8,surprise:1.5,impact:HERO_TIMING.duration/1000});
 const rests=new WeakMap();
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10)};
@@ -161,12 +161,13 @@ export function animateCharacter(root,{time=0,face=root?.userData?.rig?.face??ro
  if(reduced){brow(rig,emotion,.5);return false}
  if(elapsed>=duration){brow(rig,emotion,.45);return false}
 
- if(['walkLeft','walkRight','climbDown','climbUp','ledge','punch','waveLeft','waveRight'].includes(mood)){
+ if(['walkLeft','walkRight','climbDown','climbUp','ledge','punch','kick','waveLeft','waveRight'].includes(mood)){
   const walking=mood.startsWith('walk'),climbing=mood.startsWith('climb'),wave=mood.startsWith('wave'),side=mood.endsWith('Left')?-1:1;
   const ease=envelope(elapsed,0,.18,duration-.22,duration),step=Math.sin(elapsed*(walking?13:8));
   if(walking){root.rotation.y=side*1.12;root.position.y+=Math.abs(step)*.014;for(const [i,leg]of (rig.legs||[]).entries()){rotate(leg,step*(i?-1:1)*.52,0,0);rotate(rig.knees?.[i],Math.max(0,step*(i?1:-1))*.60,0,0)}arm(rig,0,.08,-step*.34);arm(rig,1,.08,step*.34);bend(rig,0,.35);bend(rig,1,.35);rotate(rig.head,-.04,-side*.12,0)}
   if(climbing||mood==='ledge'){root.rotation.y=1.4;for(let i=0;i<Math.min(2,rig.arms.length);i++){const reach=climbing?(.5+.5*step*(i?-1:1)):1;arm(rig,i,.75+reach*.9,-.55);bend(rig,i,.65+reach*.4);rotate(rig.legs?.[i],-.35+step*(i?-1:1)*.35,0,0);rotate(rig.knees?.[i],.65+step*(i?1:-1)*.3,0,0)}rotate(rig.head,-.12,0,.03)}
   if(mood==='punch'){const wind=envelope(elapsed,0,.18,.26,.36),hit=envelope(elapsed,.24,.38,.48,.75);root.rotation.y=.8;arm(rig,0,.12,-.15);bend(rig,0,.5);arm(rig,1,.55+hit*.9,-.35-wind*.4+hit*.4);bend(rig,1,1.25-hit*1.15);rotate(rig.body,0,wind*-.16+hit*.20,0);rotate(rig.head,0,.25,0);brow(rig,'happy',hit)}
+  if(mood==='kick'){const wind=envelope(elapsed,0,.18,.27,.38),hit=envelope(elapsed,.25,.39,.48,.78);root.rotation.y=1.05;rotate(rig.legs?.[1],-wind*.65-hit*.95,0,0);rotate(rig.knees?.[1],wind*1.15-hit*.08,0,0);rotate(rig.knees?.[0],hit*.12,0,0);arm(rig,0,.45*ease,-.2);arm(rig,1,.35*ease,.15);rotate(rig.head,-.03,-.2,0);brow(rig,'happy',hit)}
   if(wave){rotate(rig.head,0,side*.28*ease,side*.08*ease);arm(rig,side<0?0:1,1.3*ease,-.25*ease);bend(rig,side<0?0:1,.65*ease,Math.sin(elapsed*12)*.35*ease);brow(rig,'happy',ease*.6);blink(rig,blinkAt(elapsed,1.4))}
  }else if(mood==='bored'){
   const a=envelope(elapsed,.1,.8,3.7,5.5),yawn=envelope(elapsed,1.1,1.7,2.4,3.2);

@@ -1,4 +1,4 @@
-# Renkio 1.11 — lobby, conversations and creature sculpts
+# Renkio 1.11.1 — lobby, conversations and creature sculpts
 
 Rollback: `backup/before-lobby-v3-20261029` points to the previous release. Existing
 game rules, score effects, native signing identity and free hosting are retained.
@@ -24,7 +24,7 @@ game rules, score effects, native signing identity and free hosting are retained
   housing and organic contours were revised. One model library serves all views.
 - Anatomy-specific accessories are fitted offline. BVH intersection avoids costly
   repeated triangle searches; the shipped client never remeshes a sculpt on touch.
-- The button visit has ledge, descent, walking, strike and return phases rather
+- The button visit has ledge, descent, walking, punch/kick and return phases rather
   than playing one punch pose throughout a translation. Waiting players can exchange
   waves. Existing glass knock and Renkio impact timing retain higher priority.
 
