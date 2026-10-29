@@ -211,7 +211,7 @@ const turnWarning=new TurnWarning();
 let warningArt=null,warningKey=null;
 function updateTurnWarning(){
  const host=document.querySelector('#scores [data-seat="'+game?.turn+'"] .illustrated-avatar');
- const state=turnWarning.update(game,game?.turn,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!document.hidden&&!characterVisitActive()&&!!host&&!document.querySelector('dialog[open]'),blocked:visualLocked()||!!practicePausedAt});
+ const state=turnWarning.update(game,game?.turn,Date.now()+(local?0:serverOffset),{visible:view==='game'&&!document.hidden&&!characterVisitActive()&&!!host&&!document.querySelector('dialog[open]'),blocked:visualLocked()||!!practicePausedAt||host?.querySelector('.character-art')?.dataset.emotion==='appleHit'});
  if(!state){if(warningArt?.isConnected&&warningArt.dataset.emotion==='knock')playCharacter(warningArt,'idle',1);warningArt=null;warningKey=null;return}
  const art=host.querySelector('.character-art');
  if(art&&(art!==warningArt||state.key!==warningKey)){warningArt=art;warningKey=state.key;playCharacter(art,'knock',state.remaining)}
