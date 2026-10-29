@@ -6,6 +6,12 @@ export function migrateRoomMessages(state,rooms){
   for(const m of r.messages||[]){const from=r.seats[m.seat]?.playerId,to=r.seats[1-m.seat]?.playerId,receipt=r.code+':'+m.id;if(!from||!to||seen.has(receipt))continue;state.directMessages.push({id:receipt,receipt,thread:conversationKey(from,to),from,to,text:m.text,at:m.at});seen.add(receipt);added++}
  }return added;
 }
+export function recordGiftMessage(state,from,to,event){
+ state.directMessages??=[];const id='gift:'+event.id;
+ if(state.directMessages.some(m=>m.id===id))return false;
+ state.directMessages.push({id,receipt:id,thread:conversationKey(from,to),from,to,kind:'gift',gift:{item:event.item,amount:event.amount},text:'Hediye',at:event.at});return true;
+}
+export function migrateGiftMessages(state){let count=0;for(const [to,p]of Object.entries(state.profiles))for(const event of p.giftInbox||[])if(state.profiles[event.from]&&recordGiftMessage(state,event.from,to,event))count++;return count}
 export function conversationAllowed(state,a,b){return a!==b&&!!state.profiles[a]&&!!state.profiles[b]&&((state.friends||[]).some(e=>e.status==='accepted'&&conversationKey(e.from,e.to)===conversationKey(a,b))||(state.directMessages||[]).some(m=>m.thread===conversationKey(a,b))||(state.matches||[]).some(m=>m.players.some(p=>p.id===a)&&m.players.some(p=>p.id===b)));}
 export function directMessages(state,a,b,{before=Infinity,beforeId='',limit=100}={}){return (state.directMessages||[]).filter(m=>m.thread===conversationKey(a,b)&&(m.at<before||m.at===before&&beforeId&&m.id<beforeId)).sort((x,y)=>y.at-x.at||(y.id>x.id?1:y.id<x.id?-1:0)).slice(0,limit).reverse()}
 export function sendDirect(state,a,b,text,receipt,now=Date.now(),currentMatch=false){
