@@ -39,9 +39,9 @@ button,input,select{min-width:0}.button,.menu-link,.friend-entry,.leader-row{min
  .period-tabs button{font-size:12px;padding:10px 5px}.hand-panel{max-width:100%}
  html[lang=en] .minor-actions button{font-size:10px!important}html[lang=en] .home-profile-actions button{font-size:11px!important}
 }
-body[data-theme=day][data-view=home] .my-table-card{background:linear-gradient(145deg,#fff,#eee4f8)!important;border-color:#d4bee8!important}
-body[data-theme=day][data-view=home] .profile-banner{background:transparent!important;border-bottom:1px solid #dacdea!important}
-body[data-theme=day][data-view=home] .my-table-card .profile-title #name,body[data-theme=day][data-view=home] .brand,body[data-theme=day][data-view=home] .brand b{color:#553278!important}
+body[data-theme=day]:is([data-view=home],[data-view=hub]) .my-table-card{background:linear-gradient(145deg,#fff,#eee4f8)!important;border-color:#d4bee8!important}
+body[data-theme=day]:is([data-view=home],[data-view=hub]) .profile-banner{background:transparent!important;border-bottom:1px solid #dacdea!important}
+body[data-theme=day]:is([data-view=home],[data-view=hub]) .my-table-card .profile-title #name,body[data-theme=day]:is([data-view=home],[data-view=hub]) .brand,body[data-theme=day]:is([data-view=home],[data-view=hub]) .brand b{color:#553278!important}
 body[data-theme=day] :is(#code,#nickname,#friendId,#name){background:#faf6ff!important;color:#48315d!important}
 body[data-theme=day] :is(.my-table-heading h2,.my-table-heading button,.join-panel label,.join-label,.page-heading p,.reward-copy p,.saved-match small,.friend-name small,.profile-dialog small){color:#6c4d84!important}
 body[data-theme=day] :is(.my-table-card,.daily-reward,.join-panel,.open-games-section,.match-archive,.home-archive,.conversation-empty,.canvas-wrap){border-color:#dac8eb!important}
@@ -78,17 +78,17 @@ body[data-theme=day] .join-panel :is(label,.join-label,.join-heading),body[data-
 
 .daily-reward .reward-days{grid-template-columns:repeat(5,minmax(0,1fr))}.phone-notifications{display:none!important}
 
-body[data-view=home] .daily-reward{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;min-height:240px!important;gap:12px!important;position:relative;padding:20px!important}
-body[data-view=home] .daily-reward .reward-copy{grid-column:1/-1;max-width:70%;min-height:96px}
-body[data-view=home] .daily-reward .reward-art{display:block!important;position:absolute;right:-8px;top:0;width:150px;height:140px;opacity:.85;pointer-events:none}
-body[data-view=home] .daily-reward .reward-days{display:flex!important;grid-column:1/-1!important;grid-row:auto!important;width:100%;justify-content:space-between;gap:8px;margin:0!important}
-body[data-view=home] .daily-reward .reward-day{flex:1;display:flex;align-items:center;flex-direction:column;gap:5px;font-size:12px}
-body[data-view=home] .daily-reward .reward-day i{width:32px;height:32px}
-body[data-view=home] .daily-reward #claimReward{grid-column:1/-1!important;grid-row:auto!important;min-height:42px;justify-self:stretch!important;margin:0!important}
-body[data-view=home] .daily-reward #rewardStatus:empty{display:none}
-body[data-view=home] .daily-reward #rewardStatus{grid-row:auto!important}
-body[data-view=home] .profile-title{grid-template-columns:minmax(0,1fr)}
-@media(min-width:700px){body[data-view=home] .daily-reward .reward-art{width:240px;height:190px;right:20px}body[data-view=home] .daily-reward .reward-days{max-width:65%}body[data-view=home] .daily-reward #claimReward{grid-column:2!important;grid-row:2!important}}
+body:is([data-view=home],[data-view=hub]) .daily-reward{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;min-height:240px!important;gap:12px!important;position:relative;padding:20px!important}
+body:is([data-view=home],[data-view=hub]) .daily-reward .reward-copy{grid-column:1/-1;max-width:70%;min-height:96px}
+body:is([data-view=home],[data-view=hub]) .daily-reward .reward-art{display:block!important;position:absolute;right:-8px;top:0;width:150px;height:140px;opacity:.85;pointer-events:none}
+body:is([data-view=home],[data-view=hub]) .daily-reward .reward-days{display:flex!important;grid-column:1/-1!important;grid-row:auto!important;width:100%;justify-content:space-between;gap:8px;margin:0!important}
+body:is([data-view=home],[data-view=hub]) .daily-reward .reward-day{flex:1;display:flex;align-items:center;flex-direction:column;gap:5px;font-size:12px}
+body:is([data-view=home],[data-view=hub]) .daily-reward .reward-day i{width:32px;height:32px}
+body:is([data-view=home],[data-view=hub]) .daily-reward #claimReward{grid-column:1/-1!important;grid-row:auto!important;min-height:42px;justify-self:stretch!important;margin:0!important}
+body:is([data-view=home],[data-view=hub]) .daily-reward #rewardStatus:empty{display:none}
+body:is([data-view=home],[data-view=hub]) .daily-reward #rewardStatus{grid-row:auto!important}
+body:is([data-view=home],[data-view=hub]) .profile-title{grid-template-columns:minmax(0,1fr)}
+@media(min-width:700px){body:is([data-view=home],[data-view=hub]) .daily-reward .reward-art{width:240px;height:190px;right:20px}body:is([data-view=home],[data-view=hub]) .daily-reward .reward-days{max-width:65%}body:is([data-view=home],[data-view=hub]) .daily-reward #claimReward{grid-column:2!important;grid-row:2!important}}
 
 .reward-day.current i{filter:none!important;opacity:1!important;background:linear-gradient(135deg,#ffe69b,#f7b94d)!important;box-shadow:0 0 20px #ffcc6355!important;color:#79511a!important}.reward-day.current b{color:#ffdb83}
 body[data-theme=day] .profile-links .text-button,body[data-theme=day] .help-trigger{opacity:1!important;color:#714293!important;background:#eee5fa!important;border-color:#cbb6e2!important}body[data-theme=day] .reward-day.current b{color:#714293}

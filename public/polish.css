@@ -4,7 +4,7 @@
 /* Both turn-consuming choices have equal visual weight. */
 body .minor-actions{display:grid!important;grid-template-columns:32px 32px minmax(0,1fr) minmax(0,1fr);gap:5px!important;align-items:stretch}body .minor-actions #pass,body .minor-actions #exchange{display:flex!important;width:auto!important;min-width:0!important;min-height:34px!important;height:34px;flex:initial!important;margin:0!important;padding:5px 5px!important;gap:4px!important;font:800 10px/1.05 var(--font,Nunito,sans-serif)!important;border:1px solid #a987be55!important;border-bottom:2px solid #6c4d8655!important;border-radius:10px!important;background:#9c75b71c!important;color:var(--ink)!important;white-space:normal!important;text-align:center;justify-content:center}body .minor-actions #pass .icon,body .minor-actions #exchange .icon{width:17px!important;height:17px!important;flex:none}body .minor-actions #pass>span,body .minor-actions #exchange>span{display:inline!important;font-size:10px!important}body .minor-actions #undo,body .minor-actions #shuffle{width:32px!important;min-width:32px!important;margin:0!important;height:34px!important}body .minor-actions #hint{display:none!important}body[data-theme=night] .minor-actions #pass,body[data-theme=night] .minor-actions #exchange{color:#eadcf7!important;background:#9766bf27!important;border-color:#a075be55!important}.minor-actions button:disabled{opacity:.35!important}#languageSelect{border-radius:12px;border:1px solid #9d79b755;padding:10px;background:var(--surface);color:var(--ink);font:750 14px var(--font,Nunito,sans-serif)}
 /* The six brand tiles use the rack's proportions, shape size and quiet white face. */
-body[data-view=home] .home-story{position:relative!important;inset:auto!important;display:block!important;width:100%!important;padding:0!important;margin:0!important;height:auto!important;order:-3}body[data-view=home] .brand-tiles{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px!important;width:min(100%,330px)!important;margin:auto!important;transform:none!important}body[data-view=home] .brand-tiles .tile{width:100%!important;height:auto!important;aspect-ratio:1;min-width:0;min-height:0;transform:none!important;border-radius:10px!important;background:#fffdf8!important;border:1px solid #e5e0ed!important;border-bottom:3px solid #d4ccdf!important;opacity:1!important}body[data-view=home] .brand-tiles .tile .tile-face{inset:4px!important}
+body:is([data-view=home],[data-view=hub]) .home-story{position:relative!important;inset:auto!important;display:block!important;width:100%!important;padding:0!important;margin:0!important;height:auto!important;order:-3}body:is([data-view=home],[data-view=hub]) .brand-tiles{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px!important;width:min(100%,330px)!important;margin:auto!important;transform:none!important}body:is([data-view=home],[data-view=hub]) .brand-tiles .tile{width:100%!important;height:auto!important;aspect-ratio:1;min-width:0;min-height:0;transform:none!important;border-radius:10px!important;background:#fffdf8!important;border:1px solid #e5e0ed!important;border-bottom:3px solid #d4ccdf!important;opacity:1!important}body:is([data-view=home],[data-view=hub]) .brand-tiles .tile .tile-face{inset:4px!important}
 .my-table-card{order:-2;width:100%;padding:15px 16px 4px;border:1px solid #946cbe44;border-radius:25px;background:radial-gradient(ellipse at 50% 70%,#6b42893b,transparent 72%),linear-gradient(145deg,#30213e,#20172e);overflow:hidden}.my-table-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.my-table-heading h2{font-size:17px;margin:0;color:#f5e7ff}.my-table-heading button{font-size:11px;color:#d7aff6;min-height:30px;padding:4px 8px}.table-stage{position:relative;width:100%;aspect-ratio:1.5;isolation:isolate;max-width:620px;margin:auto}.table-model{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}.table-player{position:absolute;width:25%;aspect-ratio:.8;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transform:translate(-50%,-50%)}.table-seat-0{left:50%;top:20%;z-index:0}.table-seat-1{left:15%;top:51%;z-index:2}.table-seat-2{left:85%;top:51%;z-index:2}.table-seat-3{left:50%;top:80%;z-index:3}.table-model{z-index:1}.table-character{position:relative!important;width:100%!important;height:auto!important;aspect-ratio:1;min-height:0!important;min-width:0!important;padding:0!important;border:0!important;background:none!important;cursor:pointer}.table-player-name{max-width:120%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eee2fa;background:#20152dca;border:1px solid #9b74bb33;padding:2px 7px;border-radius:8px;font:750 10px/14px Nunito,system-ui,sans-serif;z-index:2;margin-top:-9px}.empty-table-seat{width:26px;height:26px;display:grid;place-items:center;border:1px dashed #d9b6ef48;border-radius:50%;color:#e3c2f280;font-size:18px;margin-bottom:16px;background:#32213c77}.lobby-card .table-stage{max-width:440px;margin-top:-10px}.home-character .home-portrait{width:90px!important;height:90px!important}.profile-banner{min-height:116px!important}.player-strip .illustrated-avatar{width:53px!important;height:53px!important;flex:0 0 53px!important}.player-card{min-height:64px!important}.player-name{font-size:13px!important}.player-sub{font-size:10px!important}.player-score{font-size:22px!important}.player-strip{gap:6px!important}.player-card .avatar{margin-left:-3px}.player-strip:has(.player-card:nth-child(3)) .illustrated-avatar{width:43px!important;height:43px!important;flex-basis:43px!important}.player-strip:has(.player-card:nth-child(3)) .player-card{gap:3px!important}.player-strip:has(.player-card:nth-child(3)) .player-name{font-size:11px!important}.player-strip:has(.player-card:nth-child(3)) .player-score{font-size:17px!important}.player-strip:has(.player-card:nth-child(3)) .player-sub{font-size:9px!important}
 @media(max-width:360px){body .minor-actions{grid-template-columns:27px 27px minmax(0,1fr) minmax(0,1fr);gap:3px!important}body .minor-actions #undo,body .minor-actions #shuffle{width:27px!important;min-width:27px!important}body .minor-actions #pass,body .minor-actions #exchange{font-size:9px!important;padding:4px 3px!important;gap:3px!important}body .minor-actions #pass>span,body .minor-actions #exchange>span{font-size:9px!important}.support-dock{right:8px}.my-table-card{padding:12px 10px 2px}.player-strip .illustrated-avatar{width:45px!important;height:45px!important;flex-basis:45px!important}}
 @media(prefers-reduced-motion:reduce){.supports-menu{animation:none}.support-trigger .icon{transition:none}}body[data-motion=reduced] .supports-menu{animation:none}
@@ -33,13 +33,13 @@ body .minor-actions #pass>span,body .minor-actions #exchange>span{position:stati
 
 .real-table-stage[data-scene-state=loading]:not([data-scene-ready=true]):before{content:'';position:absolute;left:calc(50% - 14px);top:calc(50% - 14px);width:28px;height:28px;border:2px solid #b88ad129;border-top-color:#c29ce1;border-radius:50%;animation:table-loading .8s linear infinite}@keyframes table-loading{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.real-table-stage:before{animation:none!important}}body[data-motion=reduced] .real-table-stage:before{animation:none!important}
 /* Home atelier: identity, actual 3D table and primary actions form one hierarchy. */
-body[data-view=home]{background:radial-gradient(ellipse at 50% 12%,#332147 0,transparent 55%),#15101e}
-body[data-view=home] .app-header{height:72px;padding:14px 24px;max-width:1040px}
-body[data-view=home] .home-screen{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);align-items:start;max-width:1040px!important;gap:16px!important;padding-top:8px!important}
-body[data-view=home] .home-story{position:relative!important;inset:auto!important;transform:none!important;width:auto;height:38px!important;grid-column:1/-1;order:-5;display:flex;justify-content:center;margin:0!important}
-body[data-view=home] .brand-tiles{height:34px!important;gap:7px!important;transform:none!important}
-body[data-view=home] .brand-tiles .tile{width:32px!important;height:33px!important;flex-basis:32px!important;animation:none!important;transform:none!important;box-shadow:0 3px 6px #0002!important}
-body[data-view=home] .my-table-card{order:-4;grid-column:1;grid-row:2/5;border:1px solid #c8a6e32b;border-radius:28px;padding:16px 14px 0;background:radial-gradient(ellipse at 50% 62%,#62467455,transparent 67%),linear-gradient(155deg,#35263f,#251b30)!important;box-shadow:inset 0 1px 0 #f1dcff12,0 18px 45px #09060f22;position:relative}
+body:is([data-view=home],[data-view=hub]){background:radial-gradient(ellipse at 50% 12%,#332147 0,transparent 55%),#15101e}
+body:is([data-view=home],[data-view=hub]) .app-header{height:72px;padding:14px 24px;max-width:1040px}
+body:is([data-view=home],[data-view=hub]) .home-screen{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);align-items:start;max-width:1040px!important;gap:16px!important;padding-top:8px!important}
+body:is([data-view=home],[data-view=hub]) .home-story{position:relative!important;inset:auto!important;transform:none!important;width:auto;height:38px!important;grid-column:1/-1;order:-5;display:flex;justify-content:center;margin:0!important}
+body:is([data-view=home],[data-view=hub]) .brand-tiles{height:34px!important;gap:7px!important;transform:none!important}
+body:is([data-view=home],[data-view=hub]) .brand-tiles .tile{width:32px!important;height:33px!important;flex-basis:32px!important;animation:none!important;transform:none!important;box-shadow:0 3px 6px #0002!important}
+body:is([data-view=home],[data-view=hub]) .my-table-card{order:-4;grid-column:1;grid-row:2/5;border:1px solid #c8a6e32b;border-radius:28px;padding:16px 14px 0;background:radial-gradient(ellipse at 50% 62%,#62467455,transparent 67%),linear-gradient(155deg,#35263f,#251b30)!important;box-shadow:inset 0 1px 0 #f1dcff12,0 18px 45px #09060f22;position:relative}
 .my-table-card .profile-banner{display:flex!important;min-height:64px!important;padding:0 2px 12px!important;border:0!important;border-bottom:1px solid #dcc4eb15!important;border-radius:0!important;background:none!important;box-shadow:none!important;gap:12px!important;overflow:visible}
 .my-table-card .profile-banner:before{display:none}
 .my-table-card .home-character{width:58px!important;height:58px!important;min-width:58px!important;position:relative}
@@ -57,53 +57,53 @@ body[data-view=home] .my-table-card{order:-4;grid-column:1;grid-row:2/5;border:1
 .my-table-heading h2{font-size:13px;font-weight:750;letter-spacing:.1px;color:#e9d8f3}
 .my-table-heading #homeTableOpen{padding:7px 12px;min-height:33px;border:1px solid #bf95dd3d;border-radius:11px;background:#b886d51c;color:#edd6ff;font-size:11px;font-weight:850}
 .my-table-card .real-table-stage{aspect-ratio:1.18!important;margin:-3px auto 0!important;border-radius:0 0 26px 26px;background:radial-gradient(ellipse at 50% 70%,#ca91e015,transparent 65%);max-width:none}
-body[data-view=home] .play-card{grid-column:2;grid-row:2;order:-3;gap:0!important}
-body[data-view=home] .home-actions{gap:10px}
-body[data-view=home] .home-actions .button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-height:116px;padding:17px;border-radius:21px;font-size:19px;box-shadow:inset 0 1px 0 #ffffff28,0 7px 16px #09051022;border-color:#c49ef15c;background:linear-gradient(135deg,#9b61dd,#6741b8)}
-body[data-view=home] .home-actions .match-button{background:linear-gradient(135deg,#299e7d,#137761);border-color:#78d8b54d}
-body[data-view=home] .home-actions .button>.icon{width:30px;height:30px;padding:0;background:none;border:0;border-radius:0}
-body[data-view=home] .home-actions .button>span{font-size:19px;align-self:auto!important}
-body[data-view=home] .home-actions .button>small{display:none}
-body[data-view=home] .home-actions .button>i{position:absolute;right:14px;top:20px;width:22px;height:22px;background:#00000012}
-body[data-view=home] .join-row{grid-template-columns:minmax(0,1fr) 75px;gap:8px;margin-top:10px;padding:10px;border:1px solid #b18acd24;border-radius:17px;background:#ffffff04}
-body[data-view=home] .join-row label{grid-column:1/-1;font-size:10px;font-weight:700;gap:6px;color:#c3afcf;padding:0 2px}
-body[data-view=home] .join-row label .icon{width:14px;height:14px;background:none;padding:0}
-body[data-view=home] .join-row input{min-height:40px!important;height:40px;padding:8px 11px!important;border-radius:10px!important;border-color:#aa81c332!important;background:#17101f66!important;font-size:11px;letter-spacing:1.4px}
-body[data-view=home] .join-row .button{min-height:40px;padding:7px 10px;border-radius:10px;font-size:12px;background:#715092;border-color:#b58edc3d;box-shadow:none}
-body[data-view=home] .open-games{grid-column:2;order:-2;padding:14px!important;border:1px solid #b999d023!important;border-radius:20px!important;background:#ffffff03!important}
-body[data-view=home] .daily-reward{grid-column:2;min-height:170px;padding:18px;border:1px solid #ae80e541;border-radius:22px;background:radial-gradient(ellipse at 100% 0,#7e47a74d,transparent 65%),#2b1c41;overflow:hidden}
-body[data-view=home] .daily-reward h2{font-size:21px;letter-spacing:-.4px}
-body[data-view=home] .reward-copy{max-width:78%}
-body[data-view=home] .reward-copy p{display:none}
-body[data-view=home] .reward-art{width:150px;height:135px;top:2px;right:-13px;opacity:.8}
-body[data-view=home] .reward-days{display:none}
-body[data-view=home] .reward-claim{grid-column:2;grid-row:2;font-size:12px;min-height:38px;padding:8px 15px;min-width:0;border-radius:12px;z-index:2}
-body[data-view=home] #rewardStatus{grid-row:3;font-size:10px}
-body[data-view=home] .match-archive{grid-column:1/-1;padding:16px!important;background:#ffffff03!important;border:1px solid #b999d023!important;border-radius:22px!important}
-body[data-view=home] .open-games-heading h2,body[data-view=home] .section-heading h2{font-size:15px}
-body[data-view=home] .open-game{border-radius:13px}
-body[data-view=home] .bottom-nav{background:#241b30ed;backdrop-filter:blur(20px);border-color:#bd98dc24;box-shadow:0 -6px 30px #10091830}
-body[data-view=home] .bottom-nav button{transition:color .2s,transform .35s cubic-bezier(.2,.8,.2,1)}
-body[data-view=home] .bottom-nav button:active{transform:scale(.94)}
-body[data-view=home] .bottom-nav [aria-current=page]:after{background:#c18cf1;box-shadow:0 0 14px #bd7cf047}
-body[data-view=home] .my-table-heading button,body[data-view=home] .home-actions .button,body[data-view=home] .join-row .button{transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s}
-body[data-view=home] .home-actions .button:active,body[data-view=home] .my-table-heading button:active,body[data-view=home] .join-row .button:active{transform:scale(.97);filter:brightness(1.08)}
+body:is([data-view=home],[data-view=hub]) .play-card{grid-column:2;grid-row:2;order:-3;gap:0!important}
+body:is([data-view=home],[data-view=hub]) .home-actions{gap:10px}
+body:is([data-view=home],[data-view=hub]) .home-actions .button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-height:116px;padding:17px;border-radius:21px;font-size:19px;box-shadow:inset 0 1px 0 #ffffff28,0 7px 16px #09051022;border-color:#c49ef15c;background:linear-gradient(135deg,#9b61dd,#6741b8)}
+body:is([data-view=home],[data-view=hub]) .home-actions .match-button{background:linear-gradient(135deg,#299e7d,#137761);border-color:#78d8b54d}
+body:is([data-view=home],[data-view=hub]) .home-actions .button>.icon{width:30px;height:30px;padding:0;background:none;border:0;border-radius:0}
+body:is([data-view=home],[data-view=hub]) .home-actions .button>span{font-size:19px;align-self:auto!important}
+body:is([data-view=home],[data-view=hub]) .home-actions .button>small{display:none}
+body:is([data-view=home],[data-view=hub]) .home-actions .button>i{position:absolute;right:14px;top:20px;width:22px;height:22px;background:#00000012}
+body:is([data-view=home],[data-view=hub]) .join-row{grid-template-columns:minmax(0,1fr) 75px;gap:8px;margin-top:10px;padding:10px;border:1px solid #b18acd24;border-radius:17px;background:#ffffff04}
+body:is([data-view=home],[data-view=hub]) .join-row label{grid-column:1/-1;font-size:10px;font-weight:700;gap:6px;color:#c3afcf;padding:0 2px}
+body:is([data-view=home],[data-view=hub]) .join-row label .icon{width:14px;height:14px;background:none;padding:0}
+body:is([data-view=home],[data-view=hub]) .join-row input{min-height:40px!important;height:40px;padding:8px 11px!important;border-radius:10px!important;border-color:#aa81c332!important;background:#17101f66!important;font-size:11px;letter-spacing:1.4px}
+body:is([data-view=home],[data-view=hub]) .join-row .button{min-height:40px;padding:7px 10px;border-radius:10px;font-size:12px;background:#715092;border-color:#b58edc3d;box-shadow:none}
+body:is([data-view=home],[data-view=hub]) .open-games{grid-column:2;order:-2;padding:14px!important;border:1px solid #b999d023!important;border-radius:20px!important;background:#ffffff03!important}
+body:is([data-view=home],[data-view=hub]) .daily-reward{grid-column:2;min-height:170px;padding:18px;border:1px solid #ae80e541;border-radius:22px;background:radial-gradient(ellipse at 100% 0,#7e47a74d,transparent 65%),#2b1c41;overflow:hidden}
+body:is([data-view=home],[data-view=hub]) .daily-reward h2{font-size:21px;letter-spacing:-.4px}
+body:is([data-view=home],[data-view=hub]) .reward-copy{max-width:78%}
+body:is([data-view=home],[data-view=hub]) .reward-copy p{display:none}
+body:is([data-view=home],[data-view=hub]) .reward-art{width:150px;height:135px;top:2px;right:-13px;opacity:.8}
+body:is([data-view=home],[data-view=hub]) .reward-days{display:none}
+body:is([data-view=home],[data-view=hub]) .reward-claim{grid-column:2;grid-row:2;font-size:12px;min-height:38px;padding:8px 15px;min-width:0;border-radius:12px;z-index:2}
+body:is([data-view=home],[data-view=hub]) #rewardStatus{grid-row:3;font-size:10px}
+body:is([data-view=home],[data-view=hub]) .match-archive{grid-column:1/-1;padding:16px!important;background:#ffffff03!important;border:1px solid #b999d023!important;border-radius:22px!important}
+body:is([data-view=home],[data-view=hub]) .open-games-heading h2,body:is([data-view=home],[data-view=hub]) .section-heading h2{font-size:15px}
+body:is([data-view=home],[data-view=hub]) .open-game{border-radius:13px}
+body:is([data-view=home],[data-view=hub]) .bottom-nav{background:#241b30ed;backdrop-filter:blur(20px);border-color:#bd98dc24;box-shadow:0 -6px 30px #10091830}
+body:is([data-view=home],[data-view=hub]) .bottom-nav button{transition:color .2s,transform .35s cubic-bezier(.2,.8,.2,1)}
+body:is([data-view=home],[data-view=hub]) .bottom-nav button:active{transform:scale(.94)}
+body:is([data-view=home],[data-view=hub]) .bottom-nav [aria-current=page]:after{background:#c18cf1;box-shadow:0 0 14px #bd7cf047}
+body:is([data-view=home],[data-view=hub]) .my-table-heading button,body:is([data-view=home],[data-view=hub]) .home-actions .button,body:is([data-view=home],[data-view=hub]) .join-row .button{transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s}
+body:is([data-view=home],[data-view=hub]) .home-actions .button:active,body:is([data-view=home],[data-view=hub]) .my-table-heading button:active,body:is([data-view=home],[data-view=hub]) .join-row .button:active{transform:scale(.97);filter:brightness(1.08)}
 @keyframes home-arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-body[data-view=home] #home.screen-enter{animation:none!important}
-body[data-view=home] #home.screen-enter>.my-table-card,body[data-view=home] #home.screen-enter>.play-card{animation:home-arrive .55s cubic-bezier(.16,1,.3,1) both}
-body[data-view=home] #home.screen-enter>.play-card{animation-delay:60ms}
+body:is([data-view=home],[data-view=hub]) #home.screen-enter{animation:none!important}
+body:is([data-view=home],[data-view=hub]) #home.screen-enter>.my-table-card,body:is([data-view=home],[data-view=hub]) #home.screen-enter>.play-card{animation:home-arrive .55s cubic-bezier(.16,1,.3,1) both}
+body:is([data-view=home],[data-view=hub]) #home.screen-enter>.play-card{animation-delay:60ms}
 @media(max-width:650px){
- body[data-view=home] .app-header{height:62px;padding:10px 16px}
- body[data-view=home] .brand{font-size:27px}
- body[data-view=home] .brand-app-icon{width:33px;height:33px}
- body[data-view=home] .header-actions{gap:6px}
- body[data-view=home] .header-actions .icon-button,body[data-view=home] .help-trigger{width:32px;height:32px;min-height:32px;border-radius:10px;background:#b184c313;border-color:#bd95d12b}
- body[data-view=home] .home-screen{display:flex!important;flex-direction:column;gap:12px!important;padding:0 12px 18px!important}
- body[data-view=home] .home-screen>section{width:100%}
- body[data-view=home] .home-story{height:30px!important;margin:0 0 1px!important}
- body[data-view=home] .brand-tiles{height:28px!important;gap:7px!important}
- body[data-view=home] .brand-tiles .tile{width:27px!important;height:28px!important;flex-basis:27px!important;border-radius:7px!important}
- body[data-view=home] .my-table-card{padding:12px 10px 0;border-radius:24px}
+ body:is([data-view=home],[data-view=hub]) .app-header{height:62px;padding:10px 16px}
+ body:is([data-view=home],[data-view=hub]) .brand{font-size:27px}
+ body:is([data-view=home],[data-view=hub]) .brand-app-icon{width:33px;height:33px}
+ body:is([data-view=home],[data-view=hub]) .header-actions{gap:6px}
+ body:is([data-view=home],[data-view=hub]) .header-actions .icon-button,body:is([data-view=home],[data-view=hub]) .help-trigger{width:32px;height:32px;min-height:32px;border-radius:10px;background:#b184c313;border-color:#bd95d12b}
+ body:is([data-view=home],[data-view=hub]) .home-screen{display:flex!important;flex-direction:column;gap:12px!important;padding:0 12px 18px!important}
+ body:is([data-view=home],[data-view=hub]) .home-screen>section{width:100%}
+ body:is([data-view=home],[data-view=hub]) .home-story{height:30px!important;margin:0 0 1px!important}
+ body:is([data-view=home],[data-view=hub]) .brand-tiles{height:28px!important;gap:7px!important}
+ body:is([data-view=home],[data-view=hub]) .brand-tiles .tile{width:27px!important;height:28px!important;flex-basis:27px!important;border-radius:7px!important}
+ body:is([data-view=home],[data-view=hub]) .my-table-card{padding:12px 10px 0;border-radius:24px}
  .my-table-card .profile-banner{gap:8px!important;padding-bottom:9px!important;min-height:56px!important}
  .my-table-card .home-character,.my-table-card .home-character .home-portrait{width:49px!important;height:49px!important;min-width:49px!important}
  .my-table-card .profile-title #name{font-size:19px!important}
@@ -114,25 +114,25 @@ body[data-view=home] #home.screen-enter>.play-card{animation-delay:60ms}
  .my-table-heading h2{font-size:12px}
  .my-table-heading #homeTableOpen{font-size:10px;min-height:29px;padding:5px 9px}
  .my-table-card .real-table-stage{height:clamp(220px,32dvh,310px);aspect-ratio:auto!important;margin:-7px auto 0!important}
- body[data-view=home] .home-actions .button{min-height:87px;gap:7px;padding:13px 15px;border-radius:18px;flex-direction:row;align-items:center;justify-content:flex-start}
- body[data-view=home] .home-actions .button>.icon{width:25px;height:25px;flex:none}
- body[data-view=home] .home-actions .button>span{font-size:17px}
- body[data-view=home] .home-actions .button>i{display:none}
- body[data-view=home] .join-row{margin-top:9px;padding:9px;grid-template-columns:minmax(0,1fr) 75px;gap:6px 8px}
- body[data-view=home] .join-row label{display:none}
- body[data-view=home] .daily-reward{min-height:154px;padding:16px;grid-template-columns:1fr 90px;gap:8px}
- body[data-view=home] .daily-reward h2{font-size:21px}
- body[data-view=home] .reward-copy{grid-column:1/3;max-width:80%}
- body[data-view=home] .reward-wallet{margin-top:8px}
- body[data-view=home] .reward-claim{grid-column:2;grid-row:2;margin-top:0;min-height:35px;align-self:end}
- body[data-view=home] .reward-eyebrow{font-size:9px;letter-spacing:1px}
- body[data-view=home] .bottom-nav{padding-top:9px;border-radius:23px 23px 0 0}
+ body:is([data-view=home],[data-view=hub]) .home-actions .button{min-height:87px;gap:7px;padding:13px 15px;border-radius:18px;flex-direction:row;align-items:center;justify-content:flex-start}
+ body:is([data-view=home],[data-view=hub]) .home-actions .button>.icon{width:25px;height:25px;flex:none}
+ body:is([data-view=home],[data-view=hub]) .home-actions .button>span{font-size:17px}
+ body:is([data-view=home],[data-view=hub]) .home-actions .button>i{display:none}
+ body:is([data-view=home],[data-view=hub]) .join-row{margin-top:9px;padding:9px;grid-template-columns:minmax(0,1fr) 75px;gap:6px 8px}
+ body:is([data-view=home],[data-view=hub]) .join-row label{display:none}
+ body:is([data-view=home],[data-view=hub]) .daily-reward{min-height:154px;padding:16px;grid-template-columns:1fr 90px;gap:8px}
+ body:is([data-view=home],[data-view=hub]) .daily-reward h2{font-size:21px}
+ body:is([data-view=home],[data-view=hub]) .reward-copy{grid-column:1/3;max-width:80%}
+ body:is([data-view=home],[data-view=hub]) .reward-wallet{margin-top:8px}
+ body:is([data-view=home],[data-view=hub]) .reward-claim{grid-column:2;grid-row:2;margin-top:0;min-height:35px;align-self:end}
+ body:is([data-view=home],[data-view=hub]) .reward-eyebrow{font-size:9px;letter-spacing:1px}
+ body:is([data-view=home],[data-view=hub]) .bottom-nav{padding-top:9px;border-radius:23px 23px 0 0}
 }
-@media(max-width:350px){.my-table-card .profile-title #name{font-size:16px!important}.my-table-card .profile-links .text-button{width:27px!important;min-width:27px!important}.my-table-card .real-table-stage{height:220px}body[data-view=home] .home-actions .button{gap:7px;padding:12px}body[data-view=home] .home-actions .button>span{font-size:15px}}
-@media(prefers-reduced-motion:reduce){body[data-view=home] #home.screen-enter>section{animation:none!important}body[data-view=home] button{transition:none!important}}
-body[data-motion=reduced][data-view=home] #home.screen-enter>section{animation:none!important}body[data-motion=reduced][data-view=home] button{transition:none!important}
+@media(max-width:350px){.my-table-card .profile-title #name{font-size:16px!important}.my-table-card .profile-links .text-button{width:27px!important;min-width:27px!important}.my-table-card .real-table-stage{height:220px}body:is([data-view=home],[data-view=hub]) .home-actions .button{gap:7px;padding:12px}body:is([data-view=home],[data-view=hub]) .home-actions .button>span{font-size:15px}}
+@media(prefers-reduced-motion:reduce){body:is([data-view=home],[data-view=hub]) #home.screen-enter>section{animation:none!important}body:is([data-view=home],[data-view=hub]) button{transition:none!important}}
+body[data-motion=reduced]:is([data-view=home],[data-view=hub]) #home.screen-enter>section{animation:none!important}body[data-motion=reduced]:is([data-view=home],[data-view=hub]) button{transition:none!important}
 /* Browser-composited page transitions keep navigation steady. */
-body[data-view=home] .app-header{view-transition-name:home-header}body[data-view=home] .bottom-nav{view-transition-name:home-navigation}
+body:is([data-view=home],[data-view=hub]) .app-header{view-transition-name:home-header}body:is([data-view=home],[data-view=hub]) .bottom-nav{view-transition-name:home-navigation}
 ::view-transition-old(root){animation:home-page-out .15s ease-out both}::view-transition-new(root){animation:home-page-in .28s cubic-bezier(.16,1,.3,1) both}
 @keyframes home-page-out{to{opacity:0;transform:translateY(-4px)}}@keyframes home-page-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
@@ -152,18 +152,18 @@ body .illustrated-avatar{background:none!important;border:0!important;overflow:v
 /* Snapshot overlays must never eat a quick follow-up tap. */
 ::view-transition{pointer-events:none}::view-transition-group(*){pointer-events:none}
 /* A table represents an actual waiting room; an unseated player sees only identity. */
-body[data-view=home] .my-table-card.is-unseated{grid-column:1/-1!important;grid-row:auto!important;padding:13px 16px!important;border-radius:21px!important}
+body:is([data-view=home],[data-view=hub]) .my-table-card.is-unseated{grid-column:1/-1!important;grid-row:auto!important;padding:13px 16px!important;border-radius:21px!important}
 .my-table-card.is-unseated .profile-banner{padding-bottom:0!important;border-bottom:0!important}
-body[data-view=home][data-table=none] .play-card{grid-column:1/-1!important;grid-row:auto!important}
-body[data-view=home][data-table=none] .open-games{grid-column:1/-1!important}
-body[data-view=home] .brand-tiles{width:max-content!important;max-width:100%;justify-content:center!important;gap:4px!important;flex:0 0 auto!important;margin:0 auto!important}
-body[data-view=home] .brand-tiles .tile{margin:0!important}
+body:is([data-view=home],[data-view=hub])[data-table=none] .play-card{grid-column:1/-1!important;grid-row:auto!important}
+body:is([data-view=home],[data-view=hub])[data-table=none] .open-games{grid-column:1/-1!important}
+body:is([data-view=home],[data-view=hub]) .brand-tiles{width:max-content!important;max-width:100%;justify-content:center!important;gap:4px!important;flex:0 0 auto!important;margin:0 auto!important}
+body:is([data-view=home],[data-view=hub]) .brand-tiles .tile{margin:0!important}
 .table-player-dialog{width:min(340px,calc(100vw - 28px));text-align:center}.table-player-dialog>.illustrated-avatar{width:150px!important;height:150px!important;margin:2px auto 16px}.table-player-dialog .drawer-heading{text-align:left}.table-secret-game{display:flex;justify-content:center;align-items:center;gap:7px;width:100%;font-size:10px;min-height:36px;margin-top:11px;color:#b9a6cc;opacity:.8}.table-secret-game .icon{width:15px;height:15px}.table-secret-game:hover{opacity:1;color:#e9d3fa}.table-seat-label.has-table-challenge{box-shadow:0 0 0 1px #bb8bdd99;background:#5e3b79d9}.table-seat-label.has-table-challenge:after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#dfb9ff;margin-left:5px;vertical-align:middle}
 .avatar-color[data-original=true]{box-shadow:inset 0 0 0 4px #221833;border-color:#ab92c3}
 /* Restore the larger reward banner, trophy and seven-day progress. */
-body[data-view=home] .daily-reward{grid-column:1/-1;grid-template-columns:minmax(0,1fr) 180px;min-height:225px;padding:25px 28px 22px;border:1px solid #7148ac;border-radius:25px;background:radial-gradient(ellipse at 100% 110%,#db318d9c,transparent 45%),radial-gradient(ellipse at 66% 24%,#5c38dfa6,transparent 55%),linear-gradient(120deg,#221657,#34156a);gap:10px}
-body[data-view=home] .reward-copy{grid-column:1;max-width:70%;z-index:2}body[data-view=home] .daily-reward h2{font-size:clamp(24px,3.5vw,34px)}body[data-view=home] .reward-copy p{display:block;font-size:13px}body[data-view=home] .reward-art{width:240px;height:190px;right:11%;top:5px;opacity:1}body[data-view=home] .reward-days{display:flex;grid-column:1;grid-row:2;align-items:center;justify-content:flex-start;gap:clamp(8px,3vw,30px);margin-top:6px;width:auto}body[data-view=home] .reward-claim{grid-column:2;grid-row:2;min-height:49px;font-size:15px;padding:9px 20px;min-width:120px;border-radius:15px}body[data-view=home] #rewardStatus{grid-column:1/-1;grid-row:3;font-size:11px}
-@media(max-width:650px){body[data-view=home] .my-table-card.is-unseated{padding:12px!important}body[data-view=home] .brand-tiles{gap:4px!important}body[data-view=home] .daily-reward{grid-template-columns:minmax(0,1fr) 91px;min-height:236px;padding:18px 16px;gap:13px}body[data-view=home] .daily-reward h2{font-size:25px}body[data-view=home] .reward-copy{max-width:80%;grid-column:1/3}body[data-view=home] .reward-copy p{font-size:12px}body[data-view=home] .reward-art{width:180px;height:145px;right:-8px;top:15px;opacity:.65}body[data-view=home] .reward-days{grid-column:1/3;justify-content:space-between;width:100%;gap:clamp(5px,1.8vw,11px);padding-right:0;margin-top:0}body[data-view=home] .reward-day i{width:27px;height:27px}body[data-view=home] .reward-claim{grid-column:1/3;grid-row:3;min-height:43px;min-width:117px;font-size:13px;margin-top:-2px}body[data-view=home] #rewardStatus{grid-row:4;margin-top:-6px}}
+body:is([data-view=home],[data-view=hub]) .daily-reward{grid-column:1/-1;grid-template-columns:minmax(0,1fr) 180px;min-height:225px;padding:25px 28px 22px;border:1px solid #7148ac;border-radius:25px;background:radial-gradient(ellipse at 100% 110%,#db318d9c,transparent 45%),radial-gradient(ellipse at 66% 24%,#5c38dfa6,transparent 55%),linear-gradient(120deg,#221657,#34156a);gap:10px}
+body:is([data-view=home],[data-view=hub]) .reward-copy{grid-column:1;max-width:70%;z-index:2}body:is([data-view=home],[data-view=hub]) .daily-reward h2{font-size:clamp(24px,3.5vw,34px)}body:is([data-view=home],[data-view=hub]) .reward-copy p{display:block;font-size:13px}body:is([data-view=home],[data-view=hub]) .reward-art{width:240px;height:190px;right:11%;top:5px;opacity:1}body:is([data-view=home],[data-view=hub]) .reward-days{display:flex;grid-column:1;grid-row:2;align-items:center;justify-content:flex-start;gap:clamp(8px,3vw,30px);margin-top:6px;width:auto}body:is([data-view=home],[data-view=hub]) .reward-claim{grid-column:2;grid-row:2;min-height:49px;font-size:15px;padding:9px 20px;min-width:120px;border-radius:15px}body:is([data-view=home],[data-view=hub]) #rewardStatus{grid-column:1/-1;grid-row:3;font-size:11px}
+@media(max-width:650px){body:is([data-view=home],[data-view=hub]) .my-table-card.is-unseated{padding:12px!important}body:is([data-view=home],[data-view=hub]) .brand-tiles{gap:4px!important}body:is([data-view=home],[data-view=hub]) .daily-reward{grid-template-columns:minmax(0,1fr) 91px;min-height:236px;padding:18px 16px;gap:13px}body:is([data-view=home],[data-view=hub]) .daily-reward h2{font-size:25px}body:is([data-view=home],[data-view=hub]) .reward-copy{max-width:80%;grid-column:1/3}body:is([data-view=home],[data-view=hub]) .reward-copy p{font-size:12px}body:is([data-view=home],[data-view=hub]) .reward-art{width:180px;height:145px;right:-8px;top:15px;opacity:.65}body:is([data-view=home],[data-view=hub]) .reward-days{grid-column:1/3;justify-content:space-between;width:100%;gap:clamp(5px,1.8vw,11px);padding-right:0;margin-top:0}body:is([data-view=home],[data-view=hub]) .reward-day i{width:27px;height:27px}body:is([data-view=home],[data-view=hub]) .reward-claim{grid-column:1/3;grid-row:3;min-height:43px;min-width:117px;font-size:13px;margin-top:-2px}body:is([data-view=home],[data-view=hub]) #rewardStatus{grid-row:4;margin-top:-6px}}
 
 /* Lobby v2: table controls belong to the lobby, not to an active match. */
 body[data-input="pointer"] :is(.illustrated-avatar,.home-portrait,.table-seat-label,.avatar-preview):focus{outline:none!important;box-shadow:none!important}

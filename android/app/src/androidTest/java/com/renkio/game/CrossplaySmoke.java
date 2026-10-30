@@ -26,13 +26,24 @@ public class CrossplaySmoke extends OfflineSmoke {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
+ private void backSmoke(){Bundle result=new Bundle();try{
+ Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());
+ matchWait(web,"typeof document.querySelector('.bottom-nav button[data-page=messages]')?.onclick==='function'");
+ for(String page:new String[]{"messages","friends","leaders","more"}){
+ matchJs(web,"document.querySelector('.bottom-nav button[data-page="+page+"]').click()");matchWait(web,"document.body.dataset.page==='"+page+"'&&document.body.dataset.view==='hub'");
+ sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);matchWait(web,"document.body.dataset.page==='home'&&document.body.dataset.view==='home'");
+ android.view.accessibility.AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();if(root!=null&&!root.findAccessibilityNodeInfosByText("Renkio kapatılsın mı?").isEmpty())throw new Exception("Exit dialog appeared before home");
+ }
+ sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);boolean prompt=false;for(int i=0;i<12;i++){android.view.accessibility.AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();if(root!=null&&!root.findAccessibilityNodeInfosByText("Renkio kapatılsın mı?").isEmpty()){prompt=true;break;}Thread.sleep(100);}if(!prompt)throw new Exception("Exit prompt missing on home");sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+ result.putString("result","PASS: real Android Back returns messages, friends, leaderboard and more to home; next Back shows exit confirmation");finish(Activity.RESULT_OK,result);
+ }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
  private void identitySmoke(boolean before){Bundle result=new Bundle();try{
  Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());
  String id="";for(int i=0;i<100;i++){String raw=matchJs(web,"JSON.parse(localStorage.getItem('renkio-profile')||'null')?.id||''");id=(String)new JSONTokener(raw).nextValue();if(!id.isEmpty())break;Thread.sleep(1000);}if(id.isEmpty())throw new Exception("Guest identity did not load");
  android.content.SharedPreferences prefs=getContext().getSharedPreferences("identity-smoke",0);if(before){prefs.edit().putString("expected",id).commit();result.putString("result","PASS: pre-update guest identity saved "+id);}else{String expected=args.getString("expected",prefs.getString("expected",""));if(expected.isEmpty()||!expected.equals(id))throw new Exception("Guest identity changed: expected "+expected+", received "+id);result.putString("result","PASS: installed native update preserved guest identity "+id);}
  finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
- @Override public void onStart(){if("identity-before".equals(args.getString("mode"))){identitySmoke(true);return;}if("identity-after".equals(args.getString("mode"))){identitySmoke(false);return;}if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
+ @Override public void onStart(){if("back".equals(args.getString("mode"))){backSmoke();return;}if("identity-before".equals(args.getString("mode"))){identitySmoke(true);return;}if("identity-after".equals(args.getString("mode"))){identitySmoke(false);return;}if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){

@@ -395,19 +395,19 @@ body[data-theme=day] .avatar-dialog .avatar-save { color:#fff!important; backgro
  .avatar-dialog .animation-choice>svg { width:23px; height:23px; }
 }
 @media(max-width:420px) {
- body[data-view=home] .home-actions :is(#findMatch,#create) {
+ body:is([data-view=home],[data-view=hub]) .home-actions :is(#findMatch,#create) {
   min-width:0;
   padding-inline:11px!important;
   gap:7px!important;
   font-size:clamp(13px,3.8vw,16px)!important;
  }
- body[data-view=home] .home-actions :is(#findMatch,#create)>span {
+ body:is([data-view=home],[data-view=hub]) .home-actions :is(#findMatch,#create)>span {
   min-width:0;
   white-space:normal!important;
   line-height:1.2;
   overflow-wrap:normal;
  }
- body[data-view=home] .home-actions :is(#findMatch,#create)>.icon {
+ body:is([data-view=home],[data-view=hub]) .home-actions :is(#findMatch,#create)>.icon {
   width:21px!important;
   height:21px!important;
   flex:none;
