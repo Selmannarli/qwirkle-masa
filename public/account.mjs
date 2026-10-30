@@ -4,10 +4,19 @@ try{const transfer=JSON.parse(window.RenkioNative?.legacyIdentity?.()||'null');f
 const auth=getAuth(initializeApp(firebaseConfig));auth.languageCode='tr';
 let changed=()=>{},known=null,guestPending=null;
 let restorePending=null;
+// Existing browser/WebView installations keep their own previous Firebase identity.
+async function previousBrowserIdentity(){
+ if(!globalThis.indexedDB)return null;
+ return new Promise(resolve=>{let done=false;const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value)};const timer=setTimeout(()=>finish(null),3000);let request;
+ try{request=indexedDB.open('firebaseLocalStorageDb')}catch{return finish(null)}
+ request.onupgradeneeded=()=>{request.transaction.abort();finish(null)};request.onerror=()=>finish(null);
+ request.onsuccess=()=>{const db=request.result;if(done){db.close();return}if(!db.objectStoreNames.contains('firebaseLocalStorage')){db.close();return finish(null)}let tx;try{tx=db.transaction('firebaseLocalStorage','readonly');const rows=tx.objectStore('firebaseLocalStorage').getAll();rows.onsuccess=()=>{const user=rows.result.map(row=>row.value).find(value=>value?.apiKey&&value.apiKey!==firebaseConfig.apiKey&&typeof value.stsTokenManager?.refreshToken==='string');finish(user?{refreshToken:user.stsTokenManager.refreshToken}:null)};tx.oncomplete=()=>db.close();tx.onerror=()=>{db.close();finish(null)}}catch{db.close();finish(null)}};
+ });
+}
 async function restoreIdentity(){
  await auth.authStateReady();if(auth.currentUser)return;
  restorePending??=(async()=>{let legacy=null;try{legacy=JSON.parse(window.RenkioNative?.legacyIdentity?.()||'null')}catch{}
- if(!legacy)return;const r=await fetch('/api/auth/upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:legacy.refreshToken}),signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Önceki hesabın aktarımı tamamlanamadı. İnternet bağlantını kontrol edip yeniden aç.');
+ legacy??=await previousBrowserIdentity();if(!legacy)return;const r=await fetch('/api/auth/upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:legacy.refreshToken}),signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Önceki hesabın aktarımı tamamlanamadı. İnternet bağlantını kontrol edip yeniden aç.');
  const {token}=await r.json();await signInWithCustomToken(auth,token);window.RenkioNative?.identityRestored?.();})();await restorePending;
 }
 const tags=new Map();
