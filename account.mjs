@@ -8,7 +8,7 @@ export async function verifyAccount(token){
  if(typeof token!=='string'||token.length>8192)throw Error('Hesabına yeniden giriş yap.');
  try{let p;const projects=[firebaseConfig.projectId,...(process.env.RENKIO_LEGACY_AUTH_PROJECT?[process.env.RENKIO_LEGACY_AUTH_PROJECT]:[])];for(const project of projects){try{({payload:p}=await jwtVerify(token,keys,{clockTolerance:30,algorithms:['RS256'],audience:project,issuer:'https://securetoken.google.com/'+project}));break}catch{}}if(!p)throw Error();
  if(!p.sub||p.sub.length>128||!Number.isInteger(p.auth_time)||p.auth_time>Date.now()/1000+30)throw Error();
- return {uid:p.sub,name:p.name||'',guest:p.firebase?.sign_in_provider==='anonymous'||!!p.renkioGuest&&!Object.keys(p.firebase?.identities||{}).length,authTime:p.auth_time};
+ return {uid:p.sub,project:p.aud,name:p.name||'',guest:p.firebase?.sign_in_provider==='anonymous'||!!p.renkioGuest&&!Object.keys(p.firebase?.identities||{}).length,authTime:p.auth_time};
  }catch{throw Error('Hesap oturumu doğrulanamadı. Yeniden giriş yap.')}
 }
 
