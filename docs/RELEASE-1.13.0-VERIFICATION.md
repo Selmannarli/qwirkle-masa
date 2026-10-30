@@ -32,3 +32,9 @@
 - Emulator and browser checks are not physical-device or large-concurrency load testing. No zero-defect guarantee.
 - Historical artifacts and old checkouts remain by explicit instruction. Old Firebase identity source is retained privately for installed-app recovery.
 - Google Play review/submission status must be checked separately; building or uploading a package alone is not publication.
+
+## Publication status
+- 30 October 2026: signed 1.13.0 / 11300 uploaded to the existing Alpha closed-test channel and the final review-submission confirmation completed. Play Console shows “İncelenmekte olan değişiklikler”; automatic pre-review checks are still running. This is not a claim that Google has approved the release.
+- Store website published as https://renkio.onrender.com. Privacy and account-deletion links submitted with the release.
+- APK, AAB and SHA256SUMS available at https://github.com/Selmannarli/renkio/releases/tag/v1.13.0.
+- On the actual emulator app, the live client revision was 9c91966b846bc190f9439dd749e6eafdb6fdbd89b7effe47cddb8a87a43bddb8 before and after force-stop/relaunch; the old guest player identity remained unchanged.
