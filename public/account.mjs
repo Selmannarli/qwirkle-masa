@@ -7,7 +7,7 @@ let restorePending=null;
 async function restoreIdentity(){
  await auth.authStateReady();if(auth.currentUser)return;
  restorePending??=(async()=>{let legacy=null;try{legacy=JSON.parse(window.RenkioNative?.legacyIdentity?.()||'null')}catch{}
- if(!legacy)return;const r=await fetch('/api/auth/upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(legacy),signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Önceki hesabın aktarımı tamamlanamadı. İnternet bağlantını kontrol edip yeniden aç.');
+ if(!legacy)return;const r=await fetch('/api/auth/upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:legacy.refreshToken}),signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Önceki hesabın aktarımı tamamlanamadı. İnternet bağlantını kontrol edip yeniden aç.');
  const {token}=await r.json();await signInWithCustomToken(auth,token);window.RenkioNative?.identityRestored?.();})();await restorePending;
 }
 const tags=new Map();
