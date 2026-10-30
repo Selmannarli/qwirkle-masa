@@ -1,6 +1,6 @@
 import {spawn,execFile} from 'node:child_process';
 import {bestMove} from '../public/engine.mjs';
-const base='https://qwirkle-masa.onrender.com';
+const base='https://renkio.onrender.com';
 const post=async(route,b)=>{const out=await new Promise((resolve,reject)=>execFile(process.platform==='win32'?'curl.exe':'curl',['--max-time','25','--fail-with-body','-sS',base+'/api/'+route,'-H','Content-Type: application/json','--data-binary',JSON.stringify(b)],(e,stdout)=>e?reject(Error(stdout||e.message)):resolve(stdout)));return JSON.parse(out)};
 const a=await post('create',{name:'Desktop QA'}),auth={room:a.code,token:a.token};
 const adb=process.env.ADB||'adb';

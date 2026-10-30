@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: qwirkle-masa
+    name: renkio
     runtime: node
     plan: free
     region: frankfurt

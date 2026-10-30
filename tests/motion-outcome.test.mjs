@@ -6,7 +6,7 @@ import {createGame,resignGame,resolveTimeout} from '../public/engine.mjs';
 const base=()=>({matchId:'outcome',revision:1,over:false,players:[{name:'Ada',score:20},{name:'Bora',score:35}],history:[],timeoutCounts:[0,0]});
 
 test('final moods belong to the displayed players and override whoever played the last tile',()=>{
- const before=base(),finished={...before,over:true,revision:2,history:[{actor:0,name:'Ada',score:12,qwirkles:1}]};
+ const before=base(),finished={...before,over:true,revision:2,history:[{actor:0,name:'Ada',score:12,renkios:1}]};
  assert.deepEqual(gameOutcomes(finished),['lose','win']);
  assert.deepEqual(characterEvents(before,finished),[{seat:0,mood:'lose'},{seat:1,mood:'win'}]);
  assert.deepEqual(gameOutcomes(before),[]);

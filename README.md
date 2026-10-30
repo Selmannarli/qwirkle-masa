@@ -18,7 +18,7 @@ Renkleri ve şekilleri birleştiren 2–4 kişilik çevrim içi masa oyunu. Renk
 
 ## Çalıştırma
 
-Node.js 22+ ile `npm start`; ardından http://localhost:4173 adresini açın. Bağımlılık kurulumu gerekmez. `PORT` ile port, `QWIRKLE_DATA` ile kayıt dizini değiştirilebilir. Yeni uygulama Renkio adını kullanır; mevcut kayıtların uyumluluğu için ortam değişkeni korunmuştur.
+Node.js 22+ ile `npm start`; ardından http://localhost:4173 adresini açın. Bağımlılık kurulumu gerekmez. `PORT` ile port, `RENKIO_DATA` ile kayıt dizini değiştirilebilir. Yeni uygulama Renkio adını kullanır; mevcut kayıtların uyumluluğu için ortam değişkeni korunmuştur.
 
 ## Oyun
 

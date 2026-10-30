@@ -15,7 +15,7 @@ test('weekly and monthly scores only include completed matches in the selected c
 test('every accessory slot includes an exclusive 50,000 gem item',()=>{for(const slot of ['head','face','neck'])assert.ok(ACCESSORIES.some(a=>a.slot===slot&&a.price===50000))});
 test('online views share character reactions, keep hands private, and archive final rack deductions',async()=>{
  const {spawn}=await import('node:child_process'),{mkdtemp,rm}=await import('node:fs/promises'),{tmpdir}=await import('node:os'),path=await import('node:path');
- const data=await mkdtemp(path.join(tmpdir(),'renkio-season-')),child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',QWIRKLE_DATA:data,RENKIO_EXPERIMENTAL:'1'}});
+ const data=await mkdtemp(path.join(tmpdir(),'renkio-season-')),child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',RENKIO_DATA:data,RENKIO_EXPERIMENTAL:'1'}});
  try{const origin=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/http:\/\/localhost:\d+/);if(m)resolve(m[0])});child.on('error',reject);child.on('exit',c=>reject(Error('server exit '+c)))});
   const call=async(route,b)=>{const r=await fetch(origin+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});assert.equal(r.status,200,route);return r.json()};
   const a=await call('create',{name:'A',turnSeconds:60}),b=await call('join',{room:a.code,name:'B'}),aa={room:a.code,token:a.token},bb={room:a.code,token:b.token};

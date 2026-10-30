@@ -24,7 +24,7 @@ test('time boost cannot be used during a third-timeout decision or after the mat
 });
 test('characters react once to committed scoring and timeouts, not reconnects or time boosts',()=>{
  const before={matchId:'x',revision:1,players:[{name:'A'},{name:'B'}],timeoutCounts:[0,0],history:[]};
- const after={...before,revision:2,history:[{actor:0,name:'A',score:12,qwirkles:1}]};assert.deepEqual(characterEvents(before,after),[{seat:0,mood:'celebrate'},{seat:1,mood:'sad'}]);
+ const after={...before,revision:2,history:[{actor:0,name:'A',score:12,renkios:1}]};assert.deepEqual(characterEvents(before,after),[{seat:0,mood:'celebrate'},{seat:1,mood:'sad'}]);
  assert.deepEqual(characterEvents(after,JSON.parse(JSON.stringify({...after,revision:3}))),[]);assert.deepEqual(characterEvents(null,after),[]);assert.deepEqual(characterEvents(before,{...after,matchId:'new'}),[]);
  assert.deepEqual(characterEvents(after,{...after,revision:3,timeoutCounts:[0,1]}),[{seat:1,mood:'sad'}]);
 });

@@ -4,7 +4,7 @@ Stable baseline: `613c68b`, tag `stable-1.8.1-before-experiment-20261024`.
 Experimental branch: `experiment/daily-joker-bonus-home`.
 Stable Render service, Google Play releases, signing files and existing Firestore data are preserved.
 
-Preview: `http://localhost:4188/`, server environment `RENKIO_EXPERIMENTAL=1` and isolated `QWIRKLE_DATA=.../work/experiment-data`. No production Firestore credential is used in this preview.
+Preview: `http://localhost:4188/`, server environment `RENKIO_EXPERIMENTAL=1` and isolated `RENKIO_DATA=.../work/experiment-data`. No production Firestore credential is used in this preview.
 
 ## Agreed rules
 

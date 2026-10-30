@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 /** Device smoke test: real WebView load and Android/desktop room interoperability. */
 public class CrossplaySmoke extends OfflineSmoke {
  private Bundle args;
- private final String base="https://qwirkle-masa.onrender.com";
+ private final String base="https://renkio.onrender.com";
  @Override public void onCreate(Bundle arguments){args=arguments;start();}
  private JSONObject post(String route,JSONObject body)throws Exception{
   HttpURLConnection c=(HttpURLConnection)new URL(base+"/api/"+route).openConnection();
@@ -26,7 +26,13 @@ public class CrossplaySmoke extends OfflineSmoke {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
- @Override public void onStart(){if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
+ private void identitySmoke(boolean before){Bundle result=new Bundle();try{
+ Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());
+ String id="";for(int i=0;i<100;i++){String raw=matchJs(web,"JSON.parse(localStorage.getItem('renkio-profile')||'null')?.id||''");id=(String)new JSONTokener(raw).nextValue();if(!id.isEmpty())break;Thread.sleep(1000);}if(id.isEmpty())throw new Exception("Guest identity did not load");
+ android.content.SharedPreferences prefs=getContext().getSharedPreferences("identity-smoke",0);if(before){prefs.edit().putString("expected",id).commit();result.putString("result","PASS: pre-update guest identity saved "+id);}else{String expected=prefs.getString("expected","");if(expected.isEmpty()||!expected.equals(id))throw new Exception("Guest identity changed: expected "+expected+", received "+id);result.putString("result","PASS: installed native update preserved guest identity "+id);}
+ finish(Activity.RESULT_OK,result);
+ }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
+ @Override public void onStart(){if("identity-before".equals(args.getString("mode"))){identitySmoke(true);return;}if("identity-after".equals(args.getString("mode"))){identitySmoke(false);return;}if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){

@@ -22,7 +22,7 @@ test('only a host can remove others; in-game removal preserves seat indexes, tur
 });
 test('multiplayer API revokes removed sessions, informs the removed client and persists tables across restart',async()=>{
  const data=await mkdtemp(path.join(tmpdir(),'renkio-lobbies-'));let child,url;
- const boot=async()=>{child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',QWIRKLE_DATA:data}});url=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/http:\/\/localhost:\d+/);if(m)resolve(m[0])});child.once('error',reject)});};
+ const boot=async()=>{child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',RENKIO_DATA:data}});url=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/http:\/\/localhost:\d+/);if(m)resolve(m[0])});child.once('error',reject)});};
  const stop=async()=>{const ended=new Promise(r=>child.once('exit',r));child.kill();await ended};
  const call=async(route,body)=>{const r=await fetch(url+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return{status:r.status,v:await r.json()}};
  try{

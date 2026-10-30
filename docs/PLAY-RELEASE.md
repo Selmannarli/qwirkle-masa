@@ -28,10 +28,10 @@ Android paketi HTML, CSS, oyun motoru ve bot Worker'ını kendi içinde taşır.
 ## Play Console'da kalan işlemler
 
 1. Kendi geliştirici hesabında Renkio adında **Oyun** oluştur. Kimlik ve hesap doğrulamalarını tamamla. Bu çalışma hesabına Play Console hesabına giriş yapmadı, sözleşme kabul etmedi veya uygulamayı Play’de yayımlamadı.
-2. Destek e-posta adresi: `selman.narli@gmail.com`. Varsa geliştirici web sitesi: `https://qwirkle-masa.onrender.com/`.
-3. Hesap silme URL’si: `https://qwirkle-masa.onrender.com/delete-account.html`. Uygulamada Ayarlar > Hesap > Hesabı sil.
+2. Destek e-posta adresi: `selman.narli@gmail.com`. Varsa geliştirici web sitesi: `https://renkio.onrender.com/`.
+3. Hesap silme URL’si: `https://renkio.onrender.com/delete-account.html`. Uygulamada Ayarlar > Hesap > Hesabı sil.
 
-   Gizlilik URL'si: `https://qwirkle-masa.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Gizlilik ve silme talepleri için iletişim adresi `selman.narli@gmail.com`.
+   Gizlilik URL'si: `https://renkio.onrender.com/privacy.html`. Aynı metin uygulamadaki Ayarlar > Gizlilik altında da bulunur. Gizlilik ve silme talepleri için iletişim adresi `selman.narli@gmail.com`.
 4. Mağaza metinlerini ve `store/` görsellerini ekle. Misafir girişi yeterlidir; inceleme için kayıtlı test hesabı gerekmez.
 5. Reklam beyanını **Hayır** olarak doldur. Veri güvenliği, içerik derecelendirmesi ve hedef kitle formlarını uygulamanın gerçek kullanımı ve işletme bilgilerinle tamamla. Sohbet ve kullanıcı mesajlarını gizleme; yaş derecesini ben senin adına seçmedim.
 6. Play App Signing'i etkinleştirip `renkio-1.1.0.aab` dosyasını önce dahili test kanalına yükle. Sürüm adı `1.1.0`, kodu `10100` görünmeli. Paket adını sonraki sürümlerde değiştirme.
@@ -66,7 +66,7 @@ Renkio, renk ve şekilleri eşleştirerek puan kazandığın bir taş oyunudur.
 
 ## İnceleyici talimatı
 
-Uygulamayı açıp bir oyuncu adı girin. **Bilgisayar > Miko ile oyna** yoluyla internetsiz mod denenebilir. İpucu düğmesine basıp öneriyi uygulayabilir ve onay simgesiyle hamleyi oynayabilirsiniz. Çevrim içi mod için **Arkadaşlarla > Masa kur** seçin; kodu başka bir Android cihazında veya `https://qwirkle-masa.onrender.com/` adresindeki tarayıcıda kullanarak katılın. Masa sahibi tur süresini seçip Başlat'a basar. Misafir hesabı otomatik açılır; isteğe bağlı e-posta/şifre veya Google girişi kullanılabilir. Ödeme gerekmez. Sunucu ücretsiz planda olduğu için ilk bağlantı uyanma gecikmesi yaşayabilir.
+Uygulamayı açıp bir oyuncu adı girin. **Bilgisayar > Miko ile oyna** yoluyla internetsiz mod denenebilir. İpucu düğmesine basıp öneriyi uygulayabilir ve onay simgesiyle hamleyi oynayabilirsiniz. Çevrim içi mod için **Arkadaşlarla > Masa kur** seçin; kodu başka bir Android cihazında veya `https://renkio.onrender.com/` adresindeki tarayıcıda kullanarak katılın. Masa sahibi tur süresini seçip Başlat'a basar. Misafir hesabı otomatik açılır; isteğe bağlı e-posta/şifre veya Google girişi kullanılabilir. Ödeme gerekmez. Sunucu ücretsiz planda olduğu için ilk bağlantı uyanma gecikmesi yaşayabilir.
 
 ## Eşleştirme
 

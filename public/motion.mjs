@@ -49,7 +49,7 @@ export function characterEvents(previous,next){
  const h=next.history?.[0];
  if(h&&JSON.stringify(h)!==JSON.stringify(previous.history?.[0])&&h.score>0){
   const names=next.players.map((p,i)=>p.name===h.name?i:-1).filter(i=>i>=0),actor=Number.isInteger(h.actor)?h.actor:names.length===1?names[0]:-1;
-  if(actor>=0&&actor<next.players.length&&!next.players[actor].eliminated){put(actor,'celebrate');if(h.qwirkles||h.score>=12)next.players.forEach((p,i)=>{if(i!==actor&&!p.eliminated)put(i,'sad')})}
+  if(actor>=0&&actor<next.players.length&&!next.players[actor].eliminated){put(actor,'celebrate');if(h.renkios||h.score>=12)next.players.forEach((p,i)=>{if(i!==actor&&!p.eliminated)put(i,'sad')})}
  }
  next.players.forEach((p,i)=>{if(p.eliminated&&!previous.players?.[i]?.eliminated)put(i,'lose')});
  return [...events.values()];
@@ -73,9 +73,9 @@ function launchHero(source,{target=()=>({x:innerWidth/2,y:innerHeight*.47}),elap
  const tick=now=>{if(cleaned)return;const t=Math.min(1,(now-started)/HERO_TIMING.duration);if(!impacted&&now-started>=HERO_TIMING.impact){impacted=true;document.dispatchEvent(new CustomEvent('renkio-impact',{detail:{...detail,point:target()}}))}let i=1;while(i<frames.length-1&&t>frames[i][0])i++;const a=frames[i-1],b=frames[i],u=(t-a[0])/(b[0]-a[0]),ease=u*u*(3-2*u),mix=j=>a[j]+(b[j]-a[j])*ease;hero.style.transform=`translate3d(${mix(1)}px,${mix(2)}px,0) scale(${mix(3)})`;hero.style.opacity=String(mix(4));light.style.opacity=String(Math.min(1,t/.12,(1-t)/.12));if(t<1)frame=requestAnimationFrame(tick);else cleanup()};light.style.animation='none';hero.style.willChange='transform,opacity';frame=requestAnimationFrame(tick);
 
 }
-export function previewCelebration(host){const source=host?.querySelector('.character-art');if(!source)return;launchHero(source,{detail:{preview:true,score:12,qwirkles:1}})}
+export function previewCelebration(host){const source=host?.querySelector('.character-art');if(!source)return;launchHero(source,{detail:{preview:true,score:12,renkios:1}})}
 function scoreHero(game,options){
- const h=game.celebration,key=game.matchId+':'+(h?.revision||game.revision);if(heroKey===null||!heroKey.startsWith(game.matchId+':')){heroKey=key;return}if(heroKey===key)return;heroKey=key;if(!h||h.revision!==game.revision)return;launchHero(document.querySelector('#scores [data-seat="'+h.actor+'"] .character-art'),{target:options.target,elapsed:options.elapsed||0,detail:{matchId:game.matchId,revision:h.revision,score:h.score,qwirkles:h.qwirkles}});
+ const h=game.celebration,key=game.matchId+':'+(h?.revision||game.revision);if(heroKey===null||!heroKey.startsWith(game.matchId+':')){heroKey=key;return}if(heroKey===key)return;heroKey=key;if(!h||h.revision!==game.revision)return;launchHero(document.querySelector('#scores [data-seat="'+h.actor+'"] .character-art'),{target:options.target,elapsed:options.elapsed||0,detail:{matchId:game.matchId,revision:h.revision,score:h.score,renkios:h.renkios}});
 }
 export function reactToGame(game,options={}){
  if(options.animateScore!==false)scoreHero(game,options);

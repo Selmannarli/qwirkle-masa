@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {bestMove} from '../public/engine.mjs';
 test('multiplayer API: privacy, host access, wrong turn, SSE and resume',async()=>{
- const data=await mkdtemp(path.join(tmpdir(),'qwirkle-test-'));const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',QWIRKLE_DATA:data}});
+ const data=await mkdtemp(path.join(tmpdir(),'renkio-test-'));const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',RENKIO_DATA:data}});
  try{const url=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/http:\/\/localhost:\d+/);if(m)resolve(m[0])});child.on('error',reject);child.on('exit',c=>reject(Error('Server exit '+c)))});
  const homepage=await fetch(url+'/');assert.equal(homepage.status,200);const html=await homepage.text();assert.ok(html.includes('/refine.css'));for(const asset of ['/style.css','/refine.css']){const stylesheet=await fetch(url+asset);assert.equal(stylesheet.status,200);assert.ok(stylesheet.headers.get('content-type').includes('text/css'));assert.ok((await stylesheet.text()).length>100)}
  const privacy=await fetch(url+'/privacy.html');assert.equal(privacy.status,200);assert.ok((await privacy.text()).includes('Gizlilik'));

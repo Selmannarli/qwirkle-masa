@@ -1,3 +1,3 @@
-// Firebase web configuration is public; authorization is enforced by signed ID tokens.
-export const firebaseConfig={apiKey:'AIzaSyASNhYLSASuhi9ujfdEe7nz3FXjHN6DYXQ',authDomain:'qwirkle-v-selman.firebaseapp.com',projectId:'qwirkle-v-selman',appId:'1:493668227359:web:91fd3e53cf93f9d93cf82a'};
-export const googleClientId='493668227359-udjb0cij2r7akepvthv6eqen3atluh6n.apps.googleusercontent.com';
+// Public client configuration. Server-side token verification enforces access.
+export const firebaseConfig={"apiKey":"AIzaSyAmfDZ3z-PHVQLHLOerxGC5DnwDyuW_zuA","authDomain":"renkio.firebaseapp.com","projectId":"renkio","appId":"1:29242429689:web:d03dd3d26cf2af02479228"};
+export const googleClientId='29242429689-b8kq150s2o7fvau3mqjrevrc98l9sh05.apps.googleusercontent.com';

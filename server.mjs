@@ -1,6 +1,6 @@
 import {recordApple} from './public/apple-rules.mjs';
 import {migrateGiftMessages,migrateRoomMessages,directMessages,sendDirect,conversationList,conversationAllowed} from './conversations.mjs';
-import {migrateBalances,markAdmin,debitDiamonds,gift,buyPracticeTime} from './economy-update.mjs';
+import {markAdmin,debitDiamonds,gift,buyPracticeTime} from './economy-update.mjs';
 import {tableGameView,expireTableGame,startTableGame,respondTableGame,pickTableGame,dismissTableGame,cancelTableGame} from './table-games.mjs';
 import {extendTurn} from './public/time-support.mjs';
 import {kickSeat,openRoomEntry,waitingRoomFor,leaveLobby} from './room-lifecycle.mjs';
@@ -22,12 +22,12 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {createGame,play,exchange,pass,celebrationLocked,expireTurn,resignGame,resolveTimeout} from './public/engine.mjs';
 import {TIME_OPTIONS,QUICK_MESSAGES} from './public/session.mjs';
-import {verifyAccount,publicProfile,verifyGoogleCredential} from './account.mjs';
+import {legacyIdentity,verifyAccount,publicProfile,verifyGoogleCredential} from './account.mjs';
 import {firebaseConfig} from './public/firebase-config.mjs';
 import {Matchmaker,planBotTurn,updateBotPace,ensureBotProfiles} from './matchmaking.mjs';
 import {BotRunner} from './server-bots.mjs';
 const chatTimes=new Map();let presenceDirty=false;
-const root=path.dirname(fileURLToPath(import.meta.url)),dataDir=process.env.QWIRKLE_DATA||path.join(root,'data');
+const root=path.dirname(fileURLToPath(import.meta.url)),dataDir=process.env.RENKIO_DATA||path.join(root,'data');
 await mkdir(dataDir,{recursive:true});
 const rooms=new Map();try{for(const r of JSON.parse(await readFile(path.join(dataDir,'rooms.json'),'utf8')))if(r.game&&!r.game.over||Date.now()-r.updated<7*86400000)rooms.set(r.code,r)}catch{}
 let social={profiles:{},matches:[]};try{social=JSON.parse(await readFile(path.join(dataDir,'social.json'),'utf8'))}catch{}
@@ -42,7 +42,7 @@ let saving=Promise.resolve();function persist(){const state=structuredClone({roo
 for(const [id,profile]of Object.entries(social.profiles))if(/^\d{12}$/.test(id)){profile.createdAt??=Date.now();grantOctoberGift(profile)}
 for(const r of rooms.values())if(r.game)r.pushTurn??=r.game.matchId+':'+r.game.revision;
 ensureAdminFriends(social);
-migrateBalances(social);
+// The historical balance reset already ran; preserve migrated inventories and balances.
 await persist();
 const push=new PushNotifications(social,async message=>{if(!cloudStore)return;const {getMessaging}=await import('firebase-admin/messaging');await getMessaging().send(message)},persist);
 const streams=new Map();const clients=new Map();const serverInstance=randomBytes(12).toString('hex');let snapshotSerial=0;
@@ -69,7 +69,7 @@ function applyExpiry(r){if(r.game?.celebration&&!r.game.celebration.released&&!c
 let bundlePromise;
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
- res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://qwirkle-v-selman.firebaseapp.com; frame-src https://qwirkle-v-selman.firebaseapp.com; frame-ancestors 'self'; base-uri 'none'; form-action 'self'");
+ res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://renkio.firebaseapp.com; frame-src https://renkio.firebaseapp.com; frame-ancestors 'self'; base-uri 'none'; form-action 'self'");
  if(req.url.split('?')[0]==='/login.html'){res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; frame-ancestors 'self'; base-uri 'none'; form-action 'self'")}
  try{const u=new URL(req.url,'http://localhost');
  if(u.pathname==='/api/client-bundle'&&(req.method==='GET'||req.method==='HEAD')){try{bundlePromise??=clientBundle(root).then(bundle=>({revision:bundle.revision,json:JSON.stringify(bundle)}));const bundle=await bundlePromise;res.setHeader('ETag','"'+bundle.revision+'"');if(req.headers['if-none-match']==='"'+bundle.revision+'"'){res.writeHead(304);res.end();return}if(req.method==='HEAD'){res.writeHead(200);res.end();return}res.writeHead(200,{'Content-Type':'application/json; charset=utf-8'});res.end(bundle.json);return}catch(error){bundlePromise=null;throw error}}
@@ -83,6 +83,7 @@ const server=http.createServer(async(req,res)=>{
  if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)return reply(res,403,{error:'İstek kaynağı geçerli değil.'});
  const ip=req.socket.remoteAddress,now=Date.now(),rate=clients.get(ip)||{time:now,n:0};if(now-rate.time>60000){rate.time=now;rate.n=0}if(++rate.n>1200)return reply(res,429,{error:'Çok fazla istek. Biraz bekle.'});clients.set(ip,rate);
  const b=await body(req);
+ if(u.pathname==='/api/auth/upgrade'){const user=await legacyIdentity(b);const {playerId}=await import('./account.mjs');if(!social.profiles[playerId(user.uid)])throw Error('Önceki oyuncu kaydı bulunamadı.');const {getAuth}=await import('firebase-admin/auth');const token=await getAuth().createCustomToken(user.uid,{renkioGuest:user.guest});return reply(res,200,{token})}
  if(u.pathname==='/api/auth/begin'){if(authFlows.size>=1000)throw Error('Biraz sonra yeniden dene.');const flow=randomBytes(32).toString('hex'),poll=randomBytes(32).toString('hex');authFlows.set(flow,{poll,at:Date.now()});return reply(res,200,{flow,poll})}
  if(u.pathname==='/api/auth/complete'){const f=authFlows.get(b.flow);if(!f||Date.now()-f.at>180000||f.credential)throw Error('Giriş isteğinin süresi doldu.');if(typeof b.credential!=='string'||b.credential.length>8192)throw Error('Giriş doğrulanamadı.');await verifyGoogleCredential(b.credential,b.flow);f.credential=b.credential;return reply(res,200,{ok:true})}
  if(u.pathname==='/api/auth/poll'){const f=authFlows.get(b.flow);if(!f||f.poll!==b.poll||Date.now()-f.at>180000)throw Error('Giriş isteğinin süresi doldu.');if(!f.credential)return reply(res,200,{ready:false});authFlows.delete(b.flow);return reply(res,200,{ready:true,credential:f.credential})}
