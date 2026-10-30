@@ -12,4 +12,7 @@ body[data-motion=reduced] .apple-bonk i{animation:none}body[data-motion=reduced]
 .apple-control{position:fixed;z-index:24;width:46px;height:46px;transform:translateX(-50%);display:grid;place-items:center;border:1px solid #b49bce66;border-radius:50%;background:#413252d9;box-shadow:0 3px 12px #160c2333;touch-action:none;cursor:grab;user-select:none;-webkit-tap-highlight-color:transparent}.apple-control[hidden]{display:none}.apple-control svg{width:26px;height:28px}.apple-control:active{cursor:grabbing;background:#594069}body[data-theme=day] .apple-control{background:#fff9;box-shadow:0 3px 12px #674c7b22}
 .message-gift{position:relative;display:grid;gap:5px;min-width:140px;border:1px solid #ad88e577;background:linear-gradient(135deg,#5a327f44,#8b5cd122)}.message-gift .gift-message-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#9a65da33;color:#cba2ff}.gift-message-icon svg{width:25px;height:25px}.message-gift p{font-weight:800}.message-gift small,.message-gift>span:not(.gift-message-icon){font-size:12px;opacity:.8}
 
-.apple-control.aiming{opacity:.35}
+.apple-control{transform:translate(calc(-50% + var(--pull-x,0px)),var(--pull-y,0px));transition:background .15s,box-shadow .15s;isolation:isolate}
+.apple-control::before{content:"";position:absolute;inset:-4px;border-radius:50%;z-index:-1;background:conic-gradient(#eecb7c calc(var(--power,0)*1turn),transparent 0);mask:radial-gradient(transparent 65%,#000 68%)}
+.apple-control:disabled{cursor:default;opacity:.45}.apple-control:disabled::before{background:conic-gradient(#b49bce calc(var(--cooldown,0)*1turn),transparent 0)}
+.apple-control.aiming{background:#634872;box-shadow:0 0 calc(5px + var(--power,0)*15px) #efc26b66}
