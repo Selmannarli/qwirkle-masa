@@ -20,3 +20,6 @@ export class ChatReadState{
 export function roomChatKey(room,owner){const ids=room.seats?.map(s=>s.playerId);return 'renkio-chat-read:'+owner+':'+(ids?.length===2&&ids.every(Boolean)&&!room.seats.some(s=>s.bot)?ids.sort().join(':'):'room:'+room.code)}
 export function directChatKey(a,b){return 'renkio-chat-read:'+a+':'+[a,b].sort().join(':')}
 export function giftLabel(m,translate=x=>x){return m.kind==='gift'?m.gift.amount+' × '+translate({joker:'Joker',hint:'İpucu',diamonds:'Elmas'}[m.gift.item]||'Hediye'):m.text}
+
+// Board/history change with revision; cosmetic packets need not serialize them again.
+export function gameRenderKey(g){return g?JSON.stringify([g.matchId,g.revision,g.turn,g.turnSerial,g.over,g.turnSeconds,g.turnDeadline,g.timeSupportUsed,g.timeoutCounts,g.timeoutDecision,g.players,g.celebration,g.bagCount]):''}

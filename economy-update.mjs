@@ -11,7 +11,7 @@ export function migrateBalances(state,now=Date.now()){
  }
  state.balanceReset20261028={at:now,previous};return true;
 }
-export function markAdmin(profile,id){if(id===ADMIN_PLAYER_ID){rewardView(profile);if(!profile.economy.unlimited)profile.economy.diamonds=700000;profile.economy.unlimited=true}}
+export function markAdmin(profile,id){if(id!==ADMIN_PLAYER_ID)return false;const changed=!profile.economy?.unlimited;rewardView(profile);if(changed)profile.economy.diamonds=700000;profile.economy.unlimited=true;return changed}
 export function debitDiamonds(profile,amount){
  rewardView(profile);if(!Number.isSafeInteger(amount)||amount<1)throw Error('Geçersiz miktar.');
  if(profile.economy.diamonds<amount&&!profile.economy.unlimited)throw Error('Yeterli elmasın yok.');
