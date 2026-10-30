@@ -12,6 +12,6 @@ export function createOpening({doc=document,win=window}={}){
  win.addEventListener('renkio-update',e=>{gate.update(e.detail);if(e.detail==='saved'&&!gate.closed&&native)win.RenkioNative.refresh()});
  const failed=()=>{if(gate.closed)return;label.textContent=language()?'Could not connect. Try again.':'Bağlantı kurulamadı. Tekrar deneyebilirsin.';retry.hidden=false;retry.textContent=language()?'Try again':'Yeniden dene';screen.classList.add('startup-failed')};
  retry.onclick=()=>win.location.reload();doc.querySelector('script[src="/app.mjs"]')?.addEventListener('error',failed);timer=setTimeout(failed,120000);gate.onChange(gate);
- return {finished,start(preparation){if(started)return;started=true;const began=performance.now();if(native){gate.update('checking');try{win.RenkioNative.refresh()}catch{gate.update('offline')}}Promise.resolve(preparation).then(()=>new Promise(r=>setTimeout(r,Math.max(0,400-(performance.now()-began))))).then(()=>gate.ready(),failed)}};
+ return {finished,start(preparation){if(started)return;started=true;const began=performance.now();if(native){if(win.navigator?.onLine===false)gate.update('offline');else{gate.update('checking');try{win.RenkioNative.refresh()}catch{gate.update('offline')}}}Promise.resolve(preparation).then(()=>new Promise(r=>setTimeout(r,Math.max(0,400-(performance.now()-began))))).then(()=>gate.ready(),failed)}};
 }
 export const opening=typeof document==='undefined'?null:createOpening();

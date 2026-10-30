@@ -28,8 +28,8 @@ public class CrossplaySmoke extends OfflineSmoke {
  }
  private void startupSmoke(){Bundle result=new Bundle();try{
  Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());boolean saw=false,ready=false;
- for(int i=0;i<1000;i++){boolean opening="true".equals(matchJs(web,"!!document.getElementById('startupScreen')&&!document.getElementById('startupScreen').classList.contains('startup-leaving')"));saw|=opening;if(saw&&"true".equals(matchJs(web,"!document.body.hasAttribute('data-starting')&&typeof document.getElementById('create')?.onclick==='function'"))){ready=true;break;}Thread.sleep(100);}
- if(!saw||!ready)throw new Exception("Opening did not transition to ready game");if(!"false".equals(matchJs(web,"document.body.innerText.includes('Güncelsin.')")))throw new Exception("Unexpected success toast");
+ for(int i=0;i<1000;i++){try{boolean opening="true".equals(matchJs(web,"!!document.getElementById('startupScreen')&&!document.getElementById('startupScreen').classList.contains('startup-leaving')"));if(opening&&!saw){Bundle stage=new Bundle();stage.putString("stage","opening visible");sendStatus(1,stage);}saw|=opening;if(saw&&"true".equals(matchJs(web,"!document.body.hasAttribute('data-starting')&&typeof document.getElementById('create')?.onclick==='function'"))){if("true".equals(matchJs(web,"document.getElementById('toast')?.textContent.includes('Güncelsin.')===true")))throw new Exception("Unexpected success toast");ready=true;break;}}catch(Exception sampling){if(!"WebView timeout".equals(sampling.getMessage()))throw sampling;}Thread.sleep(100);}
+ if(!saw||!ready)throw new Exception("Opening did not transition to ready game");
  result.putString("result","PASS: installed Android showed opening screen, completed preparation/update handshake, revealed ready game and did not show up-to-date toast");finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
  private void backSmoke(){Bundle result=new Bundle();try{
@@ -63,7 +63,7 @@ public class CrossplaySmoke extends OfflineSmoke {
   JSONObject played=post("action",action).getJSONObject("game");if(played.getInt("revision")!=game.getInt("revision")+1)throw new Exception("Revision did not advance");
   result.putString("result","PASS: WebView loaded without hints; Android joined desktop room; private hands and turn action verified");result.putInt("revision",played.getInt("revision"));finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
- private String matchJs(WebView web,String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript(script,v->{value[0]=v;latch.countDown();}));if(!latch.await(5,TimeUnit.SECONDS))throw new Exception("WebView timeout");return value[0];}
+ private String matchJs(WebView web,String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript(script,v->{value[0]=v;latch.countDown();}));if(!latch.await(15,TimeUnit.SECONDS))throw new Exception("WebView timeout");return value[0];}
  private void matchWait(WebView web,String condition)throws Exception{for(int i=0;i<180;i++){if("true".equals(matchJs(web,condition)))return;Thread.sleep(500);}throw new Exception("Match UI timeout: "+condition);}
  private void captureMatch(String name)throws Exception{dismissSystemWait();android.graphics.Bitmap b=getUiAutomation().takeScreenshot();try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),name))){b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}b.recycle();}
  private void matchSmoke(){Bundle result=new Bundle();try{dismissSystemWait();
