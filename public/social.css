@@ -50,3 +50,5 @@ body[data-theme=day] #directConversation{background:#fff}body[data-theme=day] .d
 @media(max-width:350px){#friendsList .friend-entry{gap:6px!important}#friendsList .friend-entry>.icon-button{width:36px;height:40px;padding:9px}#friendsList .friend-entry>.illustrated-avatar{width:40px!important;height:40px!important}.conversation-row{gap:9px}.conversation-row>.illustrated-avatar{width:43px!important;height:43px!important}}
 
 @media(max-width:540px){body[data-page=messages]:has(#directInput:focus){--social-bottom:env(safe-area-inset-bottom)}body[data-page=messages]:has(#directInput:focus) .bottom-nav{display:none}}
+
+body[data-theme=day]:is([data-page=messages],[data-page=friends]){--surface:#fff;--ink:#352a49;--muted:#776684;--line:#dfd4ec;--bg:#f7f4ff;color:var(--ink)!important}
