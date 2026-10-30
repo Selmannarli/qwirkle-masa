@@ -32,9 +32,9 @@ public class CrossplaySmoke extends OfflineSmoke {
  for(String page:new String[]{"messages","friends","leaders","more"}){
  matchJs(web,"document.querySelector('.bottom-nav button[data-page="+page+"]').click()");matchWait(web,"document.body.dataset.page==='"+page+"'&&document.body.dataset.view==='hub'");
  sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);matchWait(web,"document.body.dataset.page==='home'&&document.body.dataset.view==='home'");
- android.view.accessibility.AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();if(root!=null&&!root.findAccessibilityNodeInfosByText("Renkio kapatılsın mı?").isEmpty())throw new Exception("Exit dialog appeared before home");
+ if(a.isFinishing()||!a.hasWindowFocus())throw new Exception("Exit dialog appeared before home");
  }
- sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);boolean prompt=false;for(int i=0;i<12;i++){android.view.accessibility.AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();if(root!=null&&!root.findAccessibilityNodeInfosByText("Renkio kapatılsın mı?").isEmpty()){prompt=true;break;}Thread.sleep(100);}if(!prompt)throw new Exception("Exit prompt missing on home");sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+ sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);boolean prompt=false;for(int i=0;i<20;i++){if(!a.hasWindowFocus()&&!a.isFinishing()){prompt=true;break;}Thread.sleep(100);}if(!prompt)throw new Exception("Exit prompt missing on home");sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
  result.putString("result","PASS: real Android Back returns messages, friends, leaderboard and more to home; next Back shows exit confirmation");finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
  private void identitySmoke(boolean before){Bundle result=new Bundle();try{
