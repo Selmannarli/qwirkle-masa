@@ -9,6 +9,7 @@ async function portraitRuntime(){
  if(portraits)return portraits;
  if(!loading)loading=import('./table-engine.mjs').then(({CharacterPortraits})=>portraits=new CharacterPortraits({reduced})).catch(error=>{for(const art of document.querySelectorAll('.character-art'))art.dataset.modelState='unavailable';console.warn('Character renderer unavailable',error.message);return null});return loading;
 }
+export async function waitForCharacters(){await portraitRuntime();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
 export function characterHasVoice(mood){return ['hello','win','lose','draw','celebrate','impact','angry','surprise'].includes(mood)||typeof mood==='string'&&mood.startsWith('greet')}
 export function playCharacter(host,mood='hello',remaining=null,options={}){
  const art=host?.matches?.('.character-art')?host:host?.querySelector?.('.character-art');if(!art)return null;const request={};requests.set(art,request);

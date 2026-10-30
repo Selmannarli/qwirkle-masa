@@ -1,10 +1,11 @@
+import {opening} from './startup.mjs';
 import {acceptRoomSnapshot,ChatReadState,roomChatKey,directChatKey,giftLabel} from './live-state.mjs';
 import {AppleGame} from './apple-game.mjs';
 import {MIKO_AVATAR} from './character-style.mjs';
 import {extendTurn} from './time-support.mjs';
 import {t,installLanguage,locale} from './i18n.mjs';
 import {renderTable,updateTableRound} from './table.mjs';
-import {installCharacterMotion,playCharacter,reactToGame,gameOutcomes,scoreStripKey,updateWaitingCharacters,cancelCharacterVisit,characterVisitActive} from './motion.mjs';
+import {installCharacterMotion,waitForCharacters,playCharacter,reactToGame,gameOutcomes,scoreStripKey,updateWaitingCharacters,cancelCharacterVisit,characterVisitActive} from './motion.mjs';
 import {syncPush,removePush,nativePushState} from './push-client.mjs';
 import {botThinkDelay,practiceAvailable,practiceSnapshot,restorePractice} from './practice.mjs';
 import {GameFeel,moveEnergy,movePower} from './game-feel.mjs';
@@ -86,8 +87,9 @@ $('name').value=read('renkio-name','')||localStorage.getItem('qw-name')||'';
 let searching=false,searchTimer=null,searchGeneration=0,searchStarted=0,searchToken=null,authRegister=false,authFlow=null,authPoll=null,accountWorking=false;
 async function accountPayload(){const n=$('name').value.trim();await accounts.ensureAccount();if(n&&n!==accounts.profile.name)await accounts.setNickname(n);await syncAvatar();return {accountToken:await accounts.accountToken()}}
 function clearRoomSession(){stream?.close();session=null;room=null;game=null;save('renkio-session',null);try{sessionStorage.removeItem('renkio-session')}catch{}localStorage.removeItem('qw-session');$('resume').classList.add('hidden')}
-accounts.watchProfile(p=>{setAvatarOwner(p?.id);if(p?.id!==walletOwner){wallet={diamonds:0,inventory:{joker:0,hint:0},balance:0,available:null,claimedDays:0};paintReward()}if(p&&friendsOwner!==p.id){friendsData=read('renkio-friends:'+p.id,{friends:[],incoming:[],outgoing:[],invites:[]});friendsOwner=p.id;renderFriends()}if(p){$('name').value=p.name;save('renkio-name',p.name)}$('accountName').textContent=p?.name||'Misafir';$('accountId').textContent=p?'ID '+(p.tag||'…'):'';$('accountKind').textContent=p?.guest?'Misafir':'Hesap';$('nickname').value=p?.name||$('name').value;$('guestNote').classList.toggle('hidden',!!p&&!p.guest);$('logoutAccount').classList.toggle('hidden',!p||p.guest);$('authOptions').classList.toggle('hidden',!!p&&!p.guest);$('deleteAccount').classList.toggle('hidden',!p);renderProfileButton();if(p){refreshWallet().catch(()=>{});syncPush(p,accounts.accountToken,api,preferences).catch(()=>{})}if(view==='home')refreshOpenGames();if(p){restoreRoomSession().catch(()=>{})}if(p){syncAvatar().catch(()=>{});refreshFriends().catch(()=>{})}else{friendsOwner=null;friendsData={friends:[],incoming:[],outgoing:[],invites:[]};renderFriends()}});
-if(navigator.onLine)accounts.ensureAccount().catch(()=>{});
+let homePreparation=Promise.resolve();
+accounts.watchProfile(p=>{setAvatarOwner(p?.id);if(p?.id!==walletOwner){wallet={diamonds:0,inventory:{joker:0,hint:0},balance:0,available:null,claimedDays:0};paintReward()}if(p&&friendsOwner!==p.id){friendsData=read('renkio-friends:'+p.id,{friends:[],incoming:[],outgoing:[],invites:[]});friendsOwner=p.id;renderFriends()}if(p){$('name').value=p.name;save('renkio-name',p.name)}$('accountName').textContent=p?.name||'Misafir';$('accountId').textContent=p?'ID '+(p.tag||'…'):'';$('accountKind').textContent=p?.guest?'Misafir':'Hesap';$('nickname').value=p?.name||$('name').value;$('guestNote').classList.toggle('hidden',!!p&&!p.guest);$('logoutAccount').classList.toggle('hidden',!p||p.guest);$('authOptions').classList.toggle('hidden',!!p&&!p.guest);$('deleteAccount').classList.toggle('hidden',!p);renderProfileButton();if(p){homePreparation=refreshWallet().catch(()=>{});syncPush(p,accounts.accountToken,api,preferences).catch(()=>{})}if(view==='home')homePreparation=Promise.allSettled([homePreparation,refreshOpenGames()]);if(p){restoreRoomSession().catch(()=>{})}if(p){syncAvatar().catch(()=>{});refreshFriends().catch(()=>{})}else{friendsOwner=null;friendsData={friends:[],incoming:[],outgoing:[],invites:[]};renderFriends()}});
+const initialAccount=navigator.onLine?accounts.ensureAccount().catch(()=>{}):Promise.resolve();
 function stopSearch(){searching=false;searchGeneration++;clearTimeout(searchTimer);searchTimer=null;homeBusy(false)}
 function showSearch(v){searchStarted=v.joinedAt;serverOffset=v.serverNow-Date.now();$('matchStatus').textContent='';updateSearchClock()}
 function updateSearchClock(){if(!searching)return;const seconds=Math.max(0,Math.floor((Date.now()+serverOffset-searchStarted)/1000));$('matchTime').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')}
@@ -267,7 +269,7 @@ function historyEntry(h,index){const r=node('div','history-row'),content=node('d
 
 $('refreshApp').onclick=()=>{if(view!=='home'){toast('Güncellemek için ana menüye dön.');return}closeDialogs();window.RenkioNative?.refresh()};
 
-window.addEventListener('renkio-update',e=>{const button=$('refreshApp');button.disabled=e.detail==='checking';button.innerHTML=icon('refresh')+(e.detail==='checking'?'Kontrol ediliyor…':'Güncel sürümü yükle');if(e.detail==='current')toast('Güncelsin.');if(e.detail==='offline')toast('Güncelleme alınamadı; kayıtlı sürüm korunuyor.');});
+window.addEventListener('renkio-update',e=>{$('refreshApp').disabled=e.detail==='checking'});
 
 function openGames(){return read('renkio-open-games',[]).filter(g=>g.owner&&g.owner===accounts.profile?.id&&g.token)}
 function storeOpenGames(games){const owner=accounts.profile?.id;const others=read('renkio-open-games',[]).filter(g=>g.owner&&g.owner!==owner);save('renkio-open-games',[...others,...games].slice(-100))}
@@ -419,7 +421,7 @@ function paintPushStatus(){const button=$('enablePhoneNotifications'),label=$('p
 $('enablePhoneNotifications').onclick=()=>{try{preferences.alerts=true;setPreferences();window.RenkioNative.enableNotifications()}catch{toast('Bildirim izni açılamadı.','error')}};
 window.addEventListener('renkio-push-state',()=>{paintPushStatus();if(accounts.profile)syncPush(accounts.profile,accounts.accountToken,api,preferences).catch(()=>{})});paintPushStatus();
 async function openNotification(){const params=new URL(location.href).searchParams,kind=params.get('notification'),code=params.get('room');if(!kind||!code||!/^([A-F0-9]{6})$/.test(code))return;try{await accounts.ensureAccount();if(kind==='invite'){await refreshFriends();modal('friendsDialog')}else{const v=await api('push/open',{accountToken:await accounts.accountToken(),room:code});if(v.conversation){setView('home');await openDirect(v.conversation)}else{connect(v);if(kind==='message')setChatPage(true)}}}catch(e){toast(e.message,'error')}}
-openNotification();
+opening.finished.then(openNotification);
 
 // Waiting-room games share the authenticated room stream; choices stay on the server.
 const RPS_LABELS={rock:'Taş',paper:'Kâğıt',scissors:'Makas'};
@@ -460,7 +462,7 @@ $('directComposer').onsubmit=async e=>{e.preventDefault();const input=$('directI
 setInterval(async()=>{if(document.hidden||document.body.dataset.page!=='messages'||!directPeer||directPolling)return;const id=directPeer,request=directRequest;directPolling=true;try{const v=await api('messages',{accountToken:await accounts.accountToken(),playerId:id});if(request===directRequest){const old=new Set(directRows.map(m=>m.id));if(v.messages.some(m=>!old.has(m.id))){directRows=[...directRows.filter(m=>!v.messages.some(n=>n.id===m.id)),...v.messages];drawDirect()}}}catch{}finally{directPolling=false}},3000);
 
 // Existing Android shells can also check and activate safely once per launch.
-if(window.RenkioNative?.refresh&&!sessionStorage.getItem('renkio-auto-update-checked')){sessionStorage.setItem('renkio-auto-update-checked','1');setTimeout(()=>{if(view==='home')window.RenkioNative.refresh()},1000)}
+opening.start((async()=>{if(navigator.onLine){let deadline;await Promise.race([(async()=>{await initialAccount;await homePreparation})(),new Promise(resolve=>{deadline=setTimeout(resolve,20000)})]).finally(()=>clearTimeout(deadline))}await Promise.allSettled([waitForCharacters(),document.fonts?.ready])})());
 if(window.RenkioNative?.enableNotifications&&!nativePushState()?.asked&&!read('renkio-notification-asked')&&preferences.alerts){save('renkio-notification-asked',true);window.RenkioNative.enableNotifications()}
 
 function lastOnline(at){if(!at)return t('Son görülme bilgisi yok');const seconds=Math.max(0,(Date.now()-at)/1000);if(seconds<45)return t('Çevrim içi');if(seconds<60)return t('Az önce');const [value,unit]=seconds<3600?[Math.floor(seconds/60),'minute']:seconds<86400?[Math.floor(seconds/3600),'hour']:[Math.floor(seconds/86400),'day'];return t('Son görülme')+': '+new Intl.RelativeTimeFormat(locale(),{numeric:'always'}).format(-value,unit)}

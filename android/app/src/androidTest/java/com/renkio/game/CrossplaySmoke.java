@@ -26,6 +26,12 @@ public class CrossplaySmoke extends OfflineSmoke {
    List<JSONObject> group=new ArrayList<>();Set<String> seen=new HashSet<>();for(int i=0;i<hand.length();i++){JSONObject t=hand.getJSONObject(i);String k=t.getInt("c")+":"+t.getInt("s");if(t.getInt(attr)==n&&seen.add(k))group.add(t);}if(group.size()>best.size())best=group;
   }JSONArray result=new JSONArray();for(int i=0;i<best.size();i++)result.put(new JSONObject().put("id",best.get(i).getString("id")).put("x",i).put("y",0));return result;
  }
+ private void startupSmoke(){Bundle result=new Bundle();try{
+ Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());boolean saw=false,ready=false;
+ for(int i=0;i<1000;i++){boolean opening="true".equals(matchJs(web,"!!document.getElementById('startupScreen')&&!document.getElementById('startupScreen').classList.contains('startup-leaving')"));saw|=opening;if(saw&&"true".equals(matchJs(web,"!document.body.hasAttribute('data-starting')&&typeof document.getElementById('create')?.onclick==='function'"))){ready=true;break;}Thread.sleep(100);}
+ if(!saw||!ready)throw new Exception("Opening did not transition to ready game");if(!"false".equals(matchJs(web,"document.body.innerText.includes('Güncelsin.')")))throw new Exception("Unexpected success toast");
+ result.putString("result","PASS: installed Android showed opening screen, completed preparation/update handshake, revealed ready game and did not show up-to-date toast");finish(Activity.RESULT_OK,result);
+ }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
  private void backSmoke(){Bundle result=new Bundle();try{
  Activity a=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));WebView web=findWebView(a.getWindow().getDecorView());
  matchWait(web,"typeof document.querySelector('.bottom-nav button[data-page=messages]')?.onclick==='function'");
@@ -43,7 +49,7 @@ public class CrossplaySmoke extends OfflineSmoke {
  android.content.SharedPreferences prefs=getContext().getSharedPreferences("identity-smoke",0);if(before){prefs.edit().putString("expected",id).commit();result.putString("result","PASS: pre-update guest identity saved "+id);}else{String expected=args.getString("expected",prefs.getString("expected",""));if(expected.isEmpty()||!expected.equals(id))throw new Exception("Guest identity changed: expected "+expected+", received "+id);result.putString("result","PASS: installed native update preserved guest identity "+id);}
  finish(Activity.RESULT_OK,result);
  }catch(Exception e){result.putString("error",e.toString());finish(Activity.RESULT_CANCELED,result);}}
- @Override public void onStart(){if("back".equals(args.getString("mode"))){backSmoke();return;}if("identity-before".equals(args.getString("mode"))){identitySmoke(true);return;}if("identity-after".equals(args.getString("mode"))){identitySmoke(false);return;}if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
+ @Override public void onStart(){if("startup".equals(args.getString("mode"))){startupSmoke();return;}if("back".equals(args.getString("mode"))){backSmoke();return;}if("identity-before".equals(args.getString("mode"))){identitySmoke(true);return;}if("identity-after".equals(args.getString("mode"))){identitySmoke(false);return;}if("push".equals(args.getString("mode"))){PushSmoke.run(this);return;}if("offline".equals(args.getString("mode"))){super.onStart();return;}if("match".equals(args.getString("mode"))){matchSmoke();return;}Bundle result=new Bundle();try{
   Activity activity=startActivitySync(getTargetContext().getPackageManager().getLaunchIntentForPackage("com.renkio.game"));
   WebView web=findWebView(activity.getWindow().getDecorView());
   boolean loaded=false;for(int i=0;i<60;i++){
