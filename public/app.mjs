@@ -1,4 +1,4 @@
-import {SingleFlight,READ_ROUTES} from './network.mjs';
+import {SingleFlight,READ_ROUTES,requestApiJson} from './network.mjs';
 import {opening} from './startup.mjs';
 import {acceptRoomSnapshot,gameRenderKey,ChatReadState,roomChatKey,directChatKey,giftLabel} from './live-state.mjs';
 import {AppleGame} from './apple-game.mjs';
@@ -123,7 +123,7 @@ const soloSaved=readPractice();$('resume').classList.toggle('hidden',!session&&!
 const invitation=new URL(location.href).searchParams.get('room');if(invitation){$('code').value=invitation.toUpperCase().slice(0,6);mode(false)}
 function name(){const n=$('name').value.trim();if(!n){$('name').focus();throw Error('Önce oyuncu adını yazalım.')}save('renkio-name',n);return n}
 function api(route,data,timeout=65000){return readRequests.run(READ_ROUTES.has(route)?route+':'+locale()+':'+timeout+':'+JSON.stringify(data):null,()=>apiRaw(route,data,timeout))}
-async function apiRaw(route,data,timeout=65000){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const res=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,language:locale().slice(0,2)}),signal:controller.signal});const v=await res.json();if(!res.ok){const error=Error(v.error||'İşlem tamamlanamadı.');error.code=v.code;error.details=v;throw error}return v}catch(e){if(e.name==='AbortError')throw Error('Sunucu yanıt vermedi. Biraz sonra yeniden deneyebilirsin.');throw e}finally{clearTimeout(timer)}}
+async function apiRaw(route,data,timeout=65000){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{return await requestApiJson('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,language:locale().slice(0,2)}),signal:controller.signal},{readOnly:READ_ROUTES.has(route)})}catch(e){if(e.name==='AbortError')throw Error('Sunucu yanıt vermedi. Biraz sonra yeniden deneyebilirsin.');throw e}finally{clearTimeout(timer)}}
 function homeBusy(on){$('findMatch').disabled=on||searching;$('create').disabled=on||searching;$('join').disabled=on||searching;$('practice').disabled=on||searching;$('resume').disabled=on;if(on&&view==='home')document.querySelector('.play-card').setAttribute('aria-busy','true');else document.querySelector('.play-card').removeAttribute('aria-busy');setButton('create',on?'Hazırlanıyor…':'Masa kur',on?'clock':'plus');$('create').insertAdjacentHTML('beforeend','<i>'+icon('arrow')+'</i>')}
 async function run(fn){if(busy)return;busy=true;homeBusy(true);render();try{await fn()}catch(e){if(!e.cancelled)toast(e.message,'error')}finally{busy=false;homeBusy(false);render()}}
 $('create').onclick=()=>run(async()=>connect(await api('create',{name:name(),...await accountPayload()})));
