@@ -322,11 +322,8 @@
 .profile-dialog .gift-form>input,
 .profile-dialog .gift-form>select { min-width:0; }
 
-/* Chat retains its row; the time offer floats above the board without reflow. */
-#game>#scores.player-strip:has(.player-speech) {
- padding-bottom:36px!important;
-}
-#game>#scores.player-strip:has(.urgent-extension) { position:relative; z-index:35; overflow:visible; }
+/* Both balloons float above the board; neither reserves layout space. */
+#game>#scores.player-strip:has(.player-speech,.urgent-extension) { position:relative; z-index:35; overflow:visible; }
 #scores .player-card>.player-speech {
  top:calc(100% + 5px)!important;
  bottom:auto!important;
