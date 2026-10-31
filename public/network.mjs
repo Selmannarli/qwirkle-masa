@@ -15,6 +15,6 @@ export async function readApiResponse(response){
 export async function requestApiJson(url,options,{readOnly=false,fetchImpl=fetch,wait=ms=>new Promise(r=>setTimeout(r,ms))}={}){
  for(let attempt=0;;attempt++){
   try{return await readApiResponse(await fetchImpl(url,options))}
-  catch(e){if(!readOnly||attempt!==0||e.code!=='SERVER_UNAVAILABLE'||options.signal?.aborted)throw e;await wait(800);if(options.signal?.aborted)throw new DOMException('Aborted','AbortError')}
+  catch(e){if(!readOnly||attempt>=7||e.code!=='SERVER_UNAVAILABLE'||options.signal?.aborted)throw e;await wait(Math.min(10000,1000*2**attempt));if(options.signal?.aborted)throw new DOMException('Aborted','AbortError')}
  }
 }

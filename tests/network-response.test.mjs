@@ -11,7 +11,7 @@ test('valid application data and errors retain their meaning',async()=>{
 test('only safe reads retry an HTML proxy response; mutations never replay',async()=>{
  for(const readOnly of [true,false]){let calls=0;const fetchImpl=async()=>++calls===1?new Response('<html>Restarting</html>',{status:503}):new Response('{"ok":true}');const run=requestApiJson('/api/test',{}, {readOnly,fetchImpl,wait:async()=>{}});if(readOnly)assert.deepEqual(await run,{ok:true});else await assert.rejects(run,{code:'SERVER_UNAVAILABLE'});assert.equal(calls,readOnly?2:1)}
 });
-test('retry stops at one and abort prevents another request',async()=>{
- let calls=0;await assert.rejects(requestApiJson('/',{},{readOnly:true,fetchImpl:async()=>{calls++;return new Response('html')},wait:async()=>{}}),{code:'SERVER_UNAVAILABLE'});assert.equal(calls,2);
+test('recovery attempts are bounded and abort prevents another request',async()=>{
+ let calls=0;await assert.rejects(requestApiJson('/',{},{readOnly:true,fetchImpl:async()=>{calls++;return new Response('html')},wait:async()=>{}}),{code:'SERVER_UNAVAILABLE'});assert.equal(calls,8);
  const c=new AbortController();calls=0;await assert.rejects(requestApiJson('/',{signal:c.signal},{readOnly:true,fetchImpl:async()=>{calls++;return new Response('html')},wait:async()=>c.abort()}),{name:'AbortError'});assert.equal(calls,1);
 });
