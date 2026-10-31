@@ -322,14 +322,11 @@
 .profile-dialog .gift-form>input,
 .profile-dialog .gift-form>select { min-width:0; }
 
-/* Message balloons and the last-seconds time purchase share the same card
-   anchor. Reserve one row only while present; two rows only on the same card. */
-#game>#scores.player-strip:has(.player-speech,.urgent-extension) {
+/* Chat retains its row; the time offer floats above the board without reflow. */
+#game>#scores.player-strip:has(.player-speech) {
  padding-bottom:36px!important;
 }
-#game>#scores.player-strip:has(.player-card:has(.player-speech):has(.urgent-extension)) {
- padding-bottom:70px!important;
-}
+#game>#scores.player-strip:has(.urgent-extension) { position:relative; z-index:35; overflow:visible; }
 #scores .player-card>.player-speech {
  top:calc(100% + 5px)!important;
  bottom:auto!important;
@@ -348,16 +345,21 @@
  top:calc(100% + 5px)!important;
  bottom:auto!important;
  left:4px;
- right:4px;
+ right:auto;
+ width:max-content;
+ max-width:calc(100% - 8px);
  min-width:0;
- min-height:30px;
- padding:5px 3px;
- font-size:10px;
+ min-height:36px;
+ padding:7px 12px;
+ border-radius:999px;
+ z-index:40;
+ font-size:11px;
  line-height:1.2;
  text-align:center;
  box-sizing:border-box;
  white-space:nowrap;
 }
+#scores .player-card>.urgent-extension::before { content:""; position:absolute; left:15px; top:-5px; width:8px; height:8px; background:inherit; border-top:1px solid #d6b6ff; border-left:1px solid #d6b6ff; transform:rotate(45deg); }
 #scores .player-card:has(.player-speech)>.urgent-extension { top:calc(100% + 39px)!important; }
 
 body[data-theme=day] .avatar-dialog {
