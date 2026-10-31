@@ -1,4 +1,5 @@
 import {HERO_TIMING} from '../public/character-style.mjs';
+import {sampleEmoteClip,hasEmoteClip,stopEmoteClip} from './emote-clips.mjs';
 import {Vector3,Quaternion,Euler} from 'three';
 import {ANIMATION_DURATIONS,animationEmotion} from '../public/animation-style.mjs';
 // Shared articulated animation. Every sample starts from the authored rest pose,
@@ -18,14 +19,14 @@ export function captureRest(root){
  const state={rig,root:remember(root),nodes:new Map(nodes(rig).map(n=>[n,remember(n)]))};rests.set(root,state);return state;
 }
 function stateFor(root){const saved=rests.get(root);return saved?.rig===root?.userData?.rig?saved:captureRest(root)}
-export function captureCharacterPose(root){
- const state=stateFor(root);return state?[root,...state.nodes.keys()].map(n=>({node:n,position:n.position.clone(),quaternion:n.quaternion.clone(),scale:n.scale.clone(),morph:n.morphTargetInfluences?.slice()})):[];
+export function captureCharacterPose(root,reuse=null){
+ const state=stateFor(root);if(state&&reuse?.length===state.nodes.size+1&&reuse[0].node===root){for(const p of reuse){p.position.copy(p.node.position);p.quaternion.copy(p.node.quaternion);p.scale.copy(p.node.scale);if(p.morph)for(let i=0;i<p.morph.length;i++)p.morph[i]=p.node.morphTargetInfluences[i]}return reuse}return state?[root,...state.nodes.keys()].map(n=>({node:n,position:n.position.clone(),quaternion:n.quaternion.clone(),scale:n.scale.clone(),morph:n.morphTargetInfluences?.slice()})):[];
 }
 export function blendCharacterPose(previous,amount){
  const weight=smooth(amount);for(const {node,position,quaternion,scale,morph}of previous){node.position.lerpVectors(position,node.position,weight);const target=node.quaternion.clone();node.quaternion.slerpQuaternions(quaternion,target,weight);node.scale.lerpVectors(scale,node.scale,weight);if(morph)for(let i=0;i<morph.length;i++)node.morphTargetInfluences[i]=morph[i]+(node.morphTargetInfluences[i]-morph[i])*weight}
 }
 export function resetCharacter(root){
- const state=stateFor(root);if(!state)return;
+ stopEmoteClip(root);const state=stateFor(root);if(!state)return;
  const restore=(n,r)=>{values(n.position,r.position);values(n.rotation,r.rotation);values(n.scale,r.scale);n.visible=r.visible};
  restore(root,state.root);for(const [n,rest]of state.nodes)restore(n,rest);
  state.rig.facial?.reset();setMouth(state.rig,'neutral');for(const lid of state.rig.lids||[])lid.visible=false;
@@ -305,7 +306,9 @@ function sampleCharacter(root,{time=0,face=root?.userData?.rig?.face??root?.user
  setMouth(rig,emotion);
  const browEmotion=mood==='appleHit'||mood==='lossAngry'||mood==='lossStomp'?'angry':emotion;
  if(reduced){brow(rig,browEmotion,.5);return false}
- if(elapsed>=duration){brow(rig,browEmotion,.45);return false}
+ if(elapsed>=duration){if(hasEmoteClip(mood))rig.facial?.reset();else brow(rig,browEmotion,.45);return false}
+
+ if(sampleEmoteClip(root,mood,elapsed,duration))return true;
 
  if(mood==='appleAim'||mood==='appleThrow'){const a=mood==='appleAim'?clamp(aimPower):1-rise(elapsed,.12,.54),side=aimDirection<0?-1:1,lift=mood==='appleAim'?2.5+a*.3:key(elapsed,[[0,2.8],[.12,2.8],[.25,1.9],[.44,.45],[.65,0]]);handPose(rig,-side,lift*(face===5?1.4:1),-a*.5,a*.65);handPose(rig,side,a*.4,-a*.15,a*.25);rotate(rig.head,-a*.08,side*a*.18,0);rotate(root,0,0,-side*a*.075);brow(rig,'happy',a*.7)}
  else if(mood==='appleHit'){const recoil=envelope(elapsed,0,.09,.19,.38),dizzy=envelope(elapsed,.1,.35,1.45,1.85),anger=envelope(elapsed,1.35,1.75,2.12,2.6);rotate(rig.head,-recoil*.16,Math.sin(elapsed*12)*dizzy*.13,Math.sin(elapsed*10)*dizzy*.12);for(const side of [-1,1])handPose(rig,side,recoil*.85+anger*.4,-anger*.15,anger*.95);blink(rig,Math.max(recoil*.95,blinkAt(elapsed,1.15,.08)));setMouth(rig,anger>.2?'sad':'neutral');brow(rig,anger>.2?'angry':'happy',Math.max(dizzy*.5,anger))}

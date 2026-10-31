@@ -6,6 +6,8 @@ import {createCharacter,disposePerson,characterContactPoint,CHARACTER_MODEL_VERS
 import {animateCharacter,resetCharacter,captureCharacterPose,blendCharacterPose,connectCharacterPose,characterSocialContactPoint,CHARACTER_DURATIONS} from './character-motion.mjs';
 import {acceptsCharacterGesture,accessoryColourKey} from '../public/character-style.mjs';
 
+const copyPose=pose=>pose?.map(p=>({...p,position:p.position.clone(),quaternion:p.quaternion.clone(),scale:p.scale.clone(),morph:p.morph?.slice()}));
+
 // One GPU context paints all DOM portraits. Their small 2D canvases follow normal
 // stacking, clipping and dialog rules, and never create another WebGL context.
 export class CharacterPortraits{
@@ -20,7 +22,7 @@ export class CharacterPortraits{
   this.renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;this.pause()});this.renderer.domElement.addEventListener('webglcontextrestored',()=>{this.lost=false;this.invalidate()});
  }
  add(art){
-  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')||record.colours!==(art.dataset.accessoryColours||'')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.colours=art.dataset.accessoryColours||'';record.mood='idle';record.until=0;record.transition=null;clearTimeout(record.timer);delete art.dataset.emotion;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
+  if(this.records.has(art)){const record=this.records.get(art),face=Number(art.dataset.character)||0,colour=Number(art.dataset.colour)||0;if(record.face!==face||record.colour!==colour||record.accessory!==(art.dataset.accessory||'none')||record.colours!==(art.dataset.accessoryColours||'')){record.face=face;record.colour=colour;record.accessory=art.dataset.accessory||'none';record.colours=art.dataset.accessoryColours||'';record.mood='idle';record.until=0;record.transition=null;record.lastPose=null;clearTimeout(record.timer);delete art.dataset.emotion;record.dirty=true;this.request()}return}const canvas=document.createElement('canvas');canvas.className='character-canvas';canvas.setAttribute('aria-hidden','true');art.replaceChildren(canvas);const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
   const r={art,canvas,ctx,face:Number(art.dataset.character)||0,colour:Number(art.dataset.colour)||0,accessory:art.dataset.accessory||'none',colours:art.dataset.accessoryColours||'',visible:false,dirty:true,mood:'idle',start:0,until:0,phase:Math.random()*15,last:0};this.records.set(art,r);this.installTouch(r);this.observer.observe(art);this.resizeObserver.observe(art);this.request();
  }
  installTouch(r){
@@ -28,7 +30,7 @@ export class CharacterPortraits{
   const host=r.art.closest('.avatar-preview');let press=null;
   r.touch={x:0,y:0,sx:0,sy:0,until:0,kind:'',start:0,yaw:0,syaw:0};
   const point=e=>{const b=host.getBoundingClientRect();return {x:Math.max(-1,Math.min(1,(e.clientX-b.left)/b.width*2-1)),y:Math.max(-1,Math.min(1,1-(e.clientY-b.top)/b.height*2))}};
-  const react=kind=>{if(!['idle','hello'].includes(r.mood))return;if(r.mood==='hello'){r.transition={mood:r.mood,start:r.start,at:performance.now()};r.mood='idle';r.until=0;clearTimeout(r.timer);delete r.art.dataset.emotion}r.touch.kind=kind;r.touch.start=performance.now();r.art.dataset.touchReaction=kind;this.request()};
+  const react=kind=>{if(!['idle','hello'].includes(r.mood))return;if(r.mood==='hello'){r.transition={mood:r.mood,start:r.start,at:performance.now(),pose:copyPose(r.lastPose),duration:360};r.mood='idle';r.until=0;clearTimeout(r.timer);delete r.art.dataset.emotion}r.touch.kind=kind;r.touch.start=performance.now();r.art.dataset.touchReaction=kind;this.request()};
   host.addEventListener('pointermove',e=>{Object.assign(r.touch,point(e),{until:performance.now()+1300});if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>12){clearTimeout(r.holdTimer);press.moved=true;if(Math.abs(e.clientX-press.x)>Math.abs(e.clientY-press.y)){r.touch.yaw=press.yaw+(e.clientX-press.x)*.016}}this.request()},{passive:true});
   host.addEventListener('pointerdown',e=>{if(e.isPrimary===false||e.button>0)return;Object.assign(r.touch,point(e),{until:performance.now()+1800});press={x:e.clientX,y:e.clientY,moved:false,held:false,yaw:r.touch.yaw};clearTimeout(r.holdTimer);r.holdTimer=setTimeout(()=>{if(press&&!press.moved){press.held=true;react('curious')}},550);this.request()},{passive:true});
   host.addEventListener('pointerup',e=>{clearTimeout(r.holdTimer);if(press&&!press.moved&&!press.held)this.play(r.art,'hello',null,{force:true});press=null;r.touch.until=performance.now()+1000},{passive:true});
@@ -43,8 +45,8 @@ export class CharacterPortraits{
   while(this.models.size>12){const oldest=this.models.keys().next().value,old=this.models.get(oldest);this.models.delete(oldest);disposePerson(old.root)}return entry;
  }
  play(art,mood='hello',remaining=null,{force=false}={}){
-  this.add(art);const r=this.records.get(art);if(!r)return false;const baseMood=mood,baseDuration=(CHARACTER_DURATIONS[mood]||1.85)*1000;const prefs=normalizeAnimationPreferences({greeting:art.dataset.animationGreeting,win:art.dataset.animationWin,loss:art.dataset.animationLoss});mood=resolveAnimationMood(mood,prefs);const duration=(CHARACTER_DURATIONS[mood]||1.85)*1000,now=performance.now();if(!force&&!acceptsCharacterGesture(r.mood,mood,r.until-now))return false;r.transition={mood:r.mood,start:r.start,at:now};r.mood=mood;const elapsed=remaining===null?0:Math.max(0,baseDuration-remaining);r.start=now-elapsed;r.until=now+Math.max(0,duration-elapsed);r.dirty=true;art.dataset.emotion=mood;art.dataset.baseEmotion=baseMood;
-  clearTimeout(r.timer);r.timer=setTimeout(()=>{if(this.records.get(art)!==r)return;r.transition={mood:r.mood,start:r.start,at:performance.now()};r.mood='idle';delete art.dataset.emotion;delete art.dataset.baseEmotion;r.dirty=true;this.request()},Math.max(0,r.until-now));this.request();return true;
+  this.add(art);const r=this.records.get(art);if(!r)return false;const baseMood=mood,baseDuration=(CHARACTER_DURATIONS[mood]||1.85)*1000;const prefs=normalizeAnimationPreferences({greeting:art.dataset.animationGreeting,win:art.dataset.animationWin,loss:art.dataset.animationLoss});mood=resolveAnimationMood(mood,prefs);const duration=(CHARACTER_DURATIONS[mood]||1.85)*1000,now=performance.now();if(!force&&!acceptsCharacterGesture(r.mood,mood,r.until-now))return false;r.transition={mood:r.mood,start:r.start,at:now,pose:copyPose(r.lastPose),duration:240};r.mood=mood;const elapsed=remaining===null?0:Math.max(0,baseDuration-remaining);r.start=now-elapsed;r.until=now+Math.max(0,duration-elapsed);r.dirty=true;art.dataset.emotion=mood;art.dataset.baseEmotion=baseMood;
+  clearTimeout(r.timer);r.timer=setTimeout(()=>{if(this.records.get(art)!==r)return;r.transition={mood:r.mood,start:r.start,at:performance.now(),pose:copyPose(r.lastPose),duration:360};r.mood='idle';delete art.dataset.emotion;delete art.dataset.baseEmotion;r.dirty=true;this.request()},Math.max(0,r.until-now));this.request();return true;
  }
  invalidate(){this.dirty=true;for(const r of this.records.values())r.dirty=true;this.request()}
  prune(){for(const [art,r]of this.records)if(!art.isConnected){clearTimeout(r.timer);clearTimeout(r.holdTimer);this.observer.unobserve(art);this.resizeObserver.unobserve(art);this.records.delete(art)}}
@@ -61,8 +63,8 @@ export class CharacterPortraits{
    const pixels=Math.max(64,Math.min(384,Math.ceil(Math.max(rect.width,rect.height)*Math.min(devicePixelRatio||1,1.5))));
    if(r.canvas.width!==pixels||r.canvas.height!==pixels){r.canvas.width=r.canvas.height=pixels}
    const entry=this.model(r.face,r.colour,r.accessory,r.colours),root=entry.root,preview=entry.accessories.get(art.dataset.accessoryPreview),bust=!preview&&!!art.closest('#scores,.home-portrait,.friend-entry,.leader-row,.mini-player'),center=preview?.center||(bust?entry.headCenter:entry.center),radius=preview?.radius||(bust?entry.headRadius:entry.radius);
-   let previous=null;if(r.transition&&!reduced&&now-r.transition.at<180){animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.transition.mood,elapsed:Math.max(0,(now-r.transition.start)/1000)});previous=captureCharacterPose(root)}else r.transition=null;
-   resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced,aimPower:Number(art.dataset.applePower)||0,aimDirection:Number(art.dataset.appleDirection)||1});if(previous)blendCharacterPose(previous,(now-r.transition.at)/180);
+   let previous=null;if(r.transition&&!reduced&&now-r.transition.at<(r.transition.duration||240)){if(r.transition.pose)previous=r.transition.pose;else{animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.transition.mood,elapsed:Math.max(0,(now-r.transition.start)/1000)});previous=captureCharacterPose(root)}}else r.transition=null;
+   resetCharacter(root);animateCharacter(root,{time:now/1000+r.phase,face:r.face,mood:r.mood,elapsed:Math.max(0,(now-r.start)/1000),reduced,aimPower:Number(art.dataset.applePower)||0,aimDirection:Number(art.dataset.appleDirection)||1});if(previous)blendCharacterPose(previous,(now-r.transition.at)/(r.transition.duration||240));
    if(r.touch&&['idle','hello'].includes(r.mood)){
     const touch=r.touch,tracking=now<touch.until,step=1-Math.exp(-Math.min(64,Math.max(1,now-r.last))/110);
     touch.sx+=((tracking?touch.x:0)-touch.sx)*step;touch.sy+=((tracking?touch.y:0)-touch.sy)*step;
@@ -78,7 +80,7 @@ export class CharacterPortraits{
    if(r.mood==='knock'){const point=characterContactPoint(root,camera);art.dataset.knockX=((point.x+1)*50).toFixed(1)+'%';art.dataset.knockY=((1-point.y)*50).toFixed(1)+'%'}
    if(r.mood==='appleAim'||r.mood==='appleThrow'){const point=characterSocialContactPoint(root,r.mood,camera,-(Number(art.dataset.appleDirection)||1));if(point){art.dataset.appleHandX=String((point.x+1)/2);art.dataset.appleHandY=String((1-point.y)/2)}}
    if(r.mood==='visitorStrike'||r.mood.startsWith('highFive')||r.mood.startsWith('playful')){const point=characterSocialContactPoint(root,r.mood,camera);if(point){art.dataset.contactX=String((point.x+1)/2);art.dataset.contactY=String((1-point.y)/2)}}
-   r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion=CHARACTER_MODEL_VERSION}
+   r.lastPose=captureCharacterPose(root,r.lastPose);r.last=now;r.dirty=false;if(!art.dataset.modelReady){art.dataset.modelReady='true';art.dataset.modelVersion=CHARACTER_MODEL_VERSION}
   }
   this.dirty=false;this.lastFrame=now;if(alive)this.request();
  }
